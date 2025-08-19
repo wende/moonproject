@@ -101,7 +101,7 @@ button {
 
 /* MODAL */
 
-#outro {
+#outro, #credits {
   display: none;
 }
 
@@ -130,6 +130,26 @@ button {
   height: auto;
 }
 
+#credits .modal-content {
+  width: 90%;
+  height: 90%;
+  max-width: none;
+  margin: 5% auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#credits .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  font-style: italic;
+}
+
+#credits .modal-body h3 {
+  font-style: normal;
+  font-weight: bold;
+}
+
 .close-container {
   display: flex;
   justify-content: flex-end;
@@ -156,6 +176,30 @@ button {
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   margin-block: 2rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--clr-primary-dark);
+}
+
+  .continue-button {
+    color: gray !important;
+    padding: 0.75rem 2rem;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+.continue-button:hover {
+  color: #1a252e !important;
+  background-color: #1a252e;
+  transform: translateY(-2px);
 }
 
 @media screen and (width < 892px) {

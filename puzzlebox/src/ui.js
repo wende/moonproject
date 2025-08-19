@@ -11,6 +11,11 @@ export function setupUI() {
       id: 'outro',
       openClass: 'outro-button',
       closeClass: 'outro-close'
+    },
+    {
+      id: 'credits',
+      openClass: 'end-button',
+      closeClass: 'credits-close'
     }
   ];
 
