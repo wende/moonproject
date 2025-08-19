@@ -60,20 +60,16 @@ class AudioManager {
   }
 
   async preloadAudio() {
-    console.log('Starting to preload audio files...');
     const loadPromises = Object.entries(this.audioFiles).map(async ([key, path]) => {
       try {
-        console.log(`Loading audio file: ${key} from ${path}`);
         const audioBuffer = await this.loadAudioFile(path);
         this.sounds.set(key, audioBuffer);
-        console.log(`Successfully loaded audio: ${key}`);
       } catch (error) {
         console.warn(`Failed to load audio file ${path}:`, error);
       }
     });
 
     await Promise.all(loadPromises);
-    console.log('Finished preloading audio files. Loaded sounds:', Array.from(this.sounds.keys()));
   }
 
   async loadAudioFile(url) {
@@ -87,6 +83,11 @@ class AudioManager {
 
   playSound(soundName, options = {}) {
     if (!this.isInitialized || this.isMuted) return null;
+    
+    // Ensure audio context is running
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
     
     const audioBuffer = this.sounds.get(soundName);
     if (!audioBuffer) {
@@ -121,12 +122,13 @@ class AudioManager {
   }
 
   playMusic(musicName, options = {}) {
-    console.log(`Attempting to play music: ${musicName}`);
-    console.log(`Audio initialized: ${this.isInitialized}, Muted: ${this.isMuted}`);
-    
     if (!this.isInitialized || this.isMuted) {
-      console.warn(`Cannot play music: initialized=${this.isInitialized}, muted=${this.isMuted}`);
       return null;
+    }
+    
+    // Ensure audio context is running
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
     }
     
     // Stop current music if playing
@@ -135,7 +137,6 @@ class AudioManager {
     const audioBuffer = this.sounds.get(musicName);
     if (!audioBuffer) {
       console.warn(`Music not found: ${musicName}`);
-      console.log('Available sounds:', Array.from(this.sounds.keys()));
       return null;
     }
 
@@ -244,7 +245,14 @@ class AudioManager {
 
   // Convenience methods for common game sounds
   playButtonClick() {
-    return this.playSound('button_click', { volume: 0.6 });
+    if (!this.isInitialized || this.isMuted) return null;
+    
+    // Ensure audio context is running
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+    
+    return this.playSound('button_click', { volume: 0.1 });
   }
 
   playPuzzleSolve() {
@@ -280,9 +288,9 @@ class AudioManager {
   }
 
   // Resume audio context when user interacts (required by browsers)
-  resumeContext() {
+  async resumeContext() {
     if (this.audioContext && this.audioContext.state === 'suspended') {
-      this.audioContext.resume();
+      await this.audioContext.resume();
     }
   }
 
@@ -302,11 +310,19 @@ class AudioManager {
 // Create global audio manager instance
 const audioManager = new AudioManager();
 
+// Make audioManager globally accessible
+window.audioManager = audioManager;
+
+// Global function to ensure audio context is resumed
+window.resumeAudioContext = async () => {
+  if (audioManager.audioContext && audioManager.audioContext.state === 'suspended') {
+    await audioManager.audioContext.resume();
+  }
+};
+
 // Initialize audio on first user interaction
 function initializeAudioOnInteraction() {
-  console.log('User interaction detected, initializing audio...');
   audioManager.initialize().then(() => {
-    console.log('Audio initialized on user interaction');
     // Resume audio context
     audioManager.resumeContext();
   });

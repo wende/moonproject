@@ -39,6 +39,11 @@ export class BaseSequencePuzzle extends Puzzle {
   }
 
   handleButtonClick(button) {
+    console.log('playButtonClick');
+    if (typeof window.audioManager !== 'undefined') {
+      window.audioManager.playButtonClick();
+    }
+
     const direction = this.getDirectionFromButton(button.name);
     this.workingArray.push(direction);
     this.workingArray.shift();

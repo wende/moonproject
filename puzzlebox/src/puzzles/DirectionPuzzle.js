@@ -43,10 +43,13 @@ export class DirectionPuzzle extends Puzzle {
       return;
     }
 
+    console.log('playButtonClick');
+    if (typeof window.audioManager !== 'undefined') {
+      window.audioManager.playButtonClick();
+    }
+
     this.workingArray.push(direction);
     this.workingArray.shift();
-    // DELETE
-    console.log(this.workingArray);
     this.playAnimation(button.name);
 
     this.checkSequences();

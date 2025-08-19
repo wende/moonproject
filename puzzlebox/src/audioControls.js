@@ -128,24 +128,19 @@ class AudioControls {
   }
 
   show() {
-    console.log('Showing audio controls...');
     this.container.style.display = 'block';
     this.isVisible = true;
     
     // Update mute button state
     this.updateMuteButton(audioManager.isMuted);
-    console.log('Audio controls shown');
   }
 
   hide() {
-    console.log('Hiding audio controls...');
     this.container.style.display = 'none';
     this.isVisible = false;
-    console.log('Audio controls hidden');
   }
 
   toggle() {
-    console.log('Toggling audio controls, current state:', this.isVisible);
     if (this.isVisible) {
       this.hide();
     } else {
@@ -159,8 +154,6 @@ const audioControls = new AudioControls();
 
 // Create audio toggle button for the main UI
 function createAudioToggleButton() {
-  console.log('Creating audio toggle button...');
-  
   const audioToggleBtn = document.createElement('button');
   audioToggleBtn.className = 'btn audio-toggle-btn';
   audioToggleBtn.innerHTML = 'Audio';
@@ -168,19 +161,13 @@ function createAudioToggleButton() {
   audioToggleBtn.title = 'Audio Settings';
   
   audioToggleBtn.addEventListener('click', () => {
-    console.log('Audio toggle button clicked');
     audioControls.toggle();
   });
 
   // Add to navigation
   const navButtons = document.querySelector('.nav-buttons');
-  console.log('Looking for nav-buttons element:', navButtons);
-  
   if (navButtons) {
     navButtons.appendChild(audioToggleBtn);
-    console.log('Audio toggle button added to nav-buttons');
-  } else {
-    console.warn('nav-buttons element not found, audio toggle button not added');
   }
 
   return audioToggleBtn;
