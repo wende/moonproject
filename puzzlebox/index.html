@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Box For The Moon</title>
+    <link rel='stylesheet' href='src/style.css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy:ital@0;1&family=Special+Elite&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <header class="nav-wrapper container">
+      <nav class="nav-buttons">
+        <button type="button" class="btn intro-button">Open Intro</button>
+        <button type="button" class="btn dialogue-button"></button>
+        <button type="button" class="btn outro-button">Look Inside</button>
+      </nav>
+    </header>
+
+
+    <div id="intro" class="modal">
+      <div class="modal-content container">
+        <div class="close-container">
+          <i class="close intro-close">×</i>
+        </div>
+        <div class="modal-header">
+          <h1 class="site-title">The box for the Moon</h1>
+        </div>
+        <div class="modal-body">
+          <div class="modal-column">
+            <p>They say this box was left behind by someone
+              <br>
+              who couldn’t say everything when it mattered most.
+              <br>
+              So they carved it into puzzles.
+              <br>
+              Sealed it with time. 
+              <br>
+              Waiting - not for the right answer,
+              <br>
+              but for the right person to open it.
+                <br>
+             
+              </p>
+            <p> Now it’s yours.
+              But only if you can trace the path she always walked.</p>
+            <br>
+            <p></p>
+            <br>
+            <p class="postscript"></p>
+          </div>
+          <div class="modal-column">
+            <!-- <img src="/intro_letter.png"
+                class="modal-image"
+                alt="In-universe note from the uncle of the person writing the rest of this letter"
+                aria-describedby="intro-letter-text"> -->
+            <div id="intro-letter-text" class="visually-hidden">
+              <p></p>
+              <p></p>
+              <p></p>
+              <p></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="outro" class="modal">
+      <div class="modal-content container">
+        <div class="close-container">
+          <i class="close outro-close">×</i>
+        </div>
+        <div class="modal-header">
+          <h2 class="congratulations-text">Congratulations</h2>
+        </div>
+        <div class="modal-body">
+          <div class="modal-column">
+            
+
+            <p>Hello Moon</p>
+            <p>Sometimes it takes too many riddles to realize<br>
+            the answer was to look inward all along.<br>
+            Congratulations on completing the puzzle.<br>
+            I leave you with a short poem — just for you:</p>
+            <i>
+            <p>Sometimes moon wanes.<br>
+            Sometimes she hides.<br>
+            But she always has<br>
+            a grip on the sea<br>
+            And so does on me</p>
+            </i>
+            <p></p>
+            <br>
+            <p class="postscript">PS. Did you know that Moon wax religiously?</p>
+          </div>
+          <div class="modal-column">
+            <img src="/nesrine.png" class="modal-image">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="background"></div>
+    <div id="background-flash"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

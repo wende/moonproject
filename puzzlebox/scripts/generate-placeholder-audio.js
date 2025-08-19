@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// List of required audio files
+const audioFiles = [
+  'ambient_mystery.mp3',
+  'puzzle_solve.mp3',
+  'button_click.mp3',
+  'box_open.mp3',
+  'paper_rustle.mp3',
+  'success_chime.mp3',
+  'error_buzz.mp3',
+  'wind_chimes.mp3',
+  'heartbeat.mp3',
+  'footsteps.mp3'
+];
+
+// Minimal MP3 header for a silent file (1 second of silence)
+const silentMp3Header = Buffer.from([
+  0xFF, 0xFB, 0x90, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+]);
+
+const audioDir = path.join(__dirname, '..', 'public', 'audio');
+
+// Ensure audio directory exists
+if (!fs.existsSync(audioDir)) {
+  fs.mkdirSync(audioDir, { recursive: true });
+  console.log('Created audio directory:', audioDir);
+}
+
+// Generate placeholder files
+audioFiles.forEach(filename => {
+  const filePath = path.join(audioDir, filename);
+  
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, silentMp3Header);
+    console.log(`Created placeholder: ${filename}`);
+  } else {
+    console.log(`File already exists: ${filename}`);
+  }
+});
+
+console.log('\nPlaceholder audio files generated successfully!');
+console.log('Replace these files with actual audio content for the full experience.');
+console.log('\nSee the README.md in the audio directory for suggestions on where to find audio files.');
