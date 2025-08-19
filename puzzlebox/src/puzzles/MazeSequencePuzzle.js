@@ -8,7 +8,7 @@ export class MazeSequencePuzzle extends BaseSequencePuzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("Cœurs légers. Âmes lourdes. Tout cela ne vaut rien sans équilibre.", () => null)
+    window.setDialogueButton("Cœurs légers. Âmes lourdes. Tout cela ne vaut rien sans équilibre.")
 
     const puzzleClearLight = this.initLightMaterials(this.scene, 'Light_Top_E');
     this.updateLightMaterial(puzzleClearLight, true);

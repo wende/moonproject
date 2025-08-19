@@ -17,8 +17,8 @@ export function setupUI() {
   // Get reference to dialogue button
   let dialogueButton = document.querySelector('.dialogue-button');
   
-  // Global function to set dialogue button text and click behavior
-  window.setDialogueButton = function(text, onClickCallback) {
+  // Global function to set dialogue button text and audio
+  window.setDialogueButton = function(text, audioFile) {
     // Get fresh reference to button in case it was replaced
     let currentButton = document.querySelector('.dialogue-button');
     
@@ -36,23 +36,48 @@ export function setupUI() {
         currentButton.classList.remove('arabic-text');
       }
       
+      // Play audio immediately if provided
+      if (audioFile && typeof audioManager[audioFile] === 'function') {
+        // Temporarily lower background music volume
+        const originalMusicVolume = audioManager.musicVolume;
+        audioManager.setMusicVolume(originalMusicVolume * 0.3); // Reduce to 30% of original volume
+        
+        audioManager[audioFile]();
+        
+        // Restore original music volume after 1 second
+        setTimeout(() => {
+          audioManager.setMusicVolume(originalMusicVolume);
+        }, 1000);
+      }
+      
       // Remove existing click listeners by cloning and replacing
       const newButton = currentButton.cloneNode(true);
       currentButton.parentNode.replaceChild(newButton, currentButton);
       
-      // Add new click listener if provided
-      if (onClickCallback && typeof onClickCallback === 'function') {
-        newButton.addEventListener('click', () => {
+      // Add click listener for dialogue button
+      newButton.addEventListener('click', () => {
+        // Temporarily lower background music volume
+        const originalMusicVolume = audioManager.musicVolume;
+        audioManager.setMusicVolume(originalMusicVolume * 0.3); // Reduce to 30% of original volume
+        
+        // Play audio on click if provided, otherwise play button click
+        if (audioFile && typeof audioManager[audioFile] === 'function') {
+          audioManager[audioFile]();
+        } else {
           audioManager.playButtonClick();
-          onClickCallback();
-        });
-      }
+        }
+        
+        // Restore original music volume after 1 second
+        setTimeout(() => {
+          audioManager.setMusicVolume(originalMusicVolume);
+        }, 1000);
+      });
     } else {
       console.warn('Dialogue button not found');
     }
   };
 
-  window.setDialogueButton("South, East, West, North", () => null)
+  window.setDialogueButton("South, East, West, North")
 
   modals.forEach(({ id, openClass, closeClass }) => {
     const modal = document.getElementById(id);

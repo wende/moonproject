@@ -17,7 +17,7 @@ export class StartSequencePuzzle extends BaseSequencePuzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("هاد البلاصة عمرها ما كانت ديالها. بصح إذا خرجت، تولّي هي اللغز.", () => null)
+    window.setDialogueButton("هاد البلاصة عمرها ما كانت ديالها. بصح إذا خرجت، تولّي هي اللغز.")
 
     this.playAnimation('SlidePanel_E_Open');
   }

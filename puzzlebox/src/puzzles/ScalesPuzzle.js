@@ -111,7 +111,7 @@ export class ScalesPuzzle extends Puzzle {
     
     // Only update dialogue button if this is called from button interaction (not constructor)
     if (!this.isInitializing) {
-      window.setDialogueButton(colorName, () => null);
+              window.setDialogueButton(colorName);
     }
     
     // Add 'col' prefix to match the material naming convention
@@ -183,7 +183,7 @@ export class ScalesPuzzle extends Puzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("She traveled the world. But the dark was never vanishing — it was the space she needed to become whole again.", () => null)
+    window.setDialogueButton("She traveled the world. But the dark was never vanishing — it was the space she needed to become whole again.")
 
     console.log('Available color materials:', Object.keys(this.colorMaterials)); // Debug
     console.log('colorSuccess exists?', 'colorSuccess' in this.colorMaterials); // Debug
