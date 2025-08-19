@@ -19,7 +19,7 @@ export class ScaleAnimator {
     this.animation.startTime = performance.now();
 
     const mapToUnitRange = (value) => {
-      return ((value - 3) / 19) * 2 - 1; // 3 -> -1, 19 -> 1
+      return -1*(((value - 3) / 30) * 2 - 1); // 3 -> -1, 19 -> 1
     };
 
     const oldPositionLeft = mapToUnitRange(fromState[0]);

@@ -164,10 +164,10 @@ function createAudioToggleButton() {
     audioControls.toggle();
   });
 
-  // Add to navigation
+  // Add to navigation at the beginning
   const navButtons = document.querySelector('.nav-buttons');
   if (navButtons) {
-    navButtons.appendChild(audioToggleBtn);
+    navButtons.insertBefore(audioToggleBtn, navButtons.firstChild);
   }
 
   return audioToggleBtn;

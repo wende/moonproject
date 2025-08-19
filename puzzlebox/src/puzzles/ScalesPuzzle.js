@@ -9,19 +9,20 @@ export class ScalesPuzzle extends Puzzle {
     this.lastBalanceState = [0, 0];
 
     this.colorOptions = [
-      { name: 'colOne', value: 1, hex: '#990000' },
-      { name: 'colTwo', value: 2, hex: '#009900' },
-      { name: 'colThree', value: 3, hex: '#000099' },
-      { name: 'colFour', value: 5, hex: '#C99700' },
-      { name: 'colStatic', value: 9, hex: '#900090' },
-      { name: 'colSuccess', value: 11, hex: '#FFFFFF' },
+      { name: 'Résilience', value: 1, hex: '#00FFD4' }, // Résilience - Bright Cyan
+      { name: 'Colère', value: 2, hex: '#FF4444' }, // Colère - Bright Red
+      { name: 'Joie', value: 3, hex: '#FFFF00' }, // Joie - Bright Yellow
+      { name: 'Tristesse', value: 5, hex: '#0088FF' }, // Tristesse - Bright Blue
+      { name: 'Peur', value: 12, hex: '#9932CC' }, // Peur - Bright Purple
+      { name: 'Amour', value: 7, hex: '#FF69B4' }, // Amour - Hot Pink
+      { name: 'Success', value: 14, hex: '#FFFFFF' }, // Success - White
     ];
 
     this.weights = {
-      weightA: 0,
-      weightB: 0,
-      weightC: 0,
-      weightD: 4, // static weight
+      weightA: 3,
+      weightB: 3,
+      weightC: 3,
+      weightD: 5, // static weight
     };
 
     this.lights = {
@@ -43,6 +44,8 @@ export class ScalesPuzzle extends Puzzle {
       this.updateLightColor(key);
     });
 
+    this.checkBalance();
+
   }
 
   setupMaterials() {
@@ -54,7 +57,8 @@ export class ScalesPuzzle extends Puzzle {
         emissive: hex,
         emissiveIntensity: 1.0,
       });
-      this.colorMaterials[name] = mat;
+      // Store with 'col' prefix to match the material naming convention
+      this.colorMaterials['col' + name] = mat;
     });
   }
 
@@ -83,7 +87,7 @@ export class ScalesPuzzle extends Puzzle {
 
     if (!weightKey) return;
 
-    this.weights[weightKey] = (this.weights[weightKey] + 1) % 4;
+    this.weights[weightKey] = (this.weights[weightKey] + 1) % 5;
 
     this.updateLightColor(weightKey);
 
@@ -93,8 +97,24 @@ export class ScalesPuzzle extends Puzzle {
 
   updateLightColor(weightKey) {
     const index = this.weights[weightKey];
+    
+    // Safety check to prevent array index out of bounds
+    if (index >= this.colorOptions.length) {
+      console.warn(`Index ${index} is out of bounds for colorOptions array`);
+      return;
+    }
+    
     const colorName = this.colorOptions[index].name;
-    const material = this.colorMaterials[colorName];
+    window.setDialogueButton(colorName, () => null);
+    
+    // Add 'col' prefix to match the material naming convention
+    const materialName = 'col' + colorName;
+    const material = this.colorMaterials[materialName];
+
+    if (!material) {
+      console.warn(`Material not found for: ${materialName}`);
+      return;
+    }
 
     const lights = this.lights[weightKey];
 
@@ -143,7 +163,10 @@ export class ScalesPuzzle extends Puzzle {
     }
 
     if (endState[0] === endState[1]) {
-      this.markAsCompleted();
+      // Delay marking as completed by 500ms so the solution is visible
+      setTimeout(() => {
+        this.markAsCompleted();
+      }, 500);
     }
 
     this.lastBalanceState = [leftSide, rightSide];
@@ -153,7 +176,7 @@ export class ScalesPuzzle extends Puzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("The dark was never vanishing. It was the space she needed to become whole again", () => null)
+    window.setDialogueButton("She traveled the world. But the dark was never vanishing — it was the space she needed to become whole again.", () => null)
 
     console.log('Available color materials:', Object.keys(this.colorMaterials)); // Debug
     console.log('colorSuccess exists?', 'colorSuccess' in this.colorMaterials); // Debug
@@ -164,10 +187,12 @@ export class ScalesPuzzle extends Puzzle {
       const mat = this.colorMaterials['colSuccess'];
       const lights = this.lights[key];
       if (Array.isArray(lights)) {
-        lights.forEach((light) => (
-          light.material = mat
-        ));
-      } else if (lights) {
+        lights.forEach((light) => {
+          if (light?.material) {
+            light.material = mat;
+          }
+        });
+      } else if (lights?.material) {
         lights.material = mat;
       }
     });

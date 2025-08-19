@@ -5,7 +5,7 @@ export class MoonPuzzle extends Puzzle {
   constructor(actions, scene) {
     super(actions, scene);
 
-    this.CORRECT_BUTTONS = [3, 5];
+    this.CORRECT_BUTTONS = [0,1,2,3];
     this.buttonStates = Array(8).fill(false);
     this.buttonObjs = [];
     this.lightObjs = [];
@@ -69,7 +69,7 @@ export class MoonPuzzle extends Puzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("The moon moved through compass points, chasing meaning — but only when she named herself did the path unlock", () => null)
+      
 
     const puzzleClearLight = this.initLightMaterials(this.scene, 'Light_Top_N');
     this.updateLightMaterial(puzzleClearLight, true);
@@ -77,8 +77,8 @@ export class MoonPuzzle extends Puzzle {
     const findTheMoon = this.scene.getObjectByName('FindTheMoon');
     if (findTheMoon) findTheMoon.visible = true;
    
-    const findTheMoonLight = this.initLightMaterials(this.scene, "FindTheMoon")
-    this.updateLightMaterial(findTheMoonLight, true)
+    //const findTheMoonLight = this.initLightMaterials(this.scene, "FindTheMoon")
+    //this.updateLightMaterial(findTheMoonLight, true)
   }
 
   getExpectedButtonNames() {
