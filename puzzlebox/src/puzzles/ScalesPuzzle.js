@@ -7,6 +7,7 @@ export class ScalesPuzzle extends Puzzle {
     super(actions, scene);
 
     this.lastBalanceState = [0, 0];
+    this.isInitializing = true;
 
     this.colorOptions = [
       { name: 'Résilience', value: 1, hex: '#00FFD4' }, // Résilience - Bright Cyan
@@ -43,6 +44,8 @@ export class ScalesPuzzle extends Puzzle {
     Object.keys(this.weights).forEach((key) => {
       this.updateLightColor(key);
     });
+    
+    this.isInitializing = false;
 
     this.checkBalance();
 
@@ -105,7 +108,11 @@ export class ScalesPuzzle extends Puzzle {
     }
     
     const colorName = this.colorOptions[index].name;
-    window.setDialogueButton(colorName, () => null);
+    
+    // Only update dialogue button if this is called from button interaction (not constructor)
+    if (!this.isInitializing) {
+      window.setDialogueButton(colorName, () => null);
+    }
     
     // Add 'col' prefix to match the material naming convention
     const materialName = 'col' + colorName;

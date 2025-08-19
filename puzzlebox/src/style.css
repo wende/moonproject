@@ -4,6 +4,19 @@
   --clr-primary-light: #E4E2DD;
 }
 
+/* ARABIC TEXT SUPPORT */
+[lang="ar"], .arabic-text {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: bidi-override;
+}
+
+/* Ensure Arabic text flows properly */
+.arabic-text {
+  font-family: 'Arial', 'Tahoma', sans-serif;
+  line-height: 1.6;
+}
+
 
 /* INITIALIZATION */
 *, *::before, *::after {

@@ -26,6 +26,16 @@ export function setupUI() {
       // Set the text
       currentButton.textContent = text || '';
       
+      // Check if text contains Arabic characters and apply RTL styling
+      const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+      if (arabicRegex.test(text)) {
+        currentButton.setAttribute('lang', 'ar');
+        currentButton.classList.add('arabic-text');
+      } else {
+        currentButton.removeAttribute('lang');
+        currentButton.classList.remove('arabic-text');
+      }
+      
       // Remove existing click listeners by cloning and replacing
       const newButton = currentButton.cloneNode(true);
       currentButton.parentNode.replaceChild(newButton, currentButton);
