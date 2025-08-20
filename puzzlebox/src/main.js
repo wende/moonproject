@@ -12,15 +12,21 @@ import { CipherSequencePuzzle } from './puzzles/CipherSequencePuzzle';
 import { loadGLTFModel } from './loaders';
 import { audioManager } from './audio';
 import { createAudioToggleButton } from './audioControls';
+import { materialManager } from './materials';
+import { ParticleSystem } from './particles';
 
-const { scene, renderer, camera, mixer, mouse, raycaster } = setupScene();
+const { scene, renderer, camera, mixer, mouse, raycaster, composer } = setupScene();
 const controls = setupControls(camera, renderer);
 const puzzleManager = new PuzzleManager();
+const particleSystem = new ParticleSystem(scene);
 
 loadGLTFModel('/scene.glb', scene, mixer)
   // destructure return from loadGLTFModel to immediately access values
   .then(({ gltf, actions }) => {
     console.log(Object.keys(actions));
+
+    // Create particle effects for atmosphere
+    particleSystem.createAllParticles();
 
     const findTheMoon = gltf.scene.getObjectByName('FindTheMoon');
     if (findTheMoon) findTheMoon.visible = false;
@@ -53,8 +59,8 @@ loadGLTFModel('/scene.glb', scene, mixer)
       moon: moonPuzzle,
       cipher: cipherPuzzle,
     };
+    intro.style.display = 'none';
     window.skipTo = (target) => {
-      intro.style.display = 'none';
       const order = ['start', 'maze', 'scales', 'moon', 'cipher', 'end'];
       const index = typeof target === 'number'
         ? target
@@ -114,13 +120,118 @@ setupInput(raycaster, mouse, camera, puzzleManager, renderer.domElement);
 
 const clock = new THREE.Clock();
 
+// Function to enhance model materials
+function enhanceModelMaterials(scene) {
+  console.log('enhanceModelMaterials called with scene:', scene);
+  let meshCount = 0;
+  
+  scene.traverse((object) => {
+    if (object.isMesh) {
+      meshCount++;
+      console.log('Found mesh:', object.name, 'Material:', object.material ? 'Yes' : 'No');
+      
+      // Enable shadows for all meshes
+      object.castShadow = true;
+      object.receiveShadow = true;
+      
+      // Only modify materials for specific objects, enhance brass for polish
+      if (object.material) {
+        console.log('Processing material for:', object.name, 'Type:', object.material.type);
+        
+        // Special handling for brass - log and try to restore original properties
+        if (object.name.toLowerCase().includes('brass')) {
+          console.log('BRASS MATERIAL FOUND:', object.name);
+          console.log('Current properties:', {
+            roughness: object.material.roughness,
+            metalness: object.material.metalness,
+            envMapIntensity: object.material.envMapIntensity,
+            clearcoat: object.material.clearcoat,
+            color: object.material.color ? object.material.color.getHexString() : 'none'
+          });
+          
+          // Try to restore brass to typical brass properties
+          object.material.roughness = 0.2;
+          object.material.metalness = 0.8;
+          object.material.envMapIntensity = 1.0;
+          object.material.clearcoat = 0.0;
+          object.material.clearcoatRoughness = 0.0;
+        }
+        
+        // Apply changes to materials (except buttons and brass)
+        if (!object.name.toLowerCase().includes('button') && 
+            !object.name.toLowerCase().includes('brass')) {
+          // Focus on making wood less reflective
+          if (object.name.toLowerCase().includes('wood')) {
+            
+            // Make wood much less reflective
+            if (object.material.envMapIntensity !== undefined) {
+              object.material.envMapIntensity = 0.1; // Very low reflection for wood
+            }
+            if (object.material.metalness !== undefined) {
+              object.material.metalness = 0.0; // No metalness for wood
+            }
+            if (object.material.roughness !== undefined) {
+              object.material.roughness = Math.max(object.material.roughness, 0.8); // Very rough wood
+            }
+            if (object.material.clearcoat !== undefined) {
+              object.material.clearcoat = 0.0; // No clearcoat for wood
+            }
+          } else {
+            
+            if (object.material.envMapIntensity !== undefined) {
+              object.material.envMapIntensity = 0.3; // Low reflection
+            }
+            if (object.material.metalness !== undefined) {
+              object.material.metalness = Math.min(object.material.metalness * 0.6, 0.7); // Reduce metalness
+            }
+            if (object.material.roughness !== undefined) {
+              object.material.roughness = Math.max(object.material.roughness, 0.3); // Increase roughness
+            }
+            if (object.material.clearcoat !== undefined) {
+              object.material.clearcoat = 0.2; // Low clearcoat
+            }
+          }
+        }
+        
+        // Mark material for update
+        object.material.needsUpdate = true;
+      }
+      
+      // Apply specific enhanced materials for certain objects (excluding brass and buttons)
+      if (object.name.toLowerCase().includes('metal') && 
+          !object.name.toLowerCase().includes('brass') && 
+          !object.name.toLowerCase().includes('button')) {
+        materialManager.applyEnhancedMaterials(object, 'enhancedMetal');
+      } else if (object.name.toLowerCase().includes('wood') && 
+                 !object.name.toLowerCase().includes('brass')) {
+        materialManager.applyEnhancedMaterials(object, 'enhancedWood');
+      } else if (object.name.toLowerCase().includes('glass') && 
+                 !object.name.toLowerCase().includes('brass')) {
+        materialManager.applyEnhancedMaterials(object, 'glass');
+      } else if (object.name.toLowerCase().includes('light') && 
+                 !object.name.toLowerCase().includes('brass')) {
+        materialManager.applyEnhancedMaterials(object, 'glowing');
+      }
+      // Note: Brass and buttons keep their original materials completely untouched
+    }
+  });
+  
+  console.log('Total meshes processed:', meshCount);
+}
+
 function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
   mixer.update(delta);
+  
+  // Update animated materials
+  materialManager.updateAnimatedMaterials(delta);
+  
+  // Update particle effects
+  particleSystem.update(delta);
 
   controls.update();
-  renderer.render(scene, camera);
+  composer.render();
 }
 
 animate();
