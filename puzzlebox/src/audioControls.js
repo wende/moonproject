@@ -40,7 +40,6 @@ class AudioControls {
             <span class="mute-icon">Audio</span>
             <span class="mute-text">Mute</span>
           </button>
-          <button class="btn test-sound-btn" id="test-sound-btn">Test Sound</button>
         </div>
       </div>
     `;
@@ -85,12 +84,6 @@ class AudioControls {
     muteBtn.addEventListener('click', () => {
       const isMuted = audioManager.toggleMute();
       this.updateMuteButton(isMuted);
-    });
-
-    // Test sound button
-    const testBtn = this.container.querySelector('#test-sound-btn');
-    testBtn.addEventListener('click', () => {
-      audioManager.playButtonClick();
     });
 
     // Close on escape key

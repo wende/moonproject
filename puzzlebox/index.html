@@ -1,154 +1,163 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Box For The Moon</title>
-    <link rel='stylesheet' href='src/style.css'>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy:ital@0;1&family=Special+Elite&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <header class="nav-wrapper container">
-      <nav class="nav-buttons">
-        <button type="button" class="btn intro-button">Open Intro</button>
-        <button type="button" class="btn dialogue-button"></button>
-        <button type="button" class="btn outro-button">Look Inside</button>
-      </nav>
-    </header>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Box For The Moon</title>
+  <link rel='stylesheet' href='src/style.css'>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy:ital@0;1&family=Special+Elite&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <header class="nav-wrapper container">
+    <nav class="nav-buttons">
+      <button type="button" class="btn intro-button">Open Intro</button>
+      <button type="button" class="btn dialogue-button"></button>
+      <button type="button" class="btn outro-button">Look Inside</button>
+    </nav>
+  </header>
 
 
-    <div id="intro" class="modal">
-      <div class="modal-content container">
-        <div class="close-container">
-          <i class="close intro-close">×</i>
-        </div>
-        <div class="modal-header">
-          <h1 class="site-title">The box for the Moon</h1>
-        </div>
-        <div class="modal-body">
-          <div class="modal-column">
-            <p>They say this box was left behind by someone
-              <br>
-              who couldn’t say everything when it mattered most.
-              <br>
-              So they carved it into puzzles.
-              <br>
-              Sealed it with time. 
-              <br>
-              Waiting - not for the right answer,
-              <br>
-              but for the right person to open it.
-                <br>
-             
-              </p>
-            <p> Now it’s yours.
-              But only if you can trace the path she's always walked.</p>
+  <div id="intro" class="modal">
+    <div class="modal-content container">
+      <div class="close-container">
+        <i class="close intro-close">×</i>
+      </div>
+      <div class="modal-header">
+        <h1 class="site-title">The box for the Moon</h1>
+      </div>
+      <div class="modal-body">
+        <div class="modal-column">
+          <p>They say this box was left behind by someone
             <br>
-            <p> To start go south, east, west, north. Good luck!</p>
+            who couldn’t say everything when it mattered most.
             <br>
-            <p class="postscript"></p>
-          </div>
-          <div class="modal-column">
-            <!-- <img src="/intro_letter.png"
+            So they carved it into puzzles.
+            <br>
+            Sealed it with time.
+            <br>
+            Waiting - not for the right answer,
+            <br>
+            but for the right person to open it.
+            <br>
+
+          </p>
+          <p> Now it’s yours.
+            But only if you can trace the path she's always walked.</p>
+          <br>
+          <p> I left the box closed. So it's not damaged by time.
+            <br>
+            To open press south, east, west, north on the compass.
+            <br>
+            Good luck!
+          </p>
+          <br>
+          <p class="postscript"></p>
+        </div>
+        <div class="modal-column">
+          <!-- <img src="/intro_letter.png"
                 class="modal-image"
                 alt="In-universe note from the uncle of the person writing the rest of this letter"
                 aria-describedby="intro-letter-text"> -->
-            <div id="intro-letter-text" class="visually-hidden">
-              <p></p>
-              <p></p>
-              <p></p>
-              <p></p>
-            </div>
+          <div id="intro-letter-text" class="visually-hidden">
+            <p></p>
+            <p></p>
+            <p></p>
+            <p></p>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn continue-button intro-close">Continue</button>
-        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn continue-button intro-close">Continue</button>
       </div>
     </div>
+  </div>
 
-    <div id="outro" class="modal">
-      <div class="modal-content container">
-        <div class="close-container">
-          <i class="close outro-close">×</i>
-        </div>
-        <div class="modal-header">
-          <h2 class="congratulations-text">Congratulations</h2>
-        </div>
-        <div class="modal-body">
-          <div class="modal-column">
-            
+  <div id="outro" class="modal">
+    <div class="modal-content container">
+      <div class="close-container">
+        <i class="close outro-close">×</i>
+      </div>
+      <div class="modal-header">
+        <h2 class="congratulations-text">Congratulations</h2>
+      </div>
+      <div class="modal-body">
+        <div class="modal-column">
 
-            <p>Hello Moon</p>
-            <p>Sometimes it takes too many riddles to realize<br>
+
+          <p>Hello Moon</p>
+          <p>Sometimes it takes too many riddles to realize<br>
             the answer was to look inward all along.<br>
             Congratulations on completing the puzzle.<br>
             I leave you with a short poem — just for you:</p>
-            <i>
-              <br>
+          <i>
+            <br>
             <p>Sometimes moon wanes<br>
-            Sometimes she hides<br>
-            But she always has<br>
-            a grip on the sea<br>
-            And so does on me</p>
-            </i>
-            <br>
-            <p>Happy Birthday Moon</p>
-            <br>
-            <p class="postscript">PS. Did you know that Moon wax religiously?</p>
-          </div>
-          <div class="modal-column">
-            <img src="/nesrine.png" class="modal-image">
-          </div>
+              Sometimes she hides<br>
+              But she always has<br>
+              a grip on the sea<br>
+              And so does on me</p>
+          </i>
+          <br>
+          <p>Happy Birthday Moon</p>
+          <br>
+          <p class="postscript">PS. Did you know that Moon wax religiously?</p>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn continue-button end-button">End</button>
+        <div class="modal-column">
+          <img src="/nesrine.png" class="modal-image">
         </div>
       </div>
-    </div>
-
-    <div id="credits" class="modal">
-      <div class="modal-content container">
-        <div class="close-container">
-          <i class="close credits-close">×</i>
-        </div>
-        <div class="modal-header">
-          <h2 class="credits-title">Credits</h2>
-        </div>
-        <div class="modal-body">
-          <div class="modal-column">
-            <h3>Game Design & Development</h3>
-            <p>Krzysztof Wende</p>
-            <br>
-            <h3>Box Model</h3>
-            <p>Some dude on GitHub &#175;\_(ツ)_/&#175;</p>
-            <br>
-            <h3>Language and Internationlization</h3>
-            <p>ChatGPT 4o</p>
-          </div>
-          <div class="modal-column">
-            <h3>Technical Credits</h3>
-            <p>Cursor, Three.js, Logic Pro, Not you Blender, Izotope RX</p>
-            <br>
-            <h3>Audio</h3>
-            <p>Galdive - Teach me how to love</p>
-            <br>
-            <h3>Dedication</h3>
-            <p>Moon, Theia, bloo_ness et al. </p>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn continue-button credits-close">Close</button>
-        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn continue-button end-button">End</button>
       </div>
     </div>
+  </div>
 
-    <div id="background"></div>
-    <div id="background-flash"></div>
+  <div id="credits" class="modal">
+    <div class="modal-content container">
+      <div class="close-container">
+        <i class="close credits-close">×</i>
+      </div>
+      <div class="modal-header">
+        <h2 class="credits-title">Credits</h2>
+      </div>
+      <div class="modal-body">
+        <div class="modal-column">
+          <h3>Game Design & Development</h3>
+          <p>Krzysztof Wende</p>
+          <br>
+          <h3>Box Model</h3>
+          <p>Some dude on GitHub &#175;\_(ツ)_/&#175;</p>
+          <br>
+          <h3>Language and Internationlization</h3>
+          <p>ChatGPT 4o</p>
+        </div>
+        <div class="modal-column">
+          <h3>Technical Credits</h3>
+          <p>Cursor, Three.js, Logic Pro, Not you Blender, Izotope RX</p>
+          <br>
+          <h3>Audio</h3>
+          <p>Galdive - Teach me how to love</p>
+          <br>
+          <h3>Dedication</h3>
+          <p>Moon, Theia, bloo_ness et al. </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn continue-button credits-close">Close</button>
+      </div>
+    </div>
+  </div>
 
-    <script type="module" src="/src/main.js"></script>
-  </body>
+  <div id="background"></div>
+  <div id="background-flash"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
 </html>

@@ -21,7 +21,6 @@ The puzzle box game now includes a comprehensive audio system that provides back
 - Master volume control
 - Separate music and sound effects volume
 - Mute/unmute functionality
-- Test sound button
 - Accessible via audio button in the navigation
 
 ## How to Use
@@ -31,7 +30,6 @@ The puzzle box game now includes a comprehensive audio system that provides back
 1. **Audio Button**: Click the 🔊 button in the top navigation to open audio controls
 2. **Volume Sliders**: Adjust master, music, and sound effects volumes independently
 3. **Mute Button**: Quickly mute/unmute all audio
-4. **Test Sound**: Click "Test Sound" to verify audio is working
 5. **Close**: Click the × button or press Escape to close the audio panel
 
 ### For Developers
