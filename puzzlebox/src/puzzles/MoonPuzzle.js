@@ -5,7 +5,7 @@ export class MoonPuzzle extends Puzzle {
   constructor(actions, scene) {
     super(actions, scene);
 
-    this.CORRECT_BUTTONS = [3, 4,5,6];
+    this.CORRECT_BUTTONS = [5,6,7,0];
     this.buttonStates = Array(8).fill(false);
     this.buttonObjs = [];
     this.lightObjs = [];
@@ -69,7 +69,7 @@ export class MoonPuzzle extends Puzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-      
+    window.setDialogueButton("Sometimes riddles are best solved by just asking yourself")
 
     const puzzleClearLight = this.initLightMaterials(this.scene, 'Light_Top_N');
     this.updateLightMaterial(puzzleClearLight, true);

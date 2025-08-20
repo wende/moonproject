@@ -6,15 +6,52 @@ export class PuzzleManager {
     this.meshMap = {};
     this.completedPuzzles = new Set();
     this.allPuzzlesCompleted = false;
+    this.cameraAnimator = null;
+    this.puzzleNames = ['start', 'maze', 'scales', 'moon', 'cipher'];
+    this.puzzleMap = new Map(); // Map puzzle names to puzzle objects
   }
 
   addPuzzle(puzzleObj) {
     this.puzzles.push(puzzleObj);
     puzzleObj.on('completed', () => this.handlePuzzleComplete(puzzleObj));
+    
+    // Map puzzle object to its name based on constructor
+    const puzzleName = this.getPuzzleName(puzzleObj);
+    if (puzzleName) {
+      this.puzzleMap.set(puzzleName, puzzleObj);
+    }
+  }
+
+  getPuzzleName(puzzleObj) {
+    const constructorName = puzzleObj.constructor.name;
+    const nameMap = {
+      'StartSequencePuzzle': 'start',
+      'MazeSequencePuzzle': 'maze',
+      'ScalesPuzzle': 'scales',
+      'MoonPuzzle': 'moon',
+      'CipherSequencePuzzle': 'cipher'
+    };
+    return nameMap[constructorName];
+  }
+
+  setCameraAnimator(cameraAnimator) {
+    this.cameraAnimator = cameraAnimator;
   }
 
   handlePuzzleComplete(puzzleObj) {
     this.completedPuzzles.add(puzzleObj);
+    
+    console.log(`Puzzle completed: ${puzzleObj.constructor.name}`);
+    console.log(`Completed puzzles: ${this.completedPuzzles.size}/${this.puzzles.length}`);
+
+    // Trigger camera animation to next puzzle
+    if (this.cameraAnimator) {
+      // Reduced delay for faster response
+      setTimeout(() => {
+        console.log('Triggering camera animation to next puzzle...');
+        this.cameraAnimator.animateToNextPuzzle(this.getCompletedPuzzleNames());
+      }, 300);
+    }
 
     if (this.completedPuzzles.size === this.puzzles.length) {
       this.allPuzzlesCompleted = true;
@@ -23,6 +60,17 @@ export class PuzzleManager {
       // Play special completion sound when all puzzles are done
       audioManager.playSuccessChime();
     }
+  }
+
+  getCompletedPuzzleNames() {
+    const completedNames = new Set();
+    for (const puzzleObj of this.completedPuzzles) {
+      const puzzleName = this.getPuzzleName(puzzleObj);
+      if (puzzleName) {
+        completedNames.add(puzzleName);
+      }
+    }
+    return completedNames;
   }
 
   registerButtonsFromGLTF(gltfScene) {

@@ -84,6 +84,29 @@ export function setupUI() {
 
   window.setDialogueButton("South, East, West, North")
 
+  // Global function to show next puzzle indicator
+  window.showNextPuzzleIndicator = function(puzzleName) {
+    const indicator = document.getElementById('next-puzzle-indicator');
+    if (indicator) {
+      const puzzleNames = {
+        'start': 'Start Sequence',
+        'maze': 'Maze Puzzle', 
+        'scales': 'Scales Puzzle',
+        'moon': 'Moon Puzzle',
+        'cipher': 'Cipher Puzzle'
+      };
+      
+      const displayName = puzzleNames[puzzleName] || puzzleName;
+      indicator.textContent = `Next: ${displayName}`;
+      indicator.style.opacity = '1';
+      
+      // Fade out after 3 seconds
+      setTimeout(() => {
+        indicator.style.opacity = '0';
+      }, 3000);
+    }
+  };
+
   modals.forEach(({ id, openClass, closeClass }) => {
     const modal = document.getElementById(id);
     const openButtons = document.querySelectorAll(`.${openClass}`);

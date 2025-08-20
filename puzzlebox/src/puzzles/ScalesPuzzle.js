@@ -14,9 +14,9 @@ export class ScalesPuzzle extends Puzzle {
       { name: 'Résilience', value: 1, hex: '#00FFD4' }, // Résilience - Bright Cyan
       { name: 'Colère', value: 2, hex: '#FF4444' }, // Colère - Bright Red
       { name: 'Joie', value: 3, hex: '#FFFF00' }, // Joie - Bright Yellow
-      { name: 'Tristesse', value: 5, hex: '#0088FF' }, // Tristesse - Bright Blue
+      { name: 'Tristesse', value: 6, hex: '#0088FF' }, // Tristesse - Bright Blue
       { name: 'Peur', value: 12, hex: '#9932CC' }, // Peur - Bright Purple
-      { name: 'Amour', value: 7, hex: '#FF69B4' }, // Amour - Hot Pink
+      { name: 'Amour', value: 8, hex: '#FF69B4' }, // Amour - Hot Pink
       { name: 'Success', value: 14, hex: '#FFFFFF' }, // Success - White
     ];
 
@@ -90,8 +90,9 @@ export class ScalesPuzzle extends Puzzle {
     const weightKey = buttonMap[button.name];
 
     if (!weightKey) return;
+    const rem = weightKey === 'weightC' ? 6 : 5
 
-    this.weights[weightKey] = (this.weights[weightKey] + 1) % 5;
+    this.weights[weightKey] = (this.weights[weightKey] + 1) % rem;
 
     this.updateLightColor(weightKey);
 
@@ -166,12 +167,10 @@ export class ScalesPuzzle extends Puzzle {
     const endState = [leftSide, rightSide];
 
     if (startState !== endState) {
-      console.log('HELLO?');
       this.scaleAnimator.transition(startState, endState);
     }
 
     if (endState[0] === endState[1]) {
-      // Delay marking as completed by 500ms so the solution is visible
       setTimeout(() => {
         this.markAsCompleted();
       }, 1000);
@@ -184,7 +183,7 @@ export class ScalesPuzzle extends Puzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("She traveled the world. But the dark was never vanishing — it was the space she needed to become whole again.")
+    window.setDialogueButton("She traveled the world. But her darkness wasn't vanishing — it was the space she needed to become full again.")
 
     console.log('Available color materials:', Object.keys(this.colorMaterials)); // Debug
     console.log('colorSuccess exists?', 'colorSuccess' in this.colorMaterials); // Debug
@@ -205,6 +204,9 @@ export class ScalesPuzzle extends Puzzle {
       }
     });
 
-    this.playAnimation('Moon_Panel_Open');
+    // Delay Moon panel animation by 1 second
+    setTimeout(() => {
+      this.playAnimation('Moon_Panel_Open');
+    }, 2000);
   }
 }

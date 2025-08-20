@@ -19,6 +19,9 @@ export class StartSequencePuzzle extends BaseSequencePuzzle {
 
     window.setDialogueButton("هاد البلاصة عمرها ما كانت ديالها. بصح إذا خرجت، تولّي هي اللغز.")
 
-    this.playAnimation('SlidePanel_E_Open');
+    // Delay sliding door animation by 1 second
+    setTimeout(() => {
+      this.playAnimation('SlidePanel_E_Open');
+    }, 1500);
   }
 }

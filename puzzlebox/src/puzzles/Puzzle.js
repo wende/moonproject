@@ -139,9 +139,19 @@ export class Puzzle {
 
     action.setLoop(THREE.LoopOnce);
     action.clampWhenFinished = true;
+    
+    // Make sliding door animations slower
+    if (name.includes('SlidePanel')) {
+      action.timeScale = 0.2; // Make it 5x slower (0.2 = 1/5 speed)
+    } else if (name.includes('Moon_Panel')) {
+      action.timeScale = 0.4; // Make it 3x slower (0.33 = 1/3 speed)
+    } else {
+      action.timeScale = 1.0; // Normal speed for other animations
+    }
+    
     action.play();
 
-    console.log(`Playing animation: ${name}`);
+    console.log(`Playing animation: ${name} with timeScale: ${action.timeScale}`);
   }
 
   initLightMaterials(scene, lightName) {

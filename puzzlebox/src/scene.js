@@ -23,8 +23,8 @@ export function setupScene() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.8
+  renderer.toneMapping = THREE.AgXToneMapping;
+  renderer.toneMappingExposure = 1.2
   //renderer.outputColorSpace = THREE.SRGBColorSpace;
   //renderer.setClearColor(0x000000, 0);
   
@@ -61,12 +61,12 @@ export function setupScene() {
 }
 
 function setupAdvancedLighting(scene) {
-  // Ambient light for overall illumination
-  const ambientLight = new THREE.AmbientLight(0x404040, 0.02);
-  ///scene.add(ambientLight);
+  // Ambient light for overall illumination - bright and neutral
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+  scene.add(ambientLight);
 
-  // Main directional light with shadows
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.08);
+  // Main directional light with shadows - bright and neutral
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 3.5);
   directionalLight.position.set(5, 10, 5);
   directionalLight.castShadow = true;
   directionalLight.shadow.mapSize.width = 2048;
@@ -78,25 +78,25 @@ function setupAdvancedLighting(scene) {
   directionalLight.shadow.camera.top = 10;
   directionalLight.shadow.camera.bottom = -10;
   directionalLight.shadow.bias = -0.0001;
-  //scene.add(directionalLight);
+  scene.add(directionalLight);
 
-  // Fill light for softer shadows
-  const fillLight = new THREE.DirectionalLight(0x87ceeb, 0.025);
+  // Fill light for softer shadows - neutral
+  const fillLight = new THREE.DirectionalLight(0xf0f0f0, 2.0);
   fillLight.position.set(-5, 5, -5);
-  //scene.add(fillLight);
+  scene.add(fillLight);
 
-  // Rim light for depth (removed yellow tint)
-  const rimLight = new THREE.DirectionalLight(0x87ceeb, 0.015);
+  // Rim light for depth - neutral
+  const rimLight = new THREE.DirectionalLight(0xe8e8e8, 1.8);
   rimLight.position.set(0, 5, -10);
-  //scene.add(rimLight);
+  scene.add(rimLight);
 
-  // Point light for atmospheric effect
-  const pointLight = new THREE.PointLight(0x4a90e2, 0.5, 20);
+  // Point light for atmospheric effect - neutral
+  const pointLight = new THREE.PointLight(0xffffff, 4.0, 20);
   pointLight.position.set(0, 3, 0);
   pointLight.castShadow = true;
   pointLight.shadow.mapSize.width = 512;
   pointLight.shadow.mapSize.height = 512;
-  //scene.add(pointLight);
+  scene.add(pointLight);
 
   // Add subtle fog for depth
   scene.fog = new THREE.Fog(0x000000, 15, 150);
@@ -112,9 +112,9 @@ function setupPostProcessing(scene, camera, renderer) {
   // Bloom effect for glowing elements
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.5,  // strength
-    0.4,  // radius
-    0.85  // threshold
+    0.2,  // strength
+    0.3,  // radius
+    0.5  // threshold
   );
   composer.addPass(bloomPass);
 

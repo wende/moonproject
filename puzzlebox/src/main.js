@@ -14,11 +14,16 @@ import { audioManager } from './audio';
 import { createAudioToggleButton } from './audioControls';
 import { materialManager } from './materials';
 import { ParticleSystem } from './particles';
+import { CameraAnimator } from './cameraAnimator';
 
 const { scene, renderer, camera, mixer, mouse, raycaster, composer } = setupScene();
 const controls = setupControls(camera, renderer);
 const puzzleManager = new PuzzleManager();
 const particleSystem = new ParticleSystem(scene);
+
+// Initialize camera animator
+const cameraAnimator = new CameraAnimator(camera, controls);
+puzzleManager.setCameraAnimator(cameraAnimator);
 
 loadGLTFModel('/scene.glb', scene, mixer)
   // destructure return from loadGLTFModel to immediately access values
@@ -31,7 +36,7 @@ loadGLTFModel('/scene.glb', scene, mixer)
     const findTheMoon = gltf.scene.getObjectByName('FindTheMoon');
     if (findTheMoon) findTheMoon.visible = false;
 
-    
+    enhanceModelMaterials(gltf.scene);
 
 
     // puzzle setup
@@ -59,8 +64,9 @@ loadGLTFModel('/scene.glb', scene, mixer)
       moon: moonPuzzle,
       cipher: cipherPuzzle,
     };
-    intro.style.display = 'none';
+    window.cameraAnimator = cameraAnimator;
     window.skipTo = (target) => {
+      intro.style.display = 'none';
       const order = ['start', 'maze', 'scales', 'moon', 'cipher', 'end'];
       const index = typeof target === 'number'
         ? target
@@ -69,6 +75,8 @@ loadGLTFModel('/scene.glb', scene, mixer)
         console.warn('skipTo: invalid target. Use name or index from', order);
         return;
       }
+      
+      // Complete puzzles up to the target
       for (let i = 0; i < index; i++) {
         const key = order[i];
         const puzzle = window.puzzles[key];
@@ -76,6 +84,29 @@ loadGLTFModel('/scene.glb', scene, mixer)
           puzzle.markAsCompleted();
         }
       }
+      
+      // Animate camera to the target puzzle position
+      if (index < order.length - 1) { // Don't animate for 'end'
+        const targetPuzzle = order[index];
+        setTimeout(() => {
+          cameraAnimator.goToPuzzle(targetPuzzle);
+        }, 500); // Small delay to let puzzle completion effects play
+      }
+    };
+
+    // Add camera control helpers
+    window.goToPuzzle = (puzzleName) => {
+      cameraAnimator.goToPuzzle(puzzleName);
+    };
+
+    window.getPuzzlePositions = () => {
+      return cameraAnimator.getPuzzlePositions();
+    };
+
+    // Test camera animation
+    window.testCameraAnimation = () => {
+      console.log('Testing camera animation...');
+      cameraAnimator.goToPuzzle('maze');
     };
 
     // Apply any saved progress if present
@@ -128,74 +159,12 @@ function enhanceModelMaterials(scene) {
   scene.traverse((object) => {
     if (object.isMesh) {
       meshCount++;
-      console.log('Found mesh:', object.name, 'Material:', object.material ? 'Yes' : 'No');
       
       // Enable shadows for all meshes
       object.castShadow = true;
       object.receiveShadow = true;
       
-      // Only modify materials for specific objects, enhance brass for polish
-      if (object.material) {
-        console.log('Processing material for:', object.name, 'Type:', object.material.type);
-        
-        // Special handling for brass - log and try to restore original properties
-        if (object.name.toLowerCase().includes('brass')) {
-          console.log('BRASS MATERIAL FOUND:', object.name);
-          console.log('Current properties:', {
-            roughness: object.material.roughness,
-            metalness: object.material.metalness,
-            envMapIntensity: object.material.envMapIntensity,
-            clearcoat: object.material.clearcoat,
-            color: object.material.color ? object.material.color.getHexString() : 'none'
-          });
-          
-          // Try to restore brass to typical brass properties
-          object.material.roughness = 0.2;
-          object.material.metalness = 0.8;
-          object.material.envMapIntensity = 1.0;
-          object.material.clearcoat = 0.0;
-          object.material.clearcoatRoughness = 0.0;
-        }
-        
-        // Apply changes to materials (except buttons and brass)
-        if (!object.name.toLowerCase().includes('button') && 
-            !object.name.toLowerCase().includes('brass')) {
-          // Focus on making wood less reflective
-          if (object.name.toLowerCase().includes('wood')) {
-            
-            // Make wood much less reflective
-            if (object.material.envMapIntensity !== undefined) {
-              object.material.envMapIntensity = 0.1; // Very low reflection for wood
-            }
-            if (object.material.metalness !== undefined) {
-              object.material.metalness = 0.0; // No metalness for wood
-            }
-            if (object.material.roughness !== undefined) {
-              object.material.roughness = Math.max(object.material.roughness, 0.8); // Very rough wood
-            }
-            if (object.material.clearcoat !== undefined) {
-              object.material.clearcoat = 0.0; // No clearcoat for wood
-            }
-          } else {
-            
-            if (object.material.envMapIntensity !== undefined) {
-              object.material.envMapIntensity = 0.3; // Low reflection
-            }
-            if (object.material.metalness !== undefined) {
-              object.material.metalness = Math.min(object.material.metalness * 0.6, 0.7); // Reduce metalness
-            }
-            if (object.material.roughness !== undefined) {
-              object.material.roughness = Math.max(object.material.roughness, 0.3); // Increase roughness
-            }
-            if (object.material.clearcoat !== undefined) {
-              object.material.clearcoat = 0.2; // Low clearcoat
-            }
-          }
-        }
-        
-        // Mark material for update
-        object.material.needsUpdate = true;
-      }
+      
       
       // Apply specific enhanced materials for certain objects (excluding brass and buttons)
       if (object.name.toLowerCase().includes('metal') && 

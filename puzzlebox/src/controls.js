@@ -7,5 +7,10 @@ export function setupControls(camera, renderer) {
   controls.minDistance = 2.5;
   controls.maxDistance = 12;
 
+  // Add method to disable/enable controls during animations
+  controls.setEnabled = function(enabled) {
+    this.enabled = enabled;
+  };
+
   return controls;
 }
