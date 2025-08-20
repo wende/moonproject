@@ -39,7 +39,6 @@ export class BaseSequencePuzzle extends Puzzle {
   }
 
   handleButtonClick(button) {
-    console.log('playButtonClick');
     if (typeof window.audioManager !== 'undefined') {
       window.audioManager.playButtonClick();
     }

@@ -6,17 +6,10 @@ function disableEmbeddedLights(scene) {
   
   scene.traverse((object) => {
     if (object.isLight) {
-      console.log(`Found embedded light: ${object.name || 'unnamed'} (${object.type})`);
       object.intensity = 0; // Disable the light by setting intensity to 0
       lightCount++;
     }
   });
-  
-  if (lightCount > 0) {
-    console.log(`Disabled ${lightCount} embedded lights in the model`);
-  } else {
-    console.log('No embedded lights found in the model');
-  }
 }
 
 export function loadGLTFModel(modelFilePath, scene, mixer) {

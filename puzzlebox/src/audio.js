@@ -92,7 +92,6 @@ class AudioManager {
       await this.preloadAudio();
       
       this.isInitialized = true;
-      console.log('Audio system initialized successfully');
     } catch (error) {
       console.error('Failed to initialize audio system:', error);
     }

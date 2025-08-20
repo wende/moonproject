@@ -40,15 +40,11 @@ export class PuzzleManager {
 
   handlePuzzleComplete(puzzleObj) {
     this.completedPuzzles.add(puzzleObj);
-    
-    console.log(`Puzzle completed: ${puzzleObj.constructor.name}`);
-    console.log(`Completed puzzles: ${this.completedPuzzles.size}/${this.puzzles.length}`);
 
     // Trigger camera animation to next puzzle
     if (this.cameraAnimator) {
       // Reduced delay for faster response
       setTimeout(() => {
-        console.log('Triggering camera animation to next puzzle...');
         this.cameraAnimator.animateToNextPuzzle(this.getCompletedPuzzleNames());
       }, 300);
     }
@@ -76,11 +72,9 @@ export class PuzzleManager {
   registerButtonsFromGLTF(gltfScene) {
     // only populate meshMap once
     if (Object.keys(this.meshMap).length === 0) {
-      console.log('[PuzzleManager] populating meshMap')
       gltfScene.traverse((child) => {
         if (child.isMesh && child.name.startsWith('Press_Button_')) {
           this.meshMap[child.name] = child;
-          console.log(`Found mesh: ${child.name}`);
         }
       });
     }
@@ -93,7 +87,6 @@ export class PuzzleManager {
       }
 
       const expectedNames = puzzle.getExpectedButtonNames();
-      console.log(`${puzzle.constructor.name} buttons: ${expectedNames}`);
 
       if (!Array.isArray(expectedNames)) {
         console.warn(`[PuzzleManager] getExpectedButtonNames() for ${puzzle.constructor.name} does not return array`);

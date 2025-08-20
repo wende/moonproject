@@ -28,7 +28,6 @@ puzzleManager.setCameraAnimator(cameraAnimator);
 loadGLTFModel('/scene.glb', scene, mixer)
   // destructure return from loadGLTFModel to immediately access values
   .then(({ gltf, actions }) => {
-    console.log(Object.keys(actions));
 
     // Create particle effects for atmosphere
     particleSystem.createAllParticles();
@@ -105,7 +104,6 @@ loadGLTFModel('/scene.glb', scene, mixer)
 
     // Test camera animation
     window.testCameraAnimation = () => {
-      console.log('Testing camera animation...');
       cameraAnimator.goToPuzzle('maze');
     };
 
@@ -122,12 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to start music after user interaction
 function startMusicAfterInteraction() {
-  console.log('Starting music after user interaction...');
   // Initialize audio first if not already done
   audioManager.initialize().then(() => {
     const musicSource = audioManager.playMusic('moonost', { fadeIn: 2.0, loopTimeout: 3.0 });
     if (musicSource) {
-      console.log('Moonost music started successfully');
+      // Music started successfully
     } else {
       console.warn('Failed to start moonost music');
     }
@@ -153,7 +150,6 @@ const clock = new THREE.Clock();
 
 // Function to enhance model materials
 function enhanceModelMaterials(scene) {
-  console.log('enhanceModelMaterials called with scene:', scene);
   let meshCount = 0;
   
   scene.traverse((object) => {
@@ -184,8 +180,6 @@ function enhanceModelMaterials(scene) {
       // Note: Brass and buttons keep their original materials completely untouched
     }
   });
-  
-  console.log('Total meshes processed:', meshCount);
 }
 
 function animate() {

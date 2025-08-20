@@ -27,8 +27,6 @@ export class ScaleAnimator {
     const positionLeft = mapToUnitRange(toState[0]);
     const positionRight = mapToUnitRange(toState[1]);
 
-    console.log(oldPositionLeft, oldPositionRight, positionLeft, positionRight);
-
     // set initial positions based on current state
     this.animation.from = {left: oldPositionLeft, right: oldPositionRight};
     this.animation.to = {left: positionLeft, right: positionRight};
@@ -60,7 +58,6 @@ export class ScaleAnimator {
       requestAnimationFrame(() => this.update());
     } else {
       this.animation.active = false;
-      console.log('Animation completed');
     }
   }
 }

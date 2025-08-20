@@ -9,15 +9,12 @@ export class StartSequencePuzzle extends BaseSequencePuzzle {
     setTimeout(() => 
       actions["Moon_Panel_Open"].halt()
     , 1)
-
-    console.log(actions["Moon_Panel_Open"])
-    console.log(this.actions)
   }
 
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("هاد البلاصة عمرها ما كانت ديالها. بصح إذا خرجت، تولّي هي اللغز.")
+    window.setDialogueButton("هذا المكان لم يكن لها أبدًا ولكن إذا غادرت ستصبح هي نفسها لغزًا")
 
     // Delay sliding door animation by 1 second
     setTimeout(() => {

@@ -183,10 +183,7 @@ export class ScalesPuzzle extends Puzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("She traveled the world. But her darkness wasn't vanishing — it was the space she needed to become full again.")
-
-    console.log('Available color materials:', Object.keys(this.colorMaterials)); // Debug
-    console.log('colorSuccess exists?', 'colorSuccess' in this.colorMaterials); // Debug
+    window.setDialogueButton("She traveled the world. But her darkness wasn't vanishing — it was the path she had to take to become full again.")
 
     const puzzleClearLight = this.initLightMaterials(this.scene, 'Light_Top_W');
     this.updateLightMaterial(puzzleClearLight, true);

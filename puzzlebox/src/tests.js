@@ -82,8 +82,6 @@ class DirectionPuzzle {
     this.workingArray.push(direction);
     this.workingArray.shift();
 
-    console.log(this.workingArray);
-
     this.checkSequences();
     this.updateSolveStatus();
   }
@@ -276,8 +274,6 @@ class ScalesPuzzle {
     document.getElementById('button-b').disabled = true;
     document.getElementById('button-c').disabled = true;
     document.getElementById('button-check').disabled = true;
-
-    console.log('you win');
 
     ['weightA', 'weightB', 'weightC', 'weightD'].forEach((key) => {
       if (key === 'weightC') {

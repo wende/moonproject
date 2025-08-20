@@ -43,7 +43,6 @@ export class DirectionPuzzle extends Puzzle {
       return;
     }
 
-    console.log('playButtonClick');
     if (typeof window.audioManager !== 'undefined') {
       window.audioManager.playButtonClick();
     }
@@ -79,7 +78,6 @@ export class DirectionPuzzle extends Puzzle {
 
       if (matchFound) {
         sequenceObj.solved = true;
-        console.log(`sequence solved: ${sequenceObj.sequence}`);
         sequenceObj.onComplete();
       }
     });

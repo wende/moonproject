@@ -42,17 +42,12 @@ export class CameraAnimator {
 
   // Get the next puzzle position based on current completion state
   getNextPuzzlePosition(completedPuzzleNames) {
-    console.log('Looking for next puzzle position...');
-    console.log('Completed puzzles:', Array.from(completedPuzzleNames));
-    
     for (const puzzleName of this.puzzleOrder) {
       if (!completedPuzzleNames.has(puzzleName)) {
-        console.log(`Next puzzle: ${puzzleName}`);
         return this.puzzlePositions[puzzleName];
       }
     }
     // If all puzzles are completed, return to front view
-    console.log('All puzzles completed, returning to start position');
     return this.puzzlePositions.start;
   }
 
@@ -69,9 +64,6 @@ export class CameraAnimator {
     
     // Disable controls during animation
     this.controls.setEnabled(false);
-    
-    console.log(`Animating camera to position: ${targetPosition.x}, ${targetPosition.y}, ${targetPosition.z}`);
-    console.log('Animation starting immediately...');
     
     // Store initial positions
     const startPosition = this.camera.position.clone();

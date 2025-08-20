@@ -150,8 +150,6 @@ export class Puzzle {
     }
     
     action.play();
-
-    console.log(`Playing animation: ${name} with timeScale: ${action.timeScale}`);
   }
 
   initLightMaterials(scene, lightName) {
