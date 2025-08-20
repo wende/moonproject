@@ -10,6 +10,7 @@ class AudioManager {
     this.isMuted = false;
     this.musicVolume = 0.3;
     this.sfxVolume = 0.5;
+    this.masterVolume = 1.0;
     
     // Audio file paths
     this.audioFiles = {
@@ -25,6 +26,39 @@ class AudioManager {
       heartbeat: '/audio/heartbeat.mp3',
       footsteps: '/audio/footsteps.mp3'
     };
+
+    // Load saved settings from localStorage
+    this.loadSettings();
+  }
+
+  // localStorage methods
+  loadSettings() {
+    try {
+      const savedSettings = localStorage.getItem('puzzleBoxAudioSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        this.musicVolume = settings.musicVolume ?? 0.3;
+        this.sfxVolume = settings.sfxVolume ?? 0.5;
+        this.masterVolume = settings.masterVolume ?? 1.0;
+        this.isMuted = settings.isMuted ?? false;
+      }
+    } catch (error) {
+      console.warn('Failed to load audio settings from localStorage:', error);
+    }
+  }
+
+  saveSettings() {
+    try {
+      const settings = {
+        musicVolume: this.musicVolume,
+        sfxVolume: this.sfxVolume,
+        masterVolume: this.masterVolume,
+        isMuted: this.isMuted
+      };
+      localStorage.setItem('puzzleBoxAudioSettings', JSON.stringify(settings));
+    } catch (error) {
+      console.warn('Failed to save audio settings to localStorage:', error);
+    }
   }
 
   async initialize() {
@@ -44,10 +78,15 @@ class AudioManager {
       this.sfxGain.connect(this.masterGain);
       this.masterGain.connect(this.audioContext.destination);
       
-      // Set initial volumes
+      // Set initial volumes from loaded settings
       this.musicGain.gain.value = this.musicVolume;
       this.sfxGain.gain.value = this.sfxVolume;
-      this.masterGain.gain.value = 1.0;
+      this.masterGain.gain.value = this.masterVolume;
+      
+      // Apply mute state if saved
+      if (this.isMuted) {
+        this.masterGain.gain.value = 0;
+      }
       
       // Preload all audio files
       await this.preloadAudio();
@@ -155,7 +194,53 @@ class AudioManager {
     }
     
     if (options.loop !== false) {
-      source.loop = true; // Music loops by default
+      // Handle looping with optional timeout
+      if (options.loopTimeout) {
+        // Don't use native loop, we'll handle it manually
+        source.loop = false;
+        
+        // Set up manual looping with timeout
+        const loopWithTimeout = () => {
+          const newSource = this.audioContext.createBufferSource();
+          const newGainNode = this.audioContext.createGain();
+          
+          newSource.buffer = audioBuffer;
+          newSource.connect(newGainNode);
+          newGainNode.connect(this.musicGain);
+          
+          // Apply same options
+          if (options.volume !== undefined) {
+            newGainNode.gain.value = options.volume * this.musicVolume;
+          } else {
+            newGainNode.gain.value = this.musicVolume;
+          }
+          
+          newSource.start(0);
+          
+          // Update current music reference
+          this.currentMusic = { source: newSource, gainNode: newGainNode, name: musicName };
+          
+          // Set up next loop
+          newSource.onended = () => {
+            setTimeout(() => {
+              if (this.currentMusic && this.currentMusic.name === musicName) {
+                loopWithTimeout();
+              }
+            }, options.loopTimeout * 1000);
+          };
+        };
+        
+        // Set up the first loop
+        source.onended = () => {
+          setTimeout(() => {
+            if (this.currentMusic && this.currentMusic.name === musicName) {
+              loopWithTimeout();
+            }
+          }, options.loopTimeout * 1000);
+        };
+      } else {
+        source.loop = true; // Use native loop if no timeout specified
+      }
     }
     
     if (options.fadeIn) {
@@ -205,6 +290,7 @@ class AudioManager {
     if (this.musicGain) {
       this.musicGain.gain.value = this.musicVolume;
     }
+    this.saveSettings();
   }
 
   setSFXVolume(volume) {
@@ -212,12 +298,15 @@ class AudioManager {
     if (this.sfxGain) {
       this.sfxGain.gain.value = this.sfxVolume;
     }
+    this.saveSettings();
   }
 
   setMasterVolume(volume) {
+    this.masterVolume = Math.max(0, Math.min(1, volume));
     if (this.masterGain) {
-      this.masterGain.gain.value = Math.max(0, Math.min(1, volume));
+      this.masterGain.gain.value = this.masterVolume;
     }
+    this.saveSettings();
   }
 
   mute() {
@@ -225,13 +314,15 @@ class AudioManager {
     if (this.masterGain) {
       this.masterGain.gain.value = 0;
     }
+    this.saveSettings();
   }
 
   unmute() {
     this.isMuted = false;
     if (this.masterGain) {
-      this.masterGain.gain.value = 1;
+      this.masterGain.gain.value = this.masterVolume;
     }
+    this.saveSettings();
   }
 
   toggleMute() {

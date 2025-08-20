@@ -35,7 +35,7 @@ body {
   background-color: var(--clr-primary-light);
   font-family: 'Sorts Mill Goudy', serif;
   cursor: default;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 canvas {
@@ -168,7 +168,7 @@ button {
 }
 
 .modal-header {
-  font-size: 3rem;
+  font-size: 3.5rem;
 }
 
 .modal-body {
@@ -176,6 +176,10 @@ button {
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   margin-block: 2rem;
+}
+
+#intro .modal-body {
+  font-size: 1.35rem;
 }
 
 .modal-footer {
@@ -210,6 +214,20 @@ button {
   .modal-body {
     grid-template-columns: 1fr;
   }
+
+  .note-container {
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 2rem 1rem;
+  }
+
+  .note-image {
+    transform: rotate(-8deg);
+  }
+
+  .note-image:hover {
+    transform: rotate(-5deg) scale(1.05);
+  }
 }
 
 /*.modal-column {*/
@@ -223,6 +241,28 @@ button {
   width: 100%;
   margin-inline: auto;
   caret-color: transparent;
+}
+
+/* Note styling for intro modal */
+.note-container {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+
+.note-image {
+  width: 19rem;
+  height: auto;
+  transform: rotate(-8deg);
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.note-image:hover {
+  transform: rotate(-5deg) scale(1.05);
 }
 
 

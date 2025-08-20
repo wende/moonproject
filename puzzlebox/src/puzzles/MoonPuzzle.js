@@ -5,7 +5,7 @@ export class MoonPuzzle extends Puzzle {
   constructor(actions, scene) {
     super(actions, scene);
 
-    this.CORRECT_BUTTONS = [4,5,6,7];
+    this.CORRECT_BUTTONS = [3, 4,5,6];
     this.buttonStates = Array(8).fill(false);
     this.buttonObjs = [];
     this.lightObjs = [];

@@ -124,6 +124,25 @@ class AudioControls {
     this.container.style.display = 'block';
     this.isVisible = true;
     
+    // Update controls with current audio manager state
+    this.updateControls();
+  }
+
+  updateControls() {
+    // Update volume sliders
+    const masterSlider = this.container.querySelector('#master-volume');
+    const musicSlider = this.container.querySelector('#music-volume');
+    const sfxSlider = this.container.querySelector('#sfx-volume');
+
+    masterSlider.value = Math.round(audioManager.masterVolume * 100);
+    musicSlider.value = Math.round(audioManager.musicVolume * 100);
+    sfxSlider.value = Math.round(audioManager.sfxVolume * 100);
+
+    // Update volume displays
+    this.updateVolumeDisplay(masterSlider);
+    this.updateVolumeDisplay(musicSlider);
+    this.updateVolumeDisplay(sfxSlider);
+
     // Update mute button state
     this.updateMuteButton(audioManager.isMuted);
   }

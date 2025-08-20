@@ -88,7 +88,7 @@ function startMusicAfterInteraction() {
   console.log('Starting music after user interaction...');
   // Initialize audio first if not already done
   audioManager.initialize().then(() => {
-    const musicSource = audioManager.playMusic('moonost', { fadeIn: 2.0 });
+    const musicSource = audioManager.playMusic('moonost', { fadeIn: 2.0, loopTimeout: 3.0 });
     if (musicSource) {
       console.log('Moonost music started successfully');
     } else {
