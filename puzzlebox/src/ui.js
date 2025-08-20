@@ -52,7 +52,7 @@ export function setupUI() {
         // Restore original music volume after 1 second
         setTimeout(() => {
           audioManager.setMusicVolume(originalMusicVolume);
-        }, 1000);
+        }, audioFile.duration * 1000);
       }
       
       // Remove existing click listeners by cloning and replacing

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Puzzle } from './Puzzle';
 import { ScaleAnimator } from './ScaleAnimator';
+import { audioManager } from '../audio';
 
 export class ScalesPuzzle extends Puzzle {
   constructor(actions, scene) {
@@ -77,7 +78,7 @@ export class ScalesPuzzle extends Puzzle {
     if (this.isCompleted) return;
 
     this.playAnimation(button.name);
-
+    audioManager.playButtonClick();
 
 
     const buttonMap = {
@@ -173,7 +174,7 @@ export class ScalesPuzzle extends Puzzle {
       // Delay marking as completed by 500ms so the solution is visible
       setTimeout(() => {
         this.markAsCompleted();
-      }, 500);
+      }, 1000);
     }
 
     this.lastBalanceState = [leftSide, rightSide];
