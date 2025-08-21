@@ -122,9 +122,84 @@ export class CameraAnimator {
       }
       
       this.animateToPosition(nextPosition.position, nextPosition.target, 2.2);
+      
+      // If all puzzles are completed (we're going to start position), trigger the zoom
+      if (completedPuzzleNames.size >= 5) {
+        // Wait for the camera animation to complete, then start the zoom
+        setTimeout(() => {
+          this.startCompletionZoom();
+        }, 2500); // 2.2s animation + 0.3s buffer
+      }
     } else {
       console.warn('No next puzzle position found');
     }
+  }
+
+  // Start a slow linear zoom as far as possible after completion
+  startCompletionZoom() {
+    if (this.isAnimating) {
+      // Stop current animation
+      if (this.currentAnimation) {
+        cancelAnimationFrame(this.currentAnimation);
+      }
+    }
+
+    this.isAnimating = true;
+    
+    // Disable controls during animation
+    this.controls.setEnabled(false);
+    
+    // Store initial position
+    const startPosition = this.camera.position.clone();
+    
+    // Calculate the maximum zoom distance (as far as possible while keeping the scene visible)
+    // We'll zoom out to a very far distance
+    const maxZoomDistance = 2.5; // Very far zoom
+    const zoomDirection = this.camera.position.clone().normalize();
+    const targetPosition = zoomDirection.multiplyScalar(maxZoomDistance);
+    
+    // Start immediately with first frame
+    const startTime = performance.now();
+    let lastTime = startTime;
+    const zoomDuration = 10.0; // 8 seconds for a very slow zoom
+    
+    const animate = (currentTime) => {
+      // Calculate delta time for smoother animation
+      const deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
+      
+      const elapsed = (currentTime - startTime) / 1000;
+      const progress = Math.min(elapsed / zoomDuration, 1);
+      
+      // Use completely linear animation for smooth zoom
+      const easedProgress = progress;
+      
+      // Direct position assignment without controls interference
+      this.camera.position.lerpVectors(startPosition, targetPosition, easedProgress);
+      
+      // Only update controls at the end to avoid interference
+      if (progress >= 1) {
+        this.controls.update();
+        this.isAnimating = false;
+        this.currentAnimation = null;
+        
+        // Re-enable controls after animation
+        this.controls.setEnabled(true);
+      // INSERT_YOUR_CODE
+      // Open the "outro" modal if it exists in the DOM
+      const outroModal = document.getElementById('outro');
+      if (outroModal) {
+        outroModal.style.display = 'block';
+        // Optionally, focus the modal for accessibility
+        outroModal.focus?.();
+      }
+      } else {
+        // Use immediate next frame for faster response
+        this.currentAnimation = requestAnimationFrame(animate);
+      }
+    };
+    
+    this.currentAnimation = requestAnimationFrame(animate);
   }
 
   getPuzzleNameForPosition(position) {

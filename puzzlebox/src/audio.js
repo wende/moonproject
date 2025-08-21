@@ -16,8 +16,8 @@ class AudioManager {
     // Audio file paths
     this.audioFiles = {
       background: '/audio/ambient_mystery.mp3',
-      moonost: '/audio/moonost.mp3',
-      moonosttrue: '/audio/moonosttrue.mp3',
+      moonproject: '/audio/moonproject.mp3',
+      moonprojecttrue: '/audio/moonprojecttrue.mp3',
       puzzle_solve: '/audio/puzzle_solve.mp3',
       button_click: '/audio/button_click.mp3',
       box_open: '/audio/box_open.mp3',
@@ -218,7 +218,8 @@ class AudioManager {
           newSource.start(0, startTime);
           
           // Update track reference
-          this.musicTracks.set(musicName, { source: newSource, gainNode: newGainNode, name: musicName });
+          const loopCurrentTime = this.audioContext.currentTime;
+          this.musicTracks.set(musicName, { source: newSource, gainNode: newGainNode, name: musicName, startTime: loopCurrentTime, initialOffset: startTime });
           
           // Set up next loop
           newSource.onended = () => {
@@ -253,8 +254,9 @@ class AudioManager {
     
     // Start at 30 seconds for debugging
     const startTime = options.startTime || 0;
-    source.start(0, startTime);
-    this.musicTracks.set(musicName, { source, gainNode, name: musicName });
+    const currentTime = this.audioContext.currentTime;
+    source.start(currentTime, startTime);
+    this.musicTracks.set(musicName, { source, gainNode, name: musicName, startTime: currentTime, initialOffset: startTime });
     
     // Keep currentMusic for backward compatibility
     this.currentMusic = { source, gainNode, name: musicName };
@@ -281,20 +283,67 @@ class AudioManager {
 
   fadeBetweenTracks(fromTrack, toTrack, fadeDuration = 5.0) {
     const fromTrackData = this.musicTracks.get(fromTrack);
-    const toTrackData = this.musicTracks.get(toTrack);
     
-    if (!fromTrackData || !toTrackData) {
-      console.warn(`Track not found for fade: ${fromTrack} or ${toTrack}`);
+    if (!fromTrackData) {
+      console.warn(`From track not found for fade: ${fromTrack}`);
       return;
     }
     
+    // Get the current playback time of the from track
     const currentTime = this.audioContext.currentTime;
+    const fromTrackElapsed = currentTime - fromTrackData.startTime;
+    // Account for the initial offset when calculating current position
+    const initialOffset = fromTrackData.initialOffset || 0;
+    const fromTrackCurrentTime = (fromTrackElapsed + initialOffset) % fromTrackData.source.buffer.duration;
     
-    // Linear fade out
+    // Fade out the current from track
     fromTrackData.gainNode.gain.linearRampToValueAtTime(0, currentTime + fadeDuration * 1.5);
+    setTimeout(() => {
+      fromTrackData.source.stop();
+      this.musicTracks.delete(fromTrack);
+    }, (fadeDuration + fadeDuration * 0.5) * 1000);
     
-    // Linear fade in
-    toTrackData.gainNode.gain.linearRampToValueAtTime(this.musicVolume * 1.4, currentTime + fadeDuration);
+    // Start the new track at the same relative position
+    const audioBuffer = this.sounds.get(toTrack);
+    if (!audioBuffer) {
+      console.warn(`To track not found for fade: ${toTrack}`);
+      return;
+    }
+    
+    const newSource = this.audioContext.createBufferSource();
+    const newGainNode = this.audioContext.createGain();
+    
+    newSource.buffer = audioBuffer;
+    newSource.connect(newGainNode);
+    newGainNode.connect(this.musicGain);
+    
+    // Start with volume 0 and fade in
+    newGainNode.gain.setValueAtTime(0, currentTime);
+    newGainNode.gain.linearRampToValueAtTime(this.musicVolume, currentTime + fadeDuration);
+    
+    // Start the new track at the exact same time position in seconds
+    const toTrackStartTime = Math.min(fromTrackCurrentTime, audioBuffer.duration - 0.1);
+    newSource.start(currentTime, toTrackStartTime);
+    
+    console.log(`Fade transition: ${fromTrack} at ${fromTrackCurrentTime.toFixed(2)}s -> ${toTrack} at ${toTrackStartTime.toFixed(2)}s`);
+    console.log(`From track elapsed: ${fromTrackElapsed.toFixed(2)}s, duration: ${fromTrackData.source.buffer.duration.toFixed(2)}s`);
+    console.log(`To track duration: ${audioBuffer.duration.toFixed(2)}s`);
+    
+    // Don't loop the new track (it's the final track)
+    newSource.loop = false;
+    
+    // Store the new track data
+    this.musicTracks.set(toTrack, { 
+      source: newSource, 
+      gainNode: newGainNode, 
+      name: toTrack,
+      startTime: currentTime
+    });
+    
+    // Update currentMusic for backward compatibility
+    this.currentMusic = { source: newSource, gainNode: newGainNode, name: toTrack };
+    
+    console.log(`Fading from ${fromTrack} to ${toTrack} at position ${toTrackStartTime.toFixed(2)}s`);
   }
 
   // Debug method to check track status

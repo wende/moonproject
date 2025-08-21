@@ -122,15 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
 function startMusicAfterInteraction() {
   // Initialize audio first if not already done
   audioManager.initialize().then(() => {
-    // Start both tracks simultaneously at 30 seconds for debugging - moonost at full volume, moonosttrue at very low volume
-    const musicSource = audioManager.playMusic('moonost', { fadeIn: 2.0, loopTimeout: 3.0, startTime: 30 });
-    const musicSourceTrue = audioManager.playMusic('moonosttrue', { fadeIn: 0, loopTimeout: 3.0, volume: 0.001, startTime: 30 });
+    // Start both tracks simultaneously at 30 seconds for debugging - moonproject at full volume, moonprojecttrue at very low volume
+    const musicSource = audioManager.playMusic('moonproject', { fadeIn: 2.0, loopTimeout: 3.0, startTime: 0 });
+    const musicSourceTrue = audioManager.playMusic('moonprojecttrue', { fadeIn: 0, loopTimeout: 3.0, volume: 0.001, startTime: 0 });
     if (musicSource && musicSourceTrue) {
       console.log('Both music tracks started successfully');
-      console.log('moonost volume:', audioManager.musicVolume);
-      console.log('moonosttrue volume: 0.001');
+      console.log('moonproject volume:', audioManager.musicVolume);
+      console.log('moonprojecttrue volume: 0.001');
     } else {
-      console.warn('Failed to start moonost music');
+      console.warn('Failed to start moonproject music');
     }
   }).catch(error => {
     console.error('Failed to initialize audio:', error);
