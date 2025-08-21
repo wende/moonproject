@@ -1,4 +1,4 @@
-import { Puzzle } from './Puzzle'
+import { Puzzle } from './Puzzle.js'
 
 export class BaseSequencePuzzle extends Puzzle {
   constructor(sequence, actions, scene) {
@@ -39,8 +39,8 @@ export class BaseSequencePuzzle extends Puzzle {
   }
 
   handleButtonClick(button) {
-    if (typeof window.audioManager !== 'undefined') {
-      window.audioManager.playButtonClick();
+    if (window.PuzzleBox?.audioManager) {
+      window.PuzzleBox.audioManager.playButtonClick();
     }
 
     const direction = this.getDirectionFromButton(button.name);

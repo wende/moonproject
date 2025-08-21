@@ -10,7 +10,7 @@ import { ScalesPuzzle } from './puzzles/ScalesPuzzle';
 import { MoonPuzzle } from './puzzles/MoonPuzzle';
 import { CipherSequencePuzzle } from './puzzles/CipherSequencePuzzle';
 import { loadGLTFModel } from './loaders';
-import { audioManager, startMusicAfterInteraction, initializeAudioSystem } from './audio';
+import { audioManager, startMusicAfterInteraction, initializeAudioSystem } from './audio_html5.js';
 import { createAudioToggleButton } from './audioControls';
 import { updateHTMLContent } from './htmlContent';
 import { materialManager, enhanceModelMaterials } from './materials';
@@ -82,9 +82,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Wait for user interaction before starting music (browser requirement)
-document.addEventListener('click', startMusicAfterInteraction);
-document.addEventListener('keydown', startMusicAfterInteraction);
-document.addEventListener('touchstart', startMusicAfterInteraction);
+// Use more specific event listeners to avoid audio control interference
+document.addEventListener('click', startMusicAfterInteraction, { passive: true });
+document.addEventListener('keydown', startMusicAfterInteraction, { passive: true });
+document.addEventListener('touchstart', startMusicAfterInteraction, { passive: true });
 
 // handle mouse stuff
 setupInput(raycaster, mouse, camera, puzzleManager, renderer.domElement);

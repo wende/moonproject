@@ -1,4 +1,4 @@
-import { BaseSequencePuzzle } from './BaseSequencePuzzle';
+import { BaseSequencePuzzle } from './BaseSequencePuzzle.js';
 
 export class StartSequencePuzzle extends BaseSequencePuzzle {
   constructor(actions) {

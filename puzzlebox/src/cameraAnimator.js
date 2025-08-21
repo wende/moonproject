@@ -1,6 +1,20 @@
 import * as THREE from 'three';
 import { t } from './i18n.js';
 
+// Camera animation constants
+const DEFAULT_ANIMATION_DURATION = 2.0;
+const ANIMATION_TIMEOUT_BUFFER = 1000; // 1 second extra buffer
+const FRAME_UPDATE_INTERVAL = 10; // Update controls every 10 frames
+const PROGRESS_COMPLETE_THRESHOLD = 1;
+const NEXT_PUZZLE_ANIMATION_DURATION = 2.2;
+const PUZZLE_COMPLETION_THRESHOLD = 5;
+const ANIMATION_BUFFER_DELAY = 2500; // 2.2s animation + 0.3s buffer
+const UI_FADE_DURATION = 3000; // 3 seconds
+const MAX_ZOOM_DISTANCE = 2.5;
+const ZOOM_DURATION = 10.0;
+const OUTRO_DELAY = 500;
+const OUTRO_FADE_DURATION = 2000; // 2 seconds
+
 export class CameraAnimator {
   constructor(camera, controls) {
     this.camera = camera;
@@ -53,7 +67,7 @@ export class CameraAnimator {
   }
 
   // Animate camera to a specific position
-  animateToPosition(targetPosition, targetTarget, duration = 2.0) {
+  animateToPosition(targetPosition, targetTarget, duration = DEFAULT_ANIMATION_DURATION) {
     if (this.isAnimating) {
       // Stop current animation
       if (this.currentAnimation) {
@@ -76,7 +90,7 @@ export class CameraAnimator {
         console.warn('Camera animation timeout - forcing completion');
         this.forceAnimationComplete(targetPosition, targetTarget);
       }
-    }, (duration + 1) * 1000); // 1 second extra buffer
+    }, (duration + 1) * ANIMATION_TIMEOUT_BUFFER); // 1 second extra buffer
     
     // Start immediately with first frame
     const startTime = performance.now();
@@ -100,12 +114,12 @@ export class CameraAnimator {
       this.controls.target.lerpVectors(startTarget, targetTarget, easedProgress);
       
       // Force controls update every few frames to prevent gimbal lock
-      if (frameCount % 10 === 0) {
+      if (frameCount % FRAME_UPDATE_INTERVAL === 0) {
         this.controls.update();
       }
       
       // Only update controls at the end to avoid interference
-      if (progress >= 1) {
+      if (progress >= PROGRESS_COMPLETE_THRESHOLD) {
         clearTimeout(safetyTimeout);
         this.controls.update();
         this.isAnimating = false;
@@ -160,7 +174,7 @@ export class CameraAnimator {
       const elements = document.querySelectorAll(selector);
       elements.forEach(element => {
         if (element) {
-          element.style.transition = 'opacity 3s ease-out';
+          element.style.transition = `opacity ${UI_FADE_DURATION / 1000}s ease-out`;
           element.style.opacity = '0';
         }
       });
@@ -175,20 +189,20 @@ export class CameraAnimator {
       const nextPuzzleName = this.getPuzzleNameForPosition(nextPosition);
       
       // Show next puzzle indicator
-      if (window.showNextPuzzleIndicator && nextPuzzleName) {
-        window.showNextPuzzleIndicator(nextPuzzleName);
+      if (window.PuzzleBox?.showNextPuzzleIndicator && nextPuzzleName) {
+        window.PuzzleBox.showNextPuzzleIndicator(nextPuzzleName);
       }
       
-      this.animateToPosition(nextPosition.position, nextPosition.target, 2.2);
+      this.animateToPosition(nextPosition.position, nextPosition.target, NEXT_PUZZLE_ANIMATION_DURATION);
       
       // If all puzzles are completed (we're going to start position), trigger the zoom
-      if (completedPuzzleNames.size >= 5) {
+      if (completedPuzzleNames.size >= PUZZLE_COMPLETION_THRESHOLD) {
     
         // Wait for the camera animation to complete, then start the zoom
         setTimeout(() => {
       
           this.startCompletionZoom();
-        }, 2500); // 2.2s animation + 0.3s buffer
+        }, ANIMATION_BUFFER_DELAY); // 2.2s animation + 0.3s buffer
       }
     } else {
       console.warn('No next puzzle position found');
@@ -219,14 +233,12 @@ export class CameraAnimator {
     
     // Calculate the maximum zoom distance (as far as possible while keeping the scene visible)
     // We'll zoom out to a very far distance
-    const maxZoomDistance = 2.5; // Very far zoom
     const zoomDirection = this.camera.position.clone().normalize();
-    const targetPosition = zoomDirection.multiplyScalar(maxZoomDistance);
+    const targetPosition = zoomDirection.multiplyScalar(MAX_ZOOM_DISTANCE);
     
     // Start immediately with first frame
     const startTime = performance.now();
     let lastTime = startTime;
-    const zoomDuration = 10.0; // 8 seconds for a very slow zoom
     
     const animate = (currentTime) => {
       // Calculate delta time for smoother animation
@@ -234,7 +246,7 @@ export class CameraAnimator {
       lastTime = currentTime;
       
       const elapsed = (currentTime - startTime) / 1000;
-      const progress = Math.min(elapsed / zoomDuration, 1);
+      const progress = Math.min(elapsed / ZOOM_DURATION, 1);
       
       // Use completely linear animation for smooth zoom
       const easedProgress = progress;
@@ -243,7 +255,7 @@ export class CameraAnimator {
       this.camera.position.lerpVectors(startPosition, targetPosition, easedProgress);
       
       // Only update controls at the end to avoid interference
-      if (progress >= 1) {
+      if (progress >= PROGRESS_COMPLETE_THRESHOLD) {
         this.controls.update();
         this.isAnimating = false;
         this.currentAnimation = null;
@@ -264,7 +276,7 @@ export class CameraAnimator {
             // Set initial state for fade-in
             outroModal.style.display = 'block';
             outroModal.style.opacity = '0';
-            outroModal.style.transition = 'opacity 2s ease-in';
+            outroModal.style.transition = `opacity ${OUTRO_FADE_DURATION / 1000}s ease-in`;
             
             // Force reflow to ensure the transition works
             void outroModal.offsetWidth;
@@ -278,7 +290,7 @@ export class CameraAnimator {
           } else {
             console.error('Outro modal element not found!');
           }
-        }, 500); // Small delay after zoom completes
+        }, OUTRO_DELAY); // Small delay after zoom completes
         
       } else {
         // Use immediate next frame for faster response
@@ -371,7 +383,7 @@ export class CameraAnimator {
     // Find which puzzle position this corresponds to
     const puzzleName = this.getPuzzleNameForPosition(targetPosition);
     
-    if (puzzleName && window.setDialogueButton) {
+    if (puzzleName && window.PuzzleBox?.setDialogueButton) {
       // Define dialogue text and audio for each puzzle position
       // These are the texts that each puzzle sets when completed (for the next puzzle)
       const puzzleDialogue = {
@@ -399,7 +411,7 @@ export class CameraAnimator {
       
       const dialogue = puzzleDialogue[puzzleName];
       if (dialogue) {
-        window.setDialogueButton(dialogue.text, dialogue.audio);
+        window.PuzzleBox.setDialogueButton(dialogue.text, dialogue.audio);
       }
     }
   }

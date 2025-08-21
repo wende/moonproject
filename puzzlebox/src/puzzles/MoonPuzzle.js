@@ -41,8 +41,8 @@ export class MoonPuzzle extends Puzzle {
     if (this.isCompleted) return;
 
     // Play button click sound
-    if (typeof window.audioManager !== 'undefined') {
-      window.audioManager.playButtonClick();
+    if (window.PuzzleBox?.audioManager) {
+      window.PuzzleBox.audioManager.playButtonClick();
     }
 
     const buttonIndex = this.buttonObjs.indexOf(button);

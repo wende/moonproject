@@ -1,4 +1,4 @@
-import { audioManager } from './audio.js';
+import { audioManager } from './audio_html5.js';
 import { t } from './i18n.js';
 
 export function setupUI() {
@@ -23,8 +23,11 @@ export function setupUI() {
   // Get reference to dialogue button
   let dialogueButton = document.querySelector('.dialogue-button');
   
+  // Create namespace for global access
+  window.PuzzleBox = window.PuzzleBox || {};
+  
   // Global function to set dialogue button text and audio
-  window.setDialogueButton = function(text, audioFile) {
+  window.PuzzleBox.setDialogueButton = function(text, audioFile) {
     // Get fresh reference to button in case it was replaced
     let currentButton = document.querySelector('.dialogue-button');
     
@@ -125,10 +128,10 @@ export function setupUI() {
     }
   };
 
-  window.setDialogueButton(t('startSequence'))
+  window.PuzzleBox.setDialogueButton(t('startSequence'))
 
   // Global function to show next puzzle indicator
-  window.showNextPuzzleIndicator = function(puzzleName) {
+  window.PuzzleBox.showNextPuzzleIndicator = function(puzzleName) {
     const indicator = document.getElementById('next-puzzle-indicator');
     if (indicator) {
       const puzzleNames = {

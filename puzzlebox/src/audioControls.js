@@ -1,4 +1,11 @@
-import { audioManager } from './audio.js';
+import { audioManager } from './audio_html5.js';
+
+// Audio controls constants
+const VOLUME_SLIDER_MAX = 100;
+const VOLUME_SLIDER_DEFAULT_MASTER = 100;
+const VOLUME_SLIDER_DEFAULT_MUSIC = 30;
+const VOLUME_SLIDER_DEFAULT_SFX = 50;
+const VOLUME_CONVERSION_FACTOR = 100; // Convert percentage to decimal
 
 class AudioControls {
   constructor() {
@@ -19,20 +26,20 @@ class AudioControls {
       <div class="audio-controls-content">
         <div class="audio-control-group">
           <label for="master-volume">Master Volume</label>
-          <input type="range" id="master-volume" min="0" max="100" value="100" class="volume-slider">
-          <span class="volume-value">100%</span>
+          <input type="range" id="master-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_MASTER}" class="volume-slider">
+          <span class="volume-value">${VOLUME_SLIDER_DEFAULT_MASTER}%</span>
         </div>
         
         <div class="audio-control-group">
           <label for="music-volume">Music Volume</label>
-          <input type="range" id="music-volume" min="0" max="100" value="30" class="volume-slider">
-          <span class="volume-value">30%</span>
+          <input type="range" id="music-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_MUSIC}" class="volume-slider">
+          <span class="volume-value">${VOLUME_SLIDER_DEFAULT_MUSIC}%</span>
         </div>
         
         <div class="audio-control-group">
           <label for="sfx-volume">Sound Effects Volume</label>
-          <input type="range" id="sfx-volume" min="0" max="100" value="50" class="volume-slider">
-          <span class="volume-value">50%</span>
+          <input type="range" id="sfx-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_SFX}" class="volume-slider">
+          <span class="volume-value">${VOLUME_SLIDER_DEFAULT_SFX}%</span>
         </div>
         
         <!-- Voice Overs toggle hidden for now
@@ -72,19 +79,19 @@ class AudioControls {
     const sfxSlider = this.container.querySelector('#sfx-volume');
 
     masterSlider.addEventListener('input', (e) => {
-      const volume = e.target.value / 100;
+      const volume = e.target.value / VOLUME_CONVERSION_FACTOR;
       audioManager.setMasterVolume(volume);
       this.updateVolumeDisplay(e.target);
     });
 
     musicSlider.addEventListener('input', (e) => {
-      const volume = e.target.value / 100;
+      const volume = e.target.value / VOLUME_CONVERSION_FACTOR;
       audioManager.setMusicVolume(volume);
       this.updateVolumeDisplay(e.target);
     });
 
     sfxSlider.addEventListener('input', (e) => {
-      const volume = e.target.value / 100;
+      const volume = e.target.value / VOLUME_CONVERSION_FACTOR;
       audioManager.setSFXVolume(volume);
       this.updateVolumeDisplay(e.target);
     });
@@ -169,9 +176,9 @@ class AudioControls {
     const musicSlider = this.container.querySelector('#music-volume');
     const sfxSlider = this.container.querySelector('#sfx-volume');
 
-    masterSlider.value = Math.round(audioManager.masterVolume * 100);
-    musicSlider.value = Math.round(audioManager.musicVolume * 100);
-    sfxSlider.value = Math.round(audioManager.sfxVolume * 100);
+    masterSlider.value = Math.round(audioManager.masterVolume * VOLUME_CONVERSION_FACTOR);
+    musicSlider.value = Math.round(audioManager.musicVolume * VOLUME_CONVERSION_FACTOR);
+    sfxSlider.value = Math.round(audioManager.sfxVolume * VOLUME_CONVERSION_FACTOR);
 
     // Update volume displays
     this.updateVolumeDisplay(masterSlider);

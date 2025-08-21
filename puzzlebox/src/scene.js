@@ -6,6 +6,17 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
+// Scene and camera constants
+const CAMERA_FOV = 60;
+const CAMERA_NEAR = 0.1;
+const CAMERA_FAR = 1000;
+const CAMERA_INITIAL_POSITION = [0, 2, 5];
+const MAX_PIXEL_RATIO = 2;
+const TONE_MAPPING_EXPOSURE = 1.2;
+const BLOOM_STRENGTH = 0.2;
+const BLOOM_RADIUS = 0.3;
+const BLOOM_THRESHOLD = 0.5;
+
 export function setupScene() {
   const scene = new THREE.Scene();
   
@@ -20,22 +31,20 @@ export function setupScene() {
   });
   
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  //renderer.shadowMap.enabled = true;
-  //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
   renderer.toneMapping = THREE.AgXToneMapping;
-  renderer.toneMappingExposure = 1.2
+  renderer.toneMappingExposure = TONE_MAPPING_EXPOSURE;
   
   document.body.appendChild(renderer.domElement);
 
   // Enhanced camera with better settings
   let camera = new THREE.PerspectiveCamera(
-    60, // Reduced FOV for more cinematic look
+    CAMERA_FOV, // Reduced FOV for more cinematic look
     window.innerWidth / window.innerHeight,
-    0.1,
-    1000
+    CAMERA_NEAR,
+    CAMERA_FAR
   );
-  camera.position.set(0, 2, 5);
+  camera.position.set(...CAMERA_INITIAL_POSITION);
 
   const mixer = new THREE.AnimationMixer(scene);
   const mouse = new THREE.Vector2();
@@ -65,9 +74,9 @@ function setupPostProcessing(scene, camera, renderer) {
   // Bloom effect for glowing elements
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.2,  // strength
-    0.3,  // radius
-    0.5  // threshold
+    BLOOM_STRENGTH,  // strength
+    BLOOM_RADIUS,  // radius
+    BLOOM_THRESHOLD  // threshold
   );
   composer.addPass(bloomPass);
 

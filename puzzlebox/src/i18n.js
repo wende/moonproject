@@ -80,11 +80,9 @@ export const translations = {
     hiddenPrototypePuzzles: "Hidden Prototype Puzzles",
     testPageDescription: "Congratulations again if you found this page in the process of solving the other puzzles! I built this page in order to test and refine how each puzzle works before moving to 3D. I thought I would in",
     moonPuzzleTest: "Moon Puzzle",
-    directionPuzzleTest: "Direction Puzzle",
     scalesPuzzleTest: "Scales Puzzle",
     puzzleStatus: "This puzzle is currently",
-    directionSequences: "This puzzle has 3 hidden sequences. You have found",
-        weightComparison: "The left side is evaluated to be",
+    weightComparison: "The left side is evaluated to be",
     theRightSide: "the right side, so"
   }
 };

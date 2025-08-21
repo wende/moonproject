@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Puzzle } from './Puzzle';
 import { ScaleAnimator } from './ScaleAnimator';
-import { audioManager } from '../audio';
+import { audioManager } from '../audio_html5.js';
 
 export class ScalesPuzzle extends Puzzle {
   constructor(actions, scene) {
@@ -113,7 +113,7 @@ export class ScalesPuzzle extends Puzzle {
     
     // Only update dialogue button if this is called from button interaction (not constructor)
     if (!this.isInitializing) {
-              window.setDialogueButton(colorName);
+              window.PuzzleBox?.setDialogueButton(colorName);
     }
     
     // Add 'col' prefix to match the material naming convention

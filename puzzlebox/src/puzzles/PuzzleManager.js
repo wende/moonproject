@@ -1,4 +1,4 @@
-import { audioManager } from '../audio.js';
+import { audioManager } from '../audio_html5.js';
 
 export class PuzzleManager {
   constructor() {

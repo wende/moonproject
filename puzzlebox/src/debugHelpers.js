@@ -1,12 +1,15 @@
 // Debug and console helper functions
 
 export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
-  // Expose helpers for skipping to a specific puzzle from the browser console
-  window.puzzleManager = puzzleManager;
-  window.puzzles = puzzles;
-  window.cameraAnimator = cameraAnimator;
+  // Create namespace for debug helpers
+  window.PuzzleBox = window.PuzzleBox || {};
   
-  window.skipTo = (target) => {
+  // Expose helpers for skipping to a specific puzzle from the browser console
+  window.PuzzleBox.puzzleManager = puzzleManager;
+  window.PuzzleBox.puzzles = puzzles;
+  window.PuzzleBox.cameraAnimator = cameraAnimator;
+  
+  window.PuzzleBox.skipTo = (target) => {
     const intro = document.getElementById('intro');
     if (intro) intro.style.display = 'none';
     
@@ -22,7 +25,7 @@ export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
     // Complete puzzles up to the target
     for (let i = 0; i < index; i++) {
       const key = order[i];
-      const puzzle = window.puzzles[key];
+      const puzzle = window.PuzzleBox.puzzles[key];
       if (puzzle && !puzzle.isCompleted) {
         puzzle.markAsCompleted();
       }
@@ -38,11 +41,11 @@ export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
   };
 
   // Add camera control helpers
-  window.goToPuzzle = (puzzleName) => {
+  window.PuzzleBox.goToPuzzle = (puzzleName) => {
     cameraAnimator.goToPuzzle(puzzleName);
   };
 
-  window.getPuzzlePositions = () => {
+  window.PuzzleBox.getPuzzlePositions = () => {
     return cameraAnimator.getPuzzlePositions();
   };
 }

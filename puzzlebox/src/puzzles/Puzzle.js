@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PuzzleManager } from './PuzzleManager';
-import { audioManager } from '../audio.js';
+import { audioManager } from '../audio_html5.js';
 
 export class Puzzle {
   constructor(actions = {}, scene = null) {
@@ -33,9 +33,6 @@ export class Puzzle {
     this.isCompleted = true;
     this.emit('completed');
     this.triggerBackgroundFlash();
-    
-    // Play puzzle completion sound
-    audioManager.playPuzzleSolve();
   }
 
   triggerBackgroundFlash() {

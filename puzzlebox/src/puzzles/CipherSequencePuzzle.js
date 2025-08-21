@@ -1,5 +1,5 @@
-import { BaseSequencePuzzle } from './BaseSequencePuzzle';
-import { audioManager } from '../audio.js';
+import { BaseSequencePuzzle } from './BaseSequencePuzzle.js';
+import { audioManager } from '../audio_html5.js';
 
 export class CipherSequencePuzzle extends BaseSequencePuzzle {
   constructor(actions, scene) {
