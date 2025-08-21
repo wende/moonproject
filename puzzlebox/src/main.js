@@ -122,9 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function startMusicAfterInteraction() {
   // Initialize audio first if not already done
   audioManager.initialize().then(() => {
-    const musicSource = audioManager.playMusic('moonost', { fadeIn: 2.0, loopTimeout: 3.0 });
-    if (musicSource) {
-      // Music started successfully
+    // Start both tracks simultaneously at 30 seconds for debugging - moonost at full volume, moonosttrue at very low volume
+    const musicSource = audioManager.playMusic('moonost', { fadeIn: 2.0, loopTimeout: 3.0, startTime: 30 });
+    const musicSourceTrue = audioManager.playMusic('moonosttrue', { fadeIn: 0, loopTimeout: 3.0, volume: 0.001, startTime: 30 });
+    if (musicSource && musicSourceTrue) {
+      console.log('Both music tracks started successfully');
+      console.log('moonost volume:', audioManager.musicVolume);
+      console.log('moonosttrue volume: 0.001');
     } else {
       console.warn('Failed to start moonost music');
     }

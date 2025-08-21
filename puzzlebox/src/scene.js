@@ -25,8 +25,6 @@ export function setupScene() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.2
-  //renderer.outputColorSpace = THREE.SRGBColorSpace;
-  //renderer.setClearColor(0x000000, 0);
   
   document.body.appendChild(renderer.domElement);
 
@@ -38,9 +36,6 @@ export function setupScene() {
     1000
   );
   camera.position.set(0, 2, 5);
-
-  // Advanced lighting setup
-  //setupAdvancedLighting(scene);
 
   const mixer = new THREE.AnimationMixer(scene);
   const mouse = new THREE.Vector2();
@@ -58,48 +53,6 @@ export function setupScene() {
   });
 
   return { scene, renderer, camera, mixer, mouse, raycaster, composer };
-}
-
-function setupAdvancedLighting(scene) {
-  // Ambient light for overall illumination - bright and neutral
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-  scene.add(ambientLight);
-
-  // Main directional light with shadows - bright and neutral
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 3.5);
-  directionalLight.position.set(5, 10, 5);
-  directionalLight.castShadow = true;
-  directionalLight.shadow.mapSize.width = 2048;
-  directionalLight.shadow.mapSize.height = 2048;
-  directionalLight.shadow.camera.near = 0.5;
-  directionalLight.shadow.camera.far = 50;
-  directionalLight.shadow.camera.left = -10;
-  directionalLight.shadow.camera.right = 10;
-  directionalLight.shadow.camera.top = 10;
-  directionalLight.shadow.camera.bottom = -10;
-  directionalLight.shadow.bias = -0.0001;
-  scene.add(directionalLight);
-
-  // Fill light for softer shadows - neutral
-  const fillLight = new THREE.DirectionalLight(0xf0f0f0, 2.0);
-  fillLight.position.set(-5, 5, -5);
-  scene.add(fillLight);
-
-  // Rim light for depth - neutral
-  const rimLight = new THREE.DirectionalLight(0xe8e8e8, 1.8);
-  rimLight.position.set(0, 5, -10);
-  scene.add(rimLight);
-
-  // Point light for atmospheric effect - neutral
-  const pointLight = new THREE.PointLight(0xffffff, 4.0, 20);
-  pointLight.position.set(0, 3, 0);
-  pointLight.castShadow = true;
-  pointLight.shadow.mapSize.width = 512;
-  pointLight.shadow.mapSize.height = 512;
-  scene.add(pointLight);
-
-  // Add subtle fog for depth
-  scene.fog = new THREE.Fog(0x000000, 15, 150);
 }
 
 function setupPostProcessing(scene, camera, renderer) {

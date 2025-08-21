@@ -76,9 +76,6 @@ export class MoonPuzzle extends Puzzle {
 
     const findTheMoon = this.scene.getObjectByName('FindTheMoon');
     if (findTheMoon) findTheMoon.visible = true;
-   
-    //const findTheMoonLight = this.initLightMaterials(this.scene, "FindTheMoon")
-    //this.updateLightMaterial(findTheMoonLight, true)
   }
 
   getExpectedButtonNames() {

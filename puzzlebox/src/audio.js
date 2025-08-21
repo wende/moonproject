@@ -5,6 +5,7 @@ class AudioManager {
     this.musicGain = null;
     this.sfxGain = null;
     this.currentMusic = null;
+    this.musicTracks = new Map(); // Support multiple music tracks
     this.sounds = new Map();
     this.isInitialized = false;
     this.isMuted = false;
@@ -16,6 +17,7 @@ class AudioManager {
     this.audioFiles = {
       background: '/audio/ambient_mystery.mp3',
       moonost: '/audio/moonost.mp3',
+      moonosttrue: '/audio/moonosttrue.mp3',
       puzzle_solve: '/audio/puzzle_solve.mp3',
       button_click: '/audio/button_click.mp3',
       box_open: '/audio/box_open.mp3',
@@ -169,9 +171,6 @@ class AudioManager {
       this.audioContext.resume();
     }
     
-    // Stop current music if playing
-    this.stopMusic();
-    
     const audioBuffer = this.sounds.get(musicName);
     if (!audioBuffer) {
       console.warn(`Music not found: ${musicName}`);
@@ -214,15 +213,17 @@ class AudioManager {
             newGainNode.gain.value = this.musicVolume;
           }
           
-          newSource.start(0);
+          // Start at the same offset for consistency
+          const startTime = options.startTime || 0;
+          newSource.start(0, startTime);
           
-          // Update current music reference
-          this.currentMusic = { source: newSource, gainNode: newGainNode, name: musicName };
+          // Update track reference
+          this.musicTracks.set(musicName, { source: newSource, gainNode: newGainNode, name: musicName });
           
           // Set up next loop
           newSource.onended = () => {
             setTimeout(() => {
-              if (this.currentMusic && this.currentMusic.name === musicName) {
+              if (this.musicTracks.has(musicName)) {
                 loopWithTimeout();
               }
             }, options.loopTimeout * 1000);
@@ -232,7 +233,7 @@ class AudioManager {
         // Set up the first loop
         source.onended = () => {
           setTimeout(() => {
-            if (this.currentMusic && this.currentMusic.name === musicName) {
+            if (this.musicTracks.has(musicName)) {
               loopWithTimeout();
             }
           }, options.loopTimeout * 1000);
@@ -242,7 +243,7 @@ class AudioManager {
       }
     }
     
-    if (options.fadeIn) {
+    if (options.fadeIn && options.fadeIn > 0) {
       gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
       gainNode.gain.linearRampToValueAtTime(
         (options.volume || 1) * this.musicVolume,
@@ -250,8 +251,14 @@ class AudioManager {
       );
     }
     
-    source.start(0);
+    // Start at 30 seconds for debugging
+    const startTime = options.startTime || 0;
+    source.start(0, startTime);
+    this.musicTracks.set(musicName, { source, gainNode, name: musicName });
+    
+    // Keep currentMusic for backward compatibility
     this.currentMusic = { source, gainNode, name: musicName };
+    
     return source;
   }
 
@@ -272,14 +279,52 @@ class AudioManager {
     this.currentMusic = null;
   }
 
+  fadeBetweenTracks(fromTrack, toTrack, fadeDuration = 5.0) {
+    const fromTrackData = this.musicTracks.get(fromTrack);
+    const toTrackData = this.musicTracks.get(toTrack);
+    
+    if (!fromTrackData || !toTrackData) {
+      console.warn(`Track not found for fade: ${fromTrack} or ${toTrack}`);
+      return;
+    }
+    
+    const currentTime = this.audioContext.currentTime;
+    
+    // Linear fade out
+    fromTrackData.gainNode.gain.linearRampToValueAtTime(0, currentTime + fadeDuration * 1.5);
+    
+    // Linear fade in
+    toTrackData.gainNode.gain.linearRampToValueAtTime(this.musicVolume * 1.4, currentTime + fadeDuration);
+  }
+
+  // Debug method to check track status
+  getTrackStatus() {
+    const status = {};
+    this.musicTracks.forEach((track, name) => {
+      status[name] = {
+        volume: track.gainNode.gain.value,
+        playing: true // Assuming if it's in the map, it's playing
+      };
+    });
+    return status;
+  }
+
   pauseMusic() {
     if (this.currentMusic) {
       this.currentMusic.source.stop();
     }
+    // Pause all music tracks
+    this.musicTracks.forEach(track => {
+      track.source.stop();
+    });
   }
 
   resumeMusic() {
     if (this.currentMusic && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+    // Resume audio context for all tracks
+    if (this.audioContext && this.audioContext.state === 'suspended') {
       this.audioContext.resume();
     }
   }
@@ -389,6 +434,12 @@ class AudioManager {
     if (this.currentMusic) {
       this.currentMusic.source.stop();
     }
+    // Stop all music tracks
+    this.musicTracks.forEach(track => {
+      track.source.stop();
+    });
+    this.musicTracks.clear();
+    
     if (this.audioContext) {
       this.audioContext.close();
     }
@@ -409,20 +460,5 @@ window.resumeAudioContext = async () => {
     await audioManager.audioContext.resume();
   }
 };
-
-// Initialize audio on first user interaction
-function initializeAudioOnInteraction() {
-  audioManager.initialize().then(() => {
-    // Resume audio context
-    audioManager.resumeContext();
-  });
-  document.removeEventListener('click', initializeAudioOnInteraction);
-  document.removeEventListener('keydown', initializeAudioOnInteraction);
-  document.removeEventListener('touchstart', initializeAudioOnInteraction);
-}
-
-document.addEventListener('click', initializeAudioOnInteraction);
-document.addEventListener('keydown', initializeAudioOnInteraction);
-document.addEventListener('touchstart', initializeAudioOnInteraction);
 
 export { AudioManager, audioManager };
