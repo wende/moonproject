@@ -26,7 +26,7 @@ export function updateHTMLContent() {
   const siteTitle = document.querySelector('.site-title');
   if (siteTitle) siteTitle.textContent = t('siteTitle');
   
-  const continueButton = document.querySelector('.intro-close');
+  const continueButton = document.querySelector('.continue-button.intro-close');
   if (continueButton) continueButton.textContent = t('continue');
   
   // Update outro modal

@@ -186,12 +186,8 @@ export const materialManager = new MaterialManager();
 
 // Function to enhance model materials
 export function enhanceModelMaterials(scene) {
-  let meshCount = 0;
-  
   scene.traverse((object) => {
     if (object.isMesh) {
-      meshCount++;
-      
       // Enable shadows for all meshes
       object.castShadow = true;
       object.receiveShadow = true;

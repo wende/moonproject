@@ -475,7 +475,7 @@ class AudioManager {
     } else {
       this.mute();
     }
-    return !this.isMuted;
+    return this.isMuted;
   }
 
   // Convenience methods for common game sounds
@@ -575,11 +575,8 @@ export function startMusicAfterInteraction() {
   // Initialize audio first if not already done
   audioManager.initialize().then(() => {
     // Start both tracks simultaneously - moonproject at full volume, moonprojecttrue at very low volume
-    const musicSource = audioManager.playMusic('moonproject', { fadeIn: 2.0, loopTimeout: 3.0, startTime: 0 });
-    const musicSourceTrue = audioManager.playMusic('moonprojecttrue', { fadeIn: 0, loopTimeout: 3.0, volume: 0.001, startTime: 0 });
-    if (!musicSource || !musicSourceTrue) {
-      console.warn('Failed to start moonproject music');
-    }
+    audioManager.playMusic('moonproject', { fadeIn: 2.0, loopTimeout: 3.0, startTime: 0 });
+    audioManager.playMusic('moonprojecttrue', { fadeIn: 0, loopTimeout: 3.0, volume: 0.001, startTime: 0 });
   }).catch(error => {
     console.error('Failed to initialize audio:', error);
   });
