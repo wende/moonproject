@@ -100,16 +100,51 @@ class AudioManager {
   }
 
   async preloadAudio() {
-    const loadPromises = Object.entries(this.audioFiles).map(async ([key, path]) => {
+    const audioFiles = Object.entries(this.audioFiles);
+    let loadedCount = 0;
+    
+    const loadPromises = audioFiles.map(async ([key, path]) => {
       try {
         const audioBuffer = await this.loadAudioFile(path);
         this.sounds.set(key, audioBuffer);
+        loadedCount++;
+        
+        // Update loading progress
+        const progress = (loadedCount / audioFiles.length) * 100;
+        this.updateLoadingProgress(progress, `${loadedCount}/${audioFiles.length} files loaded`);
+        
       } catch (error) {
         console.warn(`Failed to load audio file ${path}:`, error);
+        loadedCount++;
+        
+        // Update progress even for failed loads
+        const progress = (loadedCount / audioFiles.length) * 100;
+        this.updateLoadingProgress(progress, `Failed to load ${key}`);
       }
     });
 
     await Promise.all(loadPromises);
+  }
+
+  updateLoadingProgress(percentage, text) {
+    const progressBar = document.getElementById('audio-loading-progress');
+    const progressText = document.getElementById('audio-loading-text');
+    const loadingContainer = document.getElementById('audio-loading-container');
+    
+    if (progressBar && progressText && loadingContainer) {
+      progressBar.style.width = `${percentage}%`;
+      progressText.textContent = `${Math.round(percentage)}% - ${text}`;
+      
+      if (percentage >= 100) {
+        setTimeout(() => {
+          loadingContainer.classList.add('fade-out');
+          // Remove the element from DOM after fade completes
+          setTimeout(() => {
+            loadingContainer.style.display = 'none';
+          }, 500);
+        }, 1000);
+      }
+    }
   }
 
   async loadAudioFile(url) {

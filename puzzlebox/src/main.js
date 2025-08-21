@@ -116,6 +116,19 @@ setupUI();
 // Initialize audio system and create audio toggle button after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   createAudioToggleButton();
+  
+  // Show loading bar and start audio loading
+  const loadingContainer = document.getElementById('audio-loading-container');
+  if (loadingContainer) {
+    loadingContainer.style.display = 'block';
+  }
+  
+  // Initialize audio system immediately to start loading
+  audioManager.initialize().then(() => {
+    console.log('Audio system initialized successfully');
+  }).catch(error => {
+    console.error('Failed to initialize audio system:', error);
+  });
 });
 
 // Function to start music after user interaction
