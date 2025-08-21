@@ -40,6 +40,11 @@ export class MoonPuzzle extends Puzzle {
   handleButtonClick(button) {
     if (this.isCompleted) return;
 
+    // Play button click sound
+    if (typeof window.audioManager !== 'undefined') {
+      window.audioManager.playButtonClick();
+    }
+
     const buttonIndex = this.buttonObjs.indexOf(button);
     // indexOf returns -1 if search item not found
     if (buttonIndex === -1) return;

@@ -157,7 +157,9 @@ class AudioManager {
       source.playbackRate.value = options.playbackRate;
     }
     
-    source.start(0);
+    // Handle startTime option
+    const startTime = options.startTime || 0;
+    source.start(0, startTime);
     return source;
   }
 
@@ -436,11 +438,11 @@ class AudioManager {
       this.audioContext.resume();
     }
     
-    return this.playSound('button_click', { volume: 0.1 });
+    return this.playSound('button_click', { volume: 0.2 });
   }
 
   playPuzzleSolve() {
-    return this.playSound('puzzle_solve', { volume: 0.8 });
+    return this.playSound('puzzle_solve', { volume: 1, startTime: 0.8 });
   }
 
   playBoxOpen() {

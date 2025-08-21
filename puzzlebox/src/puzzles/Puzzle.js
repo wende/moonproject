@@ -42,6 +42,9 @@ export class Puzzle {
     const flashElement = document.getElementById('background-flash');
     if (!flashElement) return;
 
+    // Play puzzle solve sound for epic completion
+    audioManager.playPuzzleSolve();
+
     flashElement.style.transition = 'none';
     flashElement.style.opacity = '0.25';
 
