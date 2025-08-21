@@ -10,27 +10,27 @@ export class CameraAnimator {
     // Define camera positions for each puzzle side
     this.puzzlePositions = {
       start: {
-        position: new THREE.Vector3(0, 6, 0),
+        position: new THREE.Vector3(0, 4, 0),
         target: new THREE.Vector3(0, 0, 0),
         description: 'Top view - Start sequence puzzle'
       },
       maze: {
-        position: new THREE.Vector3(5, 2, 0),
+        position: new THREE.Vector3(3.5, 1.5, 0),
         target: new THREE.Vector3(0, 0, 0),
         description: 'Right side - Maze puzzle'
       },
       scales: {
-        position: new THREE.Vector3(-5, 2, 0),
+        position: new THREE.Vector3(-3.5, 1.5, 0),
         target: new THREE.Vector3(0, 0, 0),
         description: 'Left side - Scales puzzle'
       },
       moon: {
-        position: new THREE.Vector3(0, 2, -5),
+        position: new THREE.Vector3(0, 1.5, -3.5),
         target: new THREE.Vector3(0, 0, 0),
         description: 'Back side - Moon puzzle'
       },
       cipher: {
-        position: new THREE.Vector3(0, 2, 5),
+        position: new THREE.Vector3(0, 1.5, 3.5),
         target: new THREE.Vector3(0, 0, 0),
         description: 'Front view - Cipher puzzle'
       }
@@ -69,21 +69,27 @@ export class CameraAnimator {
     const startPosition = this.camera.position.clone();
     const startTarget = this.controls.target.clone();
     
+    // Add safety timeout to prevent getting stuck
+    const safetyTimeout = setTimeout(() => {
+      if (this.isAnimating) {
+        console.warn('Camera animation timeout - forcing completion');
+        this.forceAnimationComplete(targetPosition, targetTarget);
+      }
+    }, (duration + 1) * 1000); // 1 second extra buffer
+    
     // Start immediately with first frame
     const startTime = performance.now();
     let lastTime = startTime;
+    let frameCount = 0;
     
     const animate = (currentTime) => {
+      frameCount++;
+      
       // Calculate delta time for smoother animation
-      const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
       
       const elapsed = (currentTime - startTime) / 1000;
       const progress = Math.min(elapsed / duration, 1);
-      
-      // Debug first few frames
-      if (progress < 0.1) {
-      }
       
       // Use completely linear animation for immediate start
       const easedProgress = progress;
@@ -92,8 +98,14 @@ export class CameraAnimator {
       this.camera.position.lerpVectors(startPosition, targetPosition, easedProgress);
       this.controls.target.lerpVectors(startTarget, targetTarget, easedProgress);
       
+      // Force controls update every few frames to prevent gimbal lock
+      if (frameCount % 10 === 0) {
+        this.controls.update();
+      }
+      
       // Only update controls at the end to avoid interference
       if (progress >= 1) {
+        clearTimeout(safetyTimeout);
         this.controls.update();
         this.isAnimating = false;
         this.currentAnimation = null;
@@ -107,6 +119,45 @@ export class CameraAnimator {
     };
     
     this.currentAnimation = requestAnimationFrame(animate);
+  }
+
+  // Force animation completion if it gets stuck
+  forceAnimationComplete(targetPosition, targetTarget) {
+    console.warn('Forcing camera animation completion');
+    
+    // Cancel any ongoing animation
+    if (this.currentAnimation) {
+      cancelAnimationFrame(this.currentAnimation);
+    }
+    
+    // Set final position directly
+    this.camera.position.copy(targetPosition);
+    this.controls.target.copy(targetTarget);
+    this.controls.update();
+    
+    // Reset state
+    this.isAnimating = false;
+    this.currentAnimation = null;
+    this.controls.setEnabled(true);
+  }
+
+  // Fade out UI elements during completion
+  fadeOutUI() {
+    const uiElements = [
+      '.nav-buttons',
+      '.audio-controls',
+      '#next-puzzle-indicator'
+    ];
+    
+    uiElements.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(element => {
+        if (element) {
+          element.style.transition = 'opacity 3s ease-out';
+          element.style.opacity = '0';
+        }
+      });
+    });
   }
 
   // Animate to next puzzle after completion
@@ -125,8 +176,10 @@ export class CameraAnimator {
       
       // If all puzzles are completed (we're going to start position), trigger the zoom
       if (completedPuzzleNames.size >= 5) {
+        console.log('All puzzles completed - triggering completion zoom');
         // Wait for the camera animation to complete, then start the zoom
         setTimeout(() => {
+          console.log('Starting completion zoom');
           this.startCompletionZoom();
         }, 2500); // 2.2s animation + 0.3s buffer
       }
@@ -137,6 +190,8 @@ export class CameraAnimator {
 
   // Start a slow linear zoom as far as possible after completion
   startCompletionZoom() {
+    console.log('startCompletionZoom called');
+    
     if (this.isAnimating) {
       // Stop current animation
       if (this.currentAnimation) {
@@ -145,6 +200,9 @@ export class CameraAnimator {
     }
 
     this.isAnimating = true;
+    
+    // Fade out UI buttons during the zoom
+    this.fadeOutUI();
     
     // Disable controls during animation
     this.controls.setEnabled(false);
@@ -185,14 +243,36 @@ export class CameraAnimator {
         
         // Re-enable controls after animation
         this.controls.setEnabled(true);
-      // INSERT_YOUR_CODE
-      // Open the "outro" modal if it exists in the DOM
-      const outroModal = document.getElementById('outro');
-      if (outroModal) {
-        outroModal.style.display = 'block';
-        // Optionally, focus the modal for accessibility
-        outroModal.focus?.();
-      }
+        
+        // Show the outro modal after completion zoom
+        console.log('Completion zoom finished - showing outro modal');
+        
+        // Trigger the allPuzzlesCompleted event to show the outro button
+        document.dispatchEvent(new CustomEvent('allPuzzlesCompleted'));
+        
+        setTimeout(() => {
+          const outroModal = document.getElementById('outro');
+          console.log('Outro modal element:', outroModal);
+          if (outroModal) {
+            // Set initial state for fade-in
+            outroModal.style.display = 'block';
+            outroModal.style.opacity = '0';
+            outroModal.style.transition = 'opacity 2s ease-in';
+            
+            // Force reflow to ensure the transition works
+            void outroModal.offsetWidth;
+            
+            // Start fade-in
+            outroModal.style.opacity = '1';
+            console.log('Outro modal fade-in started');
+            
+            // Optionally, focus the modal for accessibility
+            outroModal.focus?.();
+          } else {
+            console.error('Outro modal element not found!');
+          }
+        }, 500); // Small delay after zoom completes
+        
       } else {
         // Use immediate next frame for faster response
         this.currentAnimation = requestAnimationFrame(animate);
