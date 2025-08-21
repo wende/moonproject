@@ -5,21 +5,22 @@ This directory should contain the following audio files for the game:
 ## Required Audio Files
 
 ### Background Music
-- `ambient_mystery.mp3` - Atmospheric, mysterious background music that loops
+- `moonproject.mp3` - Main background music track
   - Should be subtle and not distracting from puzzle solving
   - Recommended: 2-3 minutes long, seamless loop
   - Mood: Mysterious, contemplative, slightly melancholic
+- `moonprojecttrue.mp3` - Secondary background music track
+  - Used for transitions and special moments
+  - Should complement the main track
 
 ### Sound Effects
 - `button_click.mp3` - Soft click sound for UI interactions
 - `puzzle_solve.mp3` - Satisfying chime when a puzzle is completed
-- `box_open.mp3` - Wooden box opening sound with creaking
-- `paper_rustle.mp3` - Subtle paper movement sound
 - `success_chime.mp3` - Bright, celebratory sound for major achievements
-- `error_buzz.mp3` - Gentle error sound for incorrect attempts
-- `wind_chimes.mp3` - Ethereal wind chime sound for magical moments
-- `heartbeat.mp3` - Subtle heartbeat sound for tense moments
-- `footsteps.mp3` - Soft footsteps on wooden surface
+
+### Voice Overs
+- `maze_vo.wav` - Voice over for maze puzzle
+- `start_vo.wav` - Voice over for start sequence
 
 ## Audio File Requirements
 
@@ -53,13 +54,9 @@ For background music:
 - "contemplative ambient"
 
 For sound effects:
-- "wooden box open"
-- "paper rustle"
 - "success chime"
 - "gentle click"
-- "wind chimes"
-- "heartbeat"
-- "footsteps wood"
+- "puzzle solve"
 
 ## Implementation Notes
 

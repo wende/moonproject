@@ -147,8 +147,7 @@ export class ScalesPuzzle extends Puzzle {
     const leftSide = value('weightA') + value('weightB') + value('weightC');
     const rightSide = value('weightC') + value('weightC') + value('weightD');
 
-    console.log(`weightA: ${value('weightA')} weightB: ${value('weightB')} weightC: ${value('weightC')}`);
-    console.log(`left side weight: ${leftSide} | right side weight: ${rightSide}`);
+
 
     this.handleStateChange(leftSide, rightSide);
   }
@@ -182,8 +181,6 @@ export class ScalesPuzzle extends Puzzle {
 
   markAsCompleted() {
     super.markAsCompleted();
-
-    window.setDialogueButton("She traveled the world. But her darkness wasn't vanishing — it was the path she had to take to become full again.")
 
     const puzzleClearLight = this.initLightMaterials(this.scene, 'Light_Top_W');
     this.updateLightMaterial(puzzleClearLight, true);

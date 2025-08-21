@@ -14,8 +14,6 @@ export class StartSequencePuzzle extends BaseSequencePuzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("هذا المكان لم يكن لها أبدًا ولكن إذا غادرت ستصبح هي نفسها لغزًا")
-
     // Delay sliding door animation by 1 second
     setTimeout(() => {
       this.playAnimation('SlidePanel_E_Open');

@@ -43,7 +43,7 @@ import { audioManager } from './audio.js';
 audioManager.playSound('button_click');
 
 // Play background music
-audioManager.playMusic('background', { fadeIn: 2.0 });
+audioManager.playMusic('moonproject', { fadeIn: 2.0 });
 
 // Stop music with fade out
 audioManager.stopMusic(1.0);
@@ -54,20 +54,20 @@ audioManager.stopMusic(1.0);
 ```javascript
 // UI Sounds
 audioManager.playButtonClick();
-audioManager.playErrorBuzz();
+// audioManager.playErrorBuzz(); // Removed - placeholder
 
 // Puzzle Sounds
 audioManager.playPuzzleSolve();
 audioManager.playSuccessChime();
 
 // Environmental Sounds
-audioManager.playPaperRustle();
-audioManager.playFootsteps();
-audioManager.playWindChimes();
-audioManager.playHeartbeat(); // Loops automatically
+// audioManager.playPaperRustle(); // Removed - placeholder
+// audioManager.playFootsteps(); // Removed - placeholder
+// audioManager.playWindChimes(); // Removed - placeholder
+// audioManager.playHeartbeat(); // Removed - placeholder
 
 // Box Sounds
-audioManager.playBoxOpen();
+// audioManager.playBoxOpen(); // Removed - placeholder
 ```
 
 #### Volume Control
@@ -95,7 +95,7 @@ puzzlebox/
 ├── public/
 │   └── audio/
 │       ├── README.md         # Audio file requirements
-│       ├── ambient_mystery.mp3
+│       ├── moonproject.mp3
 │       ├── button_click.mp3
 │       ├── puzzle_solve.mp3
 │       └── ... (other audio files)
@@ -111,16 +111,13 @@ The system expects these audio files in `/public/audio/`:
 
 | File | Purpose | Duration | Loop |
 |------|---------|----------|------|
-| `ambient_mystery.mp3` | Background music | 2-3 min | Yes |
+| `moonproject.mp3` | Background music | 2-3 min | Yes |
+| `moonprojecttrue.mp3` | Secondary music track | 2-3 min | Yes |
 | `button_click.mp3` | UI interactions | 0.5-1s | No |
 | `puzzle_solve.mp3` | Puzzle completion | 1-2s | No |
-| `box_open.mp3` | Box opening | 1-3s | No |
-| `paper_rustle.mp3` | Paper movement | 0.5-1s | No |
 | `success_chime.mp3` | Major achievements | 2-3s | No |
-| `error_buzz.mp3` | Incorrect attempts | 0.5-1s | No |
-| `wind_chimes.mp3` | Magical moments | 1-2s | No |
-| `heartbeat.mp3` | Tense moments | 1-2s | Yes |
-| `footsteps.mp3` | Movement sounds | 0.5-1s | No |
+| `maze_vo.wav` | Voice over - maze | 5-10s | No |
+| `start_vo.wav` | Voice over - start | 5-10s | No |
 
 ### Adding New Audio Files
 

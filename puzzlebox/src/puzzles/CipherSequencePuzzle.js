@@ -15,8 +15,7 @@ export class CipherSequencePuzzle extends BaseSequencePuzzle {
 
     this.triggerEpicBackgroundFlash();
     
-    // Debug: Check track status before fade
-    console.log('Track status before fade:', audioManager.getTrackStatus());
+
     
     // Fade from moonproject to moonprojecttrue with a longer fade for better overlap
     audioManager.fadeBetweenTracks('moonproject', 'moonprojecttrue', 2);

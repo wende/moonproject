@@ -41,41 +41,83 @@ export function setupUI() {
         currentButton.classList.remove('arabic-text');
       }
       
-      // Play audio immediately if provided
-      if (audioFile && typeof audioManager[audioFile] === 'function') {
+              // Play audio immediately if provided
+        if (audioFile && typeof audioManager[audioFile] === 'function' && audioManager.areVoiceOversEnabled()) {
         // Temporarily lower background music volume
         const originalMusicVolume = audioManager.musicVolume;
-        audioManager.setMusicVolume(originalMusicVolume * 0.3); // Reduce to 30% of original volume
+        audioManager.setMusicVolumeTemporary(originalMusicVolume * audioManager.getTempMusicVolumeReduction()); // Reduce to 30% of original volume
         
-        audioManager[audioFile]();
+        // Get the audio source to determine duration
+        const audioSource = audioManager[audioFile]();
         
-        // Restore original music volume after 1 second
+        // Get the duration of the audio file
+        let audioDuration = 1000; // Default fallback duration
+        if (audioSource && audioSource.buffer) {
+          audioDuration = audioSource.buffer.duration * 1000; // Convert to milliseconds
+        }
+        
+        // Restore original music volume after the actual audio duration
         setTimeout(() => {
-          audioManager.setMusicVolume(originalMusicVolume);
-        }, audioFile.duration * 1000);
+          audioManager.setMusicVolumeTemporary(originalMusicVolume);
+        }, audioDuration);
       }
       
       // Remove existing click listeners by cloning and replacing
       const newButton = currentButton.cloneNode(true);
       currentButton.parentNode.replaceChild(newButton, currentButton);
       
-      // Add click listener for dialogue button
+      // Add click listener for dialogue button with debouncing
+      let volumeRestoreTimeout = null;
+      let originalVolume = null;
+      
       newButton.addEventListener('click', () => {
-        // Temporarily lower background music volume
-        const originalMusicVolume = audioManager.musicVolume;
-        audioManager.setMusicVolume(originalMusicVolume * 0.3); // Reduce to 30% of original volume
+        // Clear any pending volume restore timeout
+        if (volumeRestoreTimeout) {
+          clearTimeout(volumeRestoreTimeout);
+        }
         
-        // Play audio on click if provided, otherwise play button click
-        if (audioFile && typeof audioManager[audioFile] === 'function') {
-          audioManager[audioFile]();
+        // Store original volume only if we haven't already
+        if (originalVolume === null) {
+          originalVolume = audioManager.musicVolume;
+        }
+        
+        // Temporarily lower background music volume
+        audioManager.setMusicVolumeTemporary(originalVolume * audioManager.getTempMusicVolumeReduction());
+        
+        // Play audio based on dialogue button text
+        const buttonText = newButton.textContent;
+        let audioSource = null;
+        let audioDuration = 1000; // Default fallback duration
+        
+        if (buttonText === "South, East, West, North" && audioManager.areVoiceOversEnabled()) {
+          // Play start voice over
+          audioSource = audioManager.playStartVO();
+        } else if (buttonText.includes("هذا المكان لم يكن لها أبدًا") && audioManager.areVoiceOversEnabled()) {
+          // Play maze voice over
+          audioSource = audioManager.playMazeVO();
         } else {
+          // Play button click for other cases
           audioManager.playButtonClick();
         }
         
-        // Restore original music volume after 1 second
-        setTimeout(() => {
-          audioManager.setMusicVolume(originalMusicVolume);
-        }, 1000);
+        // If we played a voice over, handle volume and duration
+        if (audioSource && audioSource.buffer) {
+          audioDuration = audioSource.buffer.duration * 1000; // Convert to milliseconds
+          
+          // Restore original music volume after the actual audio duration
+          volumeRestoreTimeout = setTimeout(() => {
+            audioManager.setMusicVolumeTemporary(originalVolume);
+            originalVolume = null; // Reset for next interaction
+            volumeRestoreTimeout = null;
+          }, audioDuration);
+        } else {
+          // Restore original music volume after 1 second for button click
+          volumeRestoreTimeout = setTimeout(() => {
+            audioManager.setMusicVolumeTemporary(originalVolume);
+            originalVolume = null; // Reset for next interaction
+            volumeRestoreTimeout = null;
+          }, 1000);
+        }
       });
     } else {
       console.warn('Dialogue button not found');
@@ -125,7 +167,28 @@ export function setupUI() {
     closeButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         audioManager.playButtonClick();
-        toggleModal(modal, false);
+                toggleModal(modal, false);
+        
+        // Voice overs disabled for now - uncomment when ready to re-enable
+        // if (id === 'intro' && audioManager.areVoiceOversEnabled()) {
+        //   // Temporarily lower background music volume
+        //   const originalMusicVolume = audioManager.musicVolume;
+        //   audioManager.setMusicVolumeTemporary(originalMusicVolume * audioManager.getTempMusicVolumeReduction());
+        //   
+        //   // Play start voice over
+        //   const audioSource = audioManager.playStartVO();
+        //   
+        //   // Get the duration of the audio file
+        //   let audioDuration = 1000; // Default fallback duration
+        //   if (audioSource && audioSource.buffer) {
+        //     audioDuration = audioSource.buffer.duration * 1000; // Convert to milliseconds
+        //   }
+        //   
+        //   // Restore original music volume after the actual audio duration
+        //   setTimeout(() => {
+        //     audioManager.setMusicVolumeTemporary(originalMusicVolume);
+        //   }, audioDuration);
+        // }
       });
     });
   });

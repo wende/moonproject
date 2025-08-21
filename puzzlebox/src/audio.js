@@ -12,21 +12,18 @@ class AudioManager {
     this.musicVolume = 0.3;
     this.sfxVolume = 0.5;
     this.masterVolume = 1.0;
+    this.tempMusicVolumeReduction = 0.3; // Factor to reduce music volume during voice overs
+    this.voiceOversEnabled = false; // Whether voice overs are enabled - disabled by default
     
     // Audio file paths
     this.audioFiles = {
-      background: '/audio/ambient_mystery.mp3',
       moonproject: '/audio/moonproject.mp3',
       moonprojecttrue: '/audio/moonprojecttrue.mp3',
       puzzle_solve: '/audio/puzzle_solve.mp3',
       button_click: '/audio/button_click.mp3',
-      box_open: '/audio/box_open.mp3',
-      paper_rustle: '/audio/paper_rustle.mp3',
       success_chime: '/audio/success_chime.mp3',
-      error_buzz: '/audio/error_buzz.mp3',
-      wind_chimes: '/audio/wind_chimes.mp3',
-      heartbeat: '/audio/heartbeat.mp3',
-      footsteps: '/audio/footsteps.mp3'
+      maze_vo: '/audio/vo/maze.wav',
+      start_vo: '/audio/vo/start.wav'
     };
 
     // Load saved settings from localStorage
@@ -36,6 +33,7 @@ class AudioManager {
   // localStorage methods
   loadSettings() {
     try {
+      // Clear any existing voice over settings to force disable
       const savedSettings = localStorage.getItem('puzzleBoxAudioSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
@@ -43,6 +41,8 @@ class AudioManager {
         this.sfxVolume = settings.sfxVolume ?? 0.5;
         this.masterVolume = settings.masterVolume ?? 1.0;
         this.isMuted = settings.isMuted ?? false;
+        // Force voice overs to be disabled regardless of saved setting
+        this.voiceOversEnabled = false;
       }
     } catch (error) {
       console.warn('Failed to load audio settings from localStorage:', error);
@@ -55,7 +55,8 @@ class AudioManager {
         musicVolume: this.musicVolume,
         sfxVolume: this.sfxVolume,
         masterVolume: this.masterVolume,
-        isMuted: this.isMuted
+        isMuted: this.isMuted,
+        voiceOversEnabled: this.voiceOversEnabled
       };
       localStorage.setItem('puzzleBoxAudioSettings', JSON.stringify(settings));
     } catch (error) {
@@ -123,7 +124,7 @@ class AudioManager {
       }
     });
 
-    await Promise.all(loadPromises);
+        await Promise.all(loadPromises);
   }
 
   updateLoadingProgress(percentage, text) {
@@ -289,10 +290,17 @@ class AudioManager {
       );
     }
     
-    // Start at 30 seconds for debugging
     const startTime = options.startTime || 0;
     const currentTime = this.audioContext.currentTime;
-    source.start(currentTime, startTime);
+    
+    // For looping music, stop 100ms before the end to avoid artifact
+    if (options.loop !== false && options.loopTimeout) {
+      const duration = audioBuffer.duration - 0.1; // Remove last 100ms
+      source.start(currentTime, startTime, duration);
+    } else {
+      source.start(currentTime, startTime);
+    }
+    
     this.musicTracks.set(musicName, { source, gainNode, name: musicName, startTime: currentTime, initialOffset: startTime });
     
     // Keep currentMusic for backward compatibility
@@ -362,9 +370,7 @@ class AudioManager {
     const toTrackStartTime = Math.min(fromTrackCurrentTime, audioBuffer.duration - 0.1);
     newSource.start(currentTime, toTrackStartTime);
     
-    console.log(`Fade transition: ${fromTrack} at ${fromTrackCurrentTime.toFixed(2)}s -> ${toTrack} at ${toTrackStartTime.toFixed(2)}s`);
-    console.log(`From track elapsed: ${fromTrackElapsed.toFixed(2)}s, duration: ${fromTrackData.source.buffer.duration.toFixed(2)}s`);
-    console.log(`To track duration: ${audioBuffer.duration.toFixed(2)}s`);
+
     
     // Don't loop the new track (it's the final track)
     newSource.loop = false;
@@ -380,10 +386,10 @@ class AudioManager {
     // Update currentMusic for backward compatibility
     this.currentMusic = { source: newSource, gainNode: newGainNode, name: toTrack };
     
-    console.log(`Fading from ${fromTrack} to ${toTrack} at position ${toTrackStartTime.toFixed(2)}s`);
+
   }
 
-  // Debug method to check track status
+
   getTrackStatus() {
     const status = {};
     this.musicTracks.forEach((track, name) => {
@@ -421,6 +427,14 @@ class AudioManager {
       this.musicGain.gain.value = this.musicVolume;
     }
     this.saveSettings();
+  }
+
+  // Set music volume temporarily without saving to localStorage
+  setMusicVolumeTemporary(volume) {
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    if (this.musicGain) {
+      this.musicGain.gain.value = clampedVolume;
+    }
   }
 
   setSFXVolume(volume) {
@@ -480,32 +494,39 @@ class AudioManager {
     return this.playSound('puzzle_solve', { volume: 1, startTime: 0.8 });
   }
 
-  playBoxOpen() {
-    return this.playSound('box_open', { volume: 0.7 });
-  }
-
   playSuccessChime() {
     return this.playSound('success_chime', { volume: 0.9 });
   }
 
-  playErrorBuzz() {
-    return this.playSound('error_buzz', { volume: 0.5 });
+  playMazeVO() {
+    if (!this.voiceOversEnabled) return null;
+    return this.playSound('maze_vo', { volume: 0.8 });
   }
 
-  playPaperRustle() {
-    return this.playSound('paper_rustle', { volume: 0.4 });
+  playStartVO() {
+    if (!this.voiceOversEnabled) return null;
+    return this.playSound('start_vo', { volume: 0.8 });
   }
 
-  playWindChimes() {
-    return this.playSound('wind_chimes', { volume: 0.6 });
+  // Get the temporary music volume reduction factor
+  getTempMusicVolumeReduction() {
+    return this.tempMusicVolumeReduction;
   }
 
-  playHeartbeat() {
-    return this.playSound('heartbeat', { volume: 0.3, loop: true });
+  // Voice over control methods
+  areVoiceOversEnabled() {
+    return false; // Force disable voice overs
   }
 
-  playFootsteps() {
-    return this.playSound('footsteps', { volume: 0.4 });
+  setVoiceOversEnabled(enabled) {
+    this.voiceOversEnabled = enabled;
+    this.saveSettings();
+  }
+
+  toggleVoiceOvers() {
+    this.voiceOversEnabled = !this.voiceOversEnabled;
+    this.saveSettings();
+    return this.voiceOversEnabled;
   }
 
   // Resume audio context when user interacts (required by browsers)

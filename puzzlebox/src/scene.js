@@ -21,8 +21,8 @@ export function setupScene() {
   
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  //renderer.shadowMap.enabled = true;
+  //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.2
   

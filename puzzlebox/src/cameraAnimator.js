@@ -112,6 +112,9 @@ export class CameraAnimator {
         
         // Re-enable controls after animation
         this.controls.setEnabled(true);
+        
+        // Set dialogue button text and audio based on puzzle position
+        this.setDialogueForPuzzlePosition(targetPosition);
       } else {
         // Use immediate next frame for faster response
         this.currentAnimation = requestAnimationFrame(animate);
@@ -139,6 +142,9 @@ export class CameraAnimator {
     this.isAnimating = false;
     this.currentAnimation = null;
     this.controls.setEnabled(true);
+    
+    // Set dialogue button text and audio based on puzzle position
+    this.setDialogueForPuzzlePosition(targetPosition);
   }
 
   // Fade out UI elements during completion
@@ -176,10 +182,10 @@ export class CameraAnimator {
       
       // If all puzzles are completed (we're going to start position), trigger the zoom
       if (completedPuzzleNames.size >= 5) {
-        console.log('All puzzles completed - triggering completion zoom');
+    
         // Wait for the camera animation to complete, then start the zoom
         setTimeout(() => {
-          console.log('Starting completion zoom');
+      
           this.startCompletionZoom();
         }, 2500); // 2.2s animation + 0.3s buffer
       }
@@ -190,7 +196,7 @@ export class CameraAnimator {
 
   // Start a slow linear zoom as far as possible after completion
   startCompletionZoom() {
-    console.log('startCompletionZoom called');
+
     
     if (this.isAnimating) {
       // Stop current animation
@@ -245,14 +251,14 @@ export class CameraAnimator {
         this.controls.setEnabled(true);
         
         // Show the outro modal after completion zoom
-        console.log('Completion zoom finished - showing outro modal');
+    
         
         // Trigger the allPuzzlesCompleted event to show the outro button
         document.dispatchEvent(new CustomEvent('allPuzzlesCompleted'));
         
         setTimeout(() => {
           const outroModal = document.getElementById('outro');
-          console.log('Outro modal element:', outroModal);
+      
           if (outroModal) {
             // Set initial state for fade-in
             outroModal.style.display = 'block';
@@ -264,7 +270,7 @@ export class CameraAnimator {
             
             // Start fade-in
             outroModal.style.opacity = '1';
-            console.log('Outro modal fade-in started');
+        
             
             // Optionally, focus the modal for accessibility
             outroModal.focus?.();
@@ -344,7 +350,7 @@ export class CameraAnimator {
     return distance < threshold;
   }
 
-  // Manual camera positioning for testing
+
   goToPuzzle(puzzleName) {
     const position = this.puzzlePositions[puzzleName];
     if (position) {
@@ -357,5 +363,43 @@ export class CameraAnimator {
   // Get all available puzzle positions
   getPuzzlePositions() {
     return Object.keys(this.puzzlePositions);
+  }
+
+  // Set dialogue button text and audio based on puzzle position
+  setDialogueForPuzzlePosition(targetPosition) {
+    // Find which puzzle position this corresponds to
+    const puzzleName = this.getPuzzleNameForPosition(targetPosition);
+    
+    if (puzzleName && window.setDialogueButton) {
+      // Define dialogue text and audio for each puzzle position
+      // These are the texts that each puzzle sets when completed (for the next puzzle)
+      const puzzleDialogue = {
+        start: {
+          text: "South, East, West, North",
+          audio: "playStartVO"
+        },
+        maze: {
+          text: "هذا المكان لم يكن لها أبدًا ولكن إذا غادرت ستصبح هي نفسها لغزًا",
+          audio: "playMazeVO"
+        },
+        scales: {
+          text: "Cœurs légers. Âmes lourdes. Tout cela ne vaut rien sans équilibre.",
+          audio: null
+        },
+        moon: {
+          text: "She traveled the world. But her darkness wasn't vanishing — it was the path she had to take to become full again.",
+          audio: null
+        },
+        cipher: {
+          text: "Sometimes riddles are best solved by just asking yourself",
+          audio: null
+        }
+      };
+      
+      const dialogue = puzzleDialogue[puzzleName];
+      if (dialogue) {
+        window.setDialogueButton(dialogue.text, dialogue.audio);
+      }
+    }
   }
 }

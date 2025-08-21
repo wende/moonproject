@@ -74,8 +74,6 @@ export class MoonPuzzle extends Puzzle {
   markAsCompleted() {
     super.markAsCompleted();
 
-    window.setDialogueButton("Sometimes riddles are best solved by just asking yourself")
-
     const puzzleClearLight = this.initLightMaterials(this.scene, 'Light_Top_N');
     this.updateLightMaterial(puzzleClearLight, true);
 

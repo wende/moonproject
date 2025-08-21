@@ -84,7 +84,7 @@ export class DirectionPuzzle extends Puzzle {
   }
 
   triggerEffect(effectName) {
-    console.log(`effect triggered: ${effectName}`);
+
     this.playAnimation(effectName);
   }
 

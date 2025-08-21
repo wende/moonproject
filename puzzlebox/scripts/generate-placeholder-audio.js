@@ -9,16 +9,11 @@ const __dirname = path.dirname(__filename);
 
 // List of required audio files
 const audioFiles = [
-  'ambient_mystery.mp3',
+  'moonproject.mp3',
+  'moonprojecttrue.mp3',
   'puzzle_solve.mp3',
   'button_click.mp3',
-  'box_open.mp3',
-  'paper_rustle.mp3',
-  'success_chime.mp3',
-  'error_buzz.mp3',
-  'wind_chimes.mp3',
-  'heartbeat.mp3',
-  'footsteps.mp3'
+  'success_chime.mp3'
 ];
 
 // Minimal MP3 header for a silent file (1 second of silence)

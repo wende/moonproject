@@ -102,10 +102,7 @@ loadGLTFModel('/scene.glb', scene, mixer)
       return cameraAnimator.getPuzzlePositions();
     };
 
-    // Test camera animation
-    window.testCameraAnimation = () => {
-      cameraAnimator.goToPuzzle('maze');
-    };
+    
 
     // Apply any saved progress if present
     puzzleManager.loadProgress();
@@ -115,7 +112,7 @@ setupUI();
 
 // Initialize audio system and create audio toggle button after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  createAudioToggleButton();
+    createAudioToggleButton();
   
   // Show loading bar and start audio loading
   const loadingContainer = document.getElementById('audio-loading-container');
@@ -124,9 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   // Initialize audio system immediately to start loading
-  audioManager.initialize().then(() => {
-    console.log('Audio system initialized successfully');
-  }).catch(error => {
+  audioManager.initialize().catch(error => {
     console.error('Failed to initialize audio system:', error);
   });
 });
@@ -135,14 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function startMusicAfterInteraction() {
   // Initialize audio first if not already done
   audioManager.initialize().then(() => {
-    // Start both tracks simultaneously at 30 seconds for debugging - moonproject at full volume, moonprojecttrue at very low volume
+    // Start both tracks simultaneously - moonproject at full volume, moonprojecttrue at very low volume
     const musicSource = audioManager.playMusic('moonproject', { fadeIn: 2.0, loopTimeout: 3.0, startTime: 0 });
     const musicSourceTrue = audioManager.playMusic('moonprojecttrue', { fadeIn: 0, loopTimeout: 3.0, volume: 0.001, startTime: 0 });
-    if (musicSource && musicSourceTrue) {
-      console.log('Both music tracks started successfully');
-      console.log('moonproject volume:', audioManager.musicVolume);
-      console.log('moonprojecttrue volume: 0.001');
-    } else {
+    if (!musicSource || !musicSourceTrue) {
       console.warn('Failed to start moonproject music');
     }
   }).catch(error => {

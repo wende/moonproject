@@ -35,6 +35,16 @@ class AudioControls {
           <span class="volume-value">50%</span>
         </div>
         
+        <!-- Voice Overs toggle hidden for now
+        <div class="audio-control-group">
+          <label for="voice-overs-toggle">Voice Overs</label>
+          <button class="btn toggle-btn" id="voice-overs-toggle">
+            <span class="toggle-icon">🎤</span>
+            <span class="toggle-text">Enabled</span>
+          </button>
+        </div>
+        -->
+        
         <div class="audio-control-buttons">
           <button class="btn mute-btn" id="mute-btn">
             <span class="mute-icon">Audio</span>
@@ -79,6 +89,13 @@ class AudioControls {
       this.updateVolumeDisplay(e.target);
     });
 
+    // Voice overs toggle - hidden for now
+    // const voiceOversToggle = this.container.querySelector('#voice-overs-toggle');
+    // voiceOversToggle.addEventListener('click', () => {
+    //   const isEnabled = audioManager.toggleVoiceOvers();
+    //   this.updateVoiceOversToggle(isEnabled);
+    // });
+
     // Mute button
     const muteBtn = this.container.querySelector('#mute-btn');
     muteBtn.addEventListener('click', () => {
@@ -99,6 +116,10 @@ class AudioControls {
         this.hide();
       }
     });
+
+    // Initialize controls with current state
+    this.updateMuteButton(audioManager.isMuted);
+    // this.updateVoiceOversToggle(audioManager.areVoiceOversEnabled()); // Voice overs hidden
   }
 
   updateVolumeDisplay(slider) {
@@ -117,6 +138,20 @@ class AudioControls {
     } else {
       muteIcon.textContent = '🔊';
       muteText.textContent = 'Mute';
+    }
+  }
+
+  updateVoiceOversToggle(isEnabled) {
+    const voiceOversToggle = this.container.querySelector('#voice-overs-toggle');
+    const toggleIcon = voiceOversToggle.querySelector('.toggle-icon');
+    const toggleText = voiceOversToggle.querySelector('.toggle-text');
+
+    if (isEnabled) {
+      toggleIcon.textContent = '🎤';
+      toggleText.textContent = 'Enabled';
+    } else {
+      toggleIcon.textContent = '🔇';
+      toggleText.textContent = 'Disabled';
     }
   }
 
@@ -145,6 +180,9 @@ class AudioControls {
 
     // Update mute button state
     this.updateMuteButton(audioManager.isMuted);
+    
+    // Update voice overs toggle state - hidden for now
+    // this.updateVoiceOversToggle(audioManager.areVoiceOversEnabled());
   }
 
   hide() {

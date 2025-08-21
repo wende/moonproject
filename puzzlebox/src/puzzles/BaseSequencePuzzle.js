@@ -46,7 +46,7 @@ export class BaseSequencePuzzle extends Puzzle {
     const direction = this.getDirectionFromButton(button.name);
     this.workingArray.push(direction);
     this.workingArray.shift();
-    console.log(`Current working array for ${this.constructor.name}: ${this.workingArray}`);
+
     this.playAnimation(button.name);
 
     this.checkSequence();
