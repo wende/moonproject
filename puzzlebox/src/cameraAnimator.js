@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { t } from './i18n.js';
 
 export class CameraAnimator {
   constructor(camera, controls) {
@@ -375,23 +376,23 @@ export class CameraAnimator {
       // These are the texts that each puzzle sets when completed (for the next puzzle)
       const puzzleDialogue = {
         start: {
-          text: "South, East, West, North",
+          text: t('startSequence'),
           audio: "playStartVO"
         },
         maze: {
-          text: "هذا المكان لم يكن لها أبدًا ولكن إذا غادرت ستصبح هي نفسها لغزًا",
+          text: t('mazePuzzle'),
           audio: "playMazeVO"
         },
         scales: {
-          text: "Cœurs légers. Âmes lourdes. Tout cela ne vaut rien sans équilibre.",
+          text: t('scalesPuzzle'),
           audio: null
         },
         moon: {
-          text: "She traveled the world. But her darkness wasn't vanishing — it was the path she had to take to become full again.",
+          text: t('moonPuzzle'),
           audio: null
         },
         cipher: {
-          text: "Sometimes riddles are best solved by just asking yourself",
+          text: t('cipherPuzzle'),
           audio: null
         }
       };

@@ -569,3 +569,37 @@ window.resumeAudioContext = async () => {
 };
 
 export { AudioManager, audioManager };
+
+// Function to start music after user interaction
+export function startMusicAfterInteraction() {
+  // Initialize audio first if not already done
+  audioManager.initialize().then(() => {
+    // Start both tracks simultaneously - moonproject at full volume, moonprojecttrue at very low volume
+    const musicSource = audioManager.playMusic('moonproject', { fadeIn: 2.0, loopTimeout: 3.0, startTime: 0 });
+    const musicSourceTrue = audioManager.playMusic('moonprojecttrue', { fadeIn: 0, loopTimeout: 3.0, volume: 0.001, startTime: 0 });
+    if (!musicSource || !musicSourceTrue) {
+      console.warn('Failed to start moonproject music');
+    }
+  }).catch(error => {
+    console.error('Failed to initialize audio:', error);
+  });
+  
+  // Remove the event listener after first interaction
+  document.removeEventListener('click', startMusicAfterInteraction);
+  document.removeEventListener('keydown', startMusicAfterInteraction);
+  document.removeEventListener('touchstart', startMusicAfterInteraction);
+}
+
+// Initialize audio system and create audio toggle button after DOM is ready
+export function initializeAudioSystem() {
+  // Show loading bar and start audio loading
+  const loadingContainer = document.getElementById('audio-loading-container');
+  if (loadingContainer) {
+    loadingContainer.style.display = 'block';
+  }
+  
+  // Initialize audio system immediately to start loading
+  audioManager.initialize().catch(error => {
+    console.error('Failed to initialize audio system:', error);
+  });
+}

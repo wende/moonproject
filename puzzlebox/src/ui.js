@@ -1,4 +1,5 @@
 import { audioManager } from './audio.js';
+import { t } from './i18n.js';
 
 export function setupUI() {
   const modals = [
@@ -89,10 +90,10 @@ export function setupUI() {
         let audioSource = null;
         let audioDuration = 1000; // Default fallback duration
         
-        if (buttonText === "South, East, West, North" && audioManager.areVoiceOversEnabled()) {
+        if (buttonText === t('startSequence') && audioManager.areVoiceOversEnabled()) {
           // Play start voice over
           audioSource = audioManager.playStartVO();
-        } else if (buttonText.includes("هذا المكان لم يكن لها أبدًا") && audioManager.areVoiceOversEnabled()) {
+        } else if (buttonText.includes(t('mazePuzzle')) && audioManager.areVoiceOversEnabled()) {
           // Play maze voice over
           audioSource = audioManager.playMazeVO();
         } else {
@@ -124,22 +125,22 @@ export function setupUI() {
     }
   };
 
-  window.setDialogueButton("South, East, West, North")
+  window.setDialogueButton(t('startSequence'))
 
   // Global function to show next puzzle indicator
   window.showNextPuzzleIndicator = function(puzzleName) {
     const indicator = document.getElementById('next-puzzle-indicator');
     if (indicator) {
       const puzzleNames = {
-        'start': 'Start Sequence',
-        'maze': 'Maze Puzzle', 
-        'scales': 'Scales Puzzle',
-        'moon': 'Moon Puzzle',
-        'cipher': 'Cipher Puzzle'
+        'start': t('startSequenceName'),
+        'maze': t('mazePuzzleName'), 
+        'scales': t('scalesPuzzleName'),
+        'moon': t('moonPuzzleName'),
+        'cipher': t('cipherPuzzleName')
       };
       
       const displayName = puzzleNames[puzzleName] || puzzleName;
-      indicator.textContent = `Next: ${displayName}`;
+      indicator.textContent = `${t('next')}: ${displayName}`;
       indicator.style.opacity = '1';
       
       // Fade out after 3 seconds

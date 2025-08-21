@@ -183,3 +183,35 @@ export class MaterialManager {
 
 // Global material manager instance
 export const materialManager = new MaterialManager();
+
+// Function to enhance model materials
+export function enhanceModelMaterials(scene) {
+  let meshCount = 0;
+  
+  scene.traverse((object) => {
+    if (object.isMesh) {
+      meshCount++;
+      
+      // Enable shadows for all meshes
+      object.castShadow = true;
+      object.receiveShadow = true;
+      
+      // Apply specific enhanced materials for certain objects (excluding brass and buttons)
+      if (object.name.toLowerCase().includes('metal') && 
+          !object.name.toLowerCase().includes('brass') && 
+          !object.name.toLowerCase().includes('button')) {
+        materialManager.applyEnhancedMaterials(object, 'enhancedMetal');
+      } else if (object.name.toLowerCase().includes('wood') && 
+                 !object.name.toLowerCase().includes('brass')) {
+        materialManager.applyEnhancedMaterials(object, 'enhancedWood');
+      } else if (object.name.toLowerCase().includes('glass') && 
+                 !object.name.toLowerCase().includes('brass')) {
+        materialManager.applyEnhancedMaterials(object, 'glass');
+      } else if (object.name.toLowerCase().includes('light') && 
+                 !object.name.toLowerCase().includes('brass')) {
+        materialManager.applyEnhancedMaterials(object, 'glowing');
+      }
+      // Note: Brass and buttons keep their original materials completely untouched
+    }
+  });
+}

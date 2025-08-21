@@ -10,11 +10,13 @@ import { ScalesPuzzle } from './puzzles/ScalesPuzzle';
 import { MoonPuzzle } from './puzzles/MoonPuzzle';
 import { CipherSequencePuzzle } from './puzzles/CipherSequencePuzzle';
 import { loadGLTFModel } from './loaders';
-import { audioManager } from './audio';
+import { audioManager, startMusicAfterInteraction, initializeAudioSystem } from './audio';
 import { createAudioToggleButton } from './audioControls';
-import { materialManager } from './materials';
+import { updateHTMLContent } from './htmlContent';
+import { materialManager, enhanceModelMaterials } from './materials';
 import { ParticleSystem } from './particles';
 import { CameraAnimator } from './cameraAnimator';
+import { setupDebugHelpers } from './debugHelpers';
 
 const { scene, renderer, camera, mixer, mouse, raycaster, composer } = setupScene();
 const controls = setupControls(camera, renderer);
@@ -54,55 +56,15 @@ loadGLTFModel('/scene.glb', scene, mixer)
 
     puzzleManager.registerButtonsFromGLTF(gltf.scene);
 
-    // Expose helpers for skipping to a specific puzzle from the browser console
-    window.puzzleManager = puzzleManager;
-    window.puzzles = {
+    // Setup debug helpers
+    const puzzles = {
       start: startPuzzle,
       maze: mazePuzzle,
       scales: scalesPuzzle,
       moon: moonPuzzle,
       cipher: cipherPuzzle,
     };
-    window.cameraAnimator = cameraAnimator;
-    window.skipTo = (target) => {
-      intro.style.display = 'none';
-      const order = ['start', 'maze', 'scales', 'moon', 'cipher', 'end'];
-      const index = typeof target === 'number'
-        ? target
-        : order.indexOf(String(target).toLowerCase());
-      if (index < 0 || index > order.length - 1) {
-        console.warn('skipTo: invalid target. Use name or index from', order);
-        return;
-      }
-      
-      // Complete puzzles up to the target
-      for (let i = 0; i < index; i++) {
-        const key = order[i];
-        const puzzle = window.puzzles[key];
-        if (puzzle && !puzzle.isCompleted) {
-          puzzle.markAsCompleted();
-        }
-      }
-      
-      // Animate camera to the target puzzle position
-      if (index < order.length - 1) { // Don't animate for 'end'
-        const targetPuzzle = order[index];
-        setTimeout(() => {
-          cameraAnimator.goToPuzzle(targetPuzzle);
-        }, 500); // Small delay to let puzzle completion effects play
-      }
-    };
-
-    // Add camera control helpers
-    window.goToPuzzle = (puzzleName) => {
-      cameraAnimator.goToPuzzle(puzzleName);
-    };
-
-    window.getPuzzlePositions = () => {
-      return cameraAnimator.getPuzzlePositions();
-    };
-
-    
+    setupDebugHelpers(puzzleManager, cameraAnimator, puzzles);
 
     // Apply any saved progress if present
     puzzleManager.loadProgress();
@@ -110,41 +72,14 @@ loadGLTFModel('/scene.glb', scene, mixer)
 
 setupUI();
 
+// Update HTML content with translations
+updateHTMLContent();
+
 // Initialize audio system and create audio toggle button after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    createAudioToggleButton();
-  
-  // Show loading bar and start audio loading
-  const loadingContainer = document.getElementById('audio-loading-container');
-  if (loadingContainer) {
-    loadingContainer.style.display = 'block';
-  }
-  
-  // Initialize audio system immediately to start loading
-  audioManager.initialize().catch(error => {
-    console.error('Failed to initialize audio system:', error);
-  });
+  createAudioToggleButton();
+  initializeAudioSystem();
 });
-
-// Function to start music after user interaction
-function startMusicAfterInteraction() {
-  // Initialize audio first if not already done
-  audioManager.initialize().then(() => {
-    // Start both tracks simultaneously - moonproject at full volume, moonprojecttrue at very low volume
-    const musicSource = audioManager.playMusic('moonproject', { fadeIn: 2.0, loopTimeout: 3.0, startTime: 0 });
-    const musicSourceTrue = audioManager.playMusic('moonprojecttrue', { fadeIn: 0, loopTimeout: 3.0, volume: 0.001, startTime: 0 });
-    if (!musicSource || !musicSourceTrue) {
-      console.warn('Failed to start moonproject music');
-    }
-  }).catch(error => {
-    console.error('Failed to initialize audio:', error);
-  });
-  
-  // Remove the event listener after first interaction
-  document.removeEventListener('click', startMusicAfterInteraction);
-  document.removeEventListener('keydown', startMusicAfterInteraction);
-  document.removeEventListener('touchstart', startMusicAfterInteraction);
-}
 
 // Wait for user interaction before starting music (browser requirement)
 document.addEventListener('click', startMusicAfterInteraction);
@@ -156,39 +91,7 @@ setupInput(raycaster, mouse, camera, puzzleManager, renderer.domElement);
 
 const clock = new THREE.Clock();
 
-// Function to enhance model materials
-function enhanceModelMaterials(scene) {
-  let meshCount = 0;
-  
-  scene.traverse((object) => {
-    if (object.isMesh) {
-      meshCount++;
-      
-      // Enable shadows for all meshes
-      object.castShadow = true;
-      object.receiveShadow = true;
-      
-      
-      
-      // Apply specific enhanced materials for certain objects (excluding brass and buttons)
-      if (object.name.toLowerCase().includes('metal') && 
-          !object.name.toLowerCase().includes('brass') && 
-          !object.name.toLowerCase().includes('button')) {
-        materialManager.applyEnhancedMaterials(object, 'enhancedMetal');
-      } else if (object.name.toLowerCase().includes('wood') && 
-                 !object.name.toLowerCase().includes('brass')) {
-        materialManager.applyEnhancedMaterials(object, 'enhancedWood');
-      } else if (object.name.toLowerCase().includes('glass') && 
-                 !object.name.toLowerCase().includes('brass')) {
-        materialManager.applyEnhancedMaterials(object, 'glass');
-      } else if (object.name.toLowerCase().includes('light') && 
-                 !object.name.toLowerCase().includes('brass')) {
-        materialManager.applyEnhancedMaterials(object, 'glowing');
-      }
-      // Note: Brass and buttons keep their original materials completely untouched
-    }
-  });
-}
+
 
 function animate() {
   requestAnimationFrame(animate);
