@@ -37,6 +37,13 @@ window.debugCamera = {
   getPuzzlePositions: () => cameraAnimator.getPuzzlePositions()
 };
 
+// Expose puzzle manager debug methods
+window.debugPuzzles = {
+  verifyNames: () => puzzleManager.verifyPuzzleNames(),
+  getCompletedNames: () => puzzleManager.getCompletedPuzzleNames(),
+  getPuzzleCount: () => puzzleManager.puzzles.length
+};
+
 loadGLTFModel('/scene.glb', scene, mixer)
   // destructure return from loadGLTFModel to immediately access values
   .then(({ gltf, actions }) => {
@@ -63,6 +70,9 @@ loadGLTFModel('/scene.glb', scene, mixer)
     puzzleManager.addPuzzle(scalesPuzzle);
     puzzleManager.addPuzzle(moonPuzzle);
     puzzleManager.addPuzzle(cipherPuzzle);
+
+    // Verify puzzle names are properly set
+    puzzleManager.verifyPuzzleNames();
 
     puzzleManager.registerButtonsFromGLTF(gltf.scene);
 
