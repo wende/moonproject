@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Transition Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .log {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-controls">
+        <h3>Camera Transition Test</h3>
+        <button onclick="testGoToPuzzle('start')">Go to Start</button>
+        <button onclick="testGoToPuzzle('maze')">Go to Maze</button>
+        <button onclick="testGoToPuzzle('scales')">Go to Scales</button>
+        <button onclick="testGoToPuzzle('moon')">Go to Moon</button>
+        <button onclick="testGoToPuzzle('cipher')">Go to Cipher</button>
+        <br>
+        <button onclick="testCyclePuzzles()">Cycle Through Puzzles</button>
+        <button onclick="testGetCurrentPosition()">Get Current Position</button>
+        <button onclick="clearLog()">Clear Log</button>
+        <div class="log" id="log"></div>
+    </div>
+
+    <script type="module">
+        // Wait for the main app to load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.debugCamera) {
+                    console.log('Debug camera methods available');
+                    log('Debug camera methods available');
+                } else {
+                    console.log('Debug camera methods not available yet');
+                    log('Debug camera methods not available yet');
+                }
+            }, 2000);
+        });
+
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        window.testGoToPuzzle = (puzzleName) => {
+            if (window.debugCamera) {
+                log(`Testing go to puzzle: ${puzzleName}`);
+                window.debugCamera.goToPuzzle(puzzleName);
+            } else {
+                log('Debug camera not available');
+            }
+        };
+
+        window.testCyclePuzzles = () => {
+            if (window.debugCamera) {
+                log('Testing cycle through puzzles');
+                window.debugCamera.cyclePuzzles();
+            } else {
+                log('Debug camera not available');
+            }
+        };
+
+        window.testGetCurrentPosition = () => {
+            if (window.debugCamera) {
+                const position = window.debugCamera.getCurrentPosition();
+                log(`Current position: ${position}`);
+            } else {
+                log('Debug camera not available');
+            }
+        };
+
+        window.clearLog = () => {
+            document.getElementById('log').innerHTML = '';
+        };
+
+        // Override console.log to also show in our log
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('camera')) {
+                log(args.join(' '));
+            }
+        };
+    </script>
+
+    <!-- Load the main app -->
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>

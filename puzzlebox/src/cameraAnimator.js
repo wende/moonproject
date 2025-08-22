@@ -57,13 +57,69 @@ export class CameraAnimator {
 
   // Get the next puzzle position based on current completion state
   getNextPuzzlePosition(completedPuzzleNames) {
+    console.log('getNextPuzzlePosition called with:', completedPuzzleNames);
+    console.log('Puzzle order:', this.puzzleOrder);
+    
+    // Ensure completedPuzzleNames is a Set
+    if (!(completedPuzzleNames instanceof Set)) {
+      console.warn('completedPuzzleNames is not a Set, converting...');
+      completedPuzzleNames = new Set(completedPuzzleNames);
+    }
+    
+    // Log the current state for debugging
+    for (const puzzleName of this.puzzleOrder) {
+      const isCompleted = completedPuzzleNames.has(puzzleName);
+      console.log(`Puzzle ${puzzleName}: ${isCompleted ? 'completed' : 'not completed'}`);
+    }
+    
+    // Check if we have a valid completion state
+    if (completedPuzzleNames.size === 0) {
+      console.log('No puzzles completed, going to first puzzle (start)');
+      return this.puzzlePositions.start;
+    }
+    
+    // Find the next incomplete puzzle
     for (const puzzleName of this.puzzleOrder) {
       if (!completedPuzzleNames.has(puzzleName)) {
+        console.log(`Next puzzle to go to: ${puzzleName}`);
         return this.puzzlePositions[puzzleName];
       }
     }
-    // If all puzzles are completed, return to front view
+    
+    // If all puzzles are completed, return to start view
+    console.log('All puzzles completed, returning to start view');
     return this.puzzlePositions.start;
+  }
+
+  // Alternative method that doesn't rely on completion state
+  getNextPuzzlePositionByCurrentPosition() {
+    const currentPos = this.camera.position;
+    let currentPuzzleIndex = -1;
+    
+    // Find which puzzle position we're closest to
+    for (let i = 0; i < this.puzzleOrder.length; i++) {
+      const puzzleName = this.puzzleOrder[i];
+      const position = this.puzzlePositions[puzzleName];
+      const distance = currentPos.distanceTo(position.position);
+      
+      if (distance < 1.0) { // Within 1 unit
+        currentPuzzleIndex = i;
+        break;
+      }
+    }
+    
+    // If we can't determine current position, start from beginning
+    if (currentPuzzleIndex === -1) {
+      console.log('Cannot determine current position, starting from first puzzle');
+      return this.puzzlePositions.start;
+    }
+    
+    // Go to next puzzle in sequence
+    const nextIndex = (currentPuzzleIndex + 1) % this.puzzleOrder.length;
+    const nextPuzzleName = this.puzzleOrder[nextIndex];
+    console.log(`Moving from ${this.puzzleOrder[currentPuzzleIndex]} to ${nextPuzzleName}`);
+    
+    return this.puzzlePositions[nextPuzzleName];
   }
 
   // Animate camera to a specific position
@@ -183,24 +239,40 @@ export class CameraAnimator {
 
   // Animate to next puzzle after completion
   animateToNextPuzzle(completedPuzzleNames) {
-    const nextPosition = this.getNextPuzzlePosition(completedPuzzleNames);
+    console.log('animateToNextPuzzle called with:', completedPuzzleNames);
+    
+    let nextPosition;
+    
+    // Try to get next position based on completion state
+    if (completedPuzzleNames && completedPuzzleNames.size > 0) {
+      nextPosition = this.getNextPuzzlePosition(completedPuzzleNames);
+      console.log('Next position determined by completion state:', nextPosition);
+    } else {
+      console.log('No completion state available, using position-based fallback');
+      nextPosition = this.getNextPuzzlePositionByCurrentPosition();
+      console.log('Next position determined by current position:', nextPosition);
+    }
+    
     if (nextPosition) {
       // Find the puzzle name for this position
       const nextPuzzleName = this.getPuzzleNameForPosition(nextPosition);
+      console.log('Next puzzle name:', nextPuzzleName);
       
       // Show next puzzle indicator
       if (window.PuzzleBox?.showNextPuzzleIndicator && nextPuzzleName) {
         window.PuzzleBox.showNextPuzzleIndicator(nextPuzzleName);
       }
       
+      console.log('Starting camera animation to:', nextPosition.position, nextPosition.target);
       this.animateToPosition(nextPosition.position, nextPosition.target, NEXT_PUZZLE_ANIMATION_DURATION);
       
       // If all puzzles are completed (we're going to start position), trigger the zoom
-      if (completedPuzzleNames.size >= PUZZLE_COMPLETION_THRESHOLD) {
+      if (completedPuzzleNames && completedPuzzleNames.size >= PUZZLE_COMPLETION_THRESHOLD) {
+        console.log('All puzzles completed, will trigger completion zoom');
     
         // Wait for the camera animation to complete, then start the zoom
         setTimeout(() => {
-      
+          console.log('Starting completion zoom');
           this.startCompletionZoom();
         }, ANIMATION_BUFFER_DELAY); // 2.2s animation + 0.3s buffer
       }
@@ -414,5 +486,41 @@ export class CameraAnimator {
         window.PuzzleBox.setDialogueButton(dialogue.text, dialogue.audio);
       }
     }
+  }
+
+  // Debug method to manually go to a specific puzzle
+  debugGoToPuzzle(puzzleName) {
+    console.log(`Debug: Manually going to puzzle: ${puzzleName}`);
+    const position = this.puzzlePositions[puzzleName];
+    if (position) {
+      this.animateToPosition(position.position, position.target, 2.0);
+    } else {
+      console.warn(`Debug: Puzzle position not found: ${puzzleName}`);
+    }
+  }
+
+  // Debug method to cycle through all puzzle positions
+  debugCycleThroughPuzzles() {
+    const currentPos = this.camera.position;
+    let currentPuzzleIndex = -1;
+    
+    // Find which puzzle position we're closest to
+    for (let i = 0; i < this.puzzleOrder.length; i++) {
+      const puzzleName = this.puzzleOrder[i];
+      const position = this.puzzlePositions[puzzleName];
+      const distance = currentPos.distanceTo(position.position);
+      
+      if (distance < 1.0) { // Within 1 unit
+        currentPuzzleIndex = i;
+        break;
+      }
+    }
+    
+    // Go to next puzzle in sequence
+    const nextIndex = (currentPuzzleIndex + 1) % this.puzzleOrder.length;
+    const nextPuzzleName = this.puzzleOrder[nextIndex];
+    console.log(`Debug: Cycling from ${this.puzzleOrder[currentPuzzleIndex] || 'unknown'} to ${nextPuzzleName}`);
+    
+    this.debugGoToPuzzle(nextPuzzleName);
   }
 }

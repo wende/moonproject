@@ -27,6 +27,16 @@ const particleSystem = new ParticleSystem(scene);
 const cameraAnimator = new CameraAnimator(camera, controls);
 puzzleManager.setCameraAnimator(cameraAnimator);
 
+console.log('Camera animator initialized with puzzle positions:', cameraAnimator.getPuzzlePositions());
+
+// Expose debug methods globally for testing
+window.debugCamera = {
+  goToPuzzle: (puzzleName) => cameraAnimator.debugGoToPuzzle(puzzleName),
+  cyclePuzzles: () => cameraAnimator.debugCycleThroughPuzzles(),
+  getCurrentPosition: () => cameraAnimator.getCurrentPuzzlePosition(),
+  getPuzzlePositions: () => cameraAnimator.getPuzzlePositions()
+};
+
 loadGLTFModel('/scene.glb', scene, mixer)
   // destructure return from loadGLTFModel to immediately access values
   .then(({ gltf, actions }) => {

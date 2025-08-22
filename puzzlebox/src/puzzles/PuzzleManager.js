@@ -39,13 +39,19 @@ export class PuzzleManager {
   }
 
   handlePuzzleComplete(puzzleObj) {
+    console.log('Puzzle completed:', puzzleObj.constructor.name);
     this.completedPuzzles.add(puzzleObj);
 
     // Trigger camera animation to next puzzle
     if (this.cameraAnimator) {
+      const completedNames = this.getCompletedPuzzleNames();
+      console.log('Completed puzzle names:', completedNames);
+      console.log('Total puzzles:', this.puzzles.length);
+      console.log('Completed puzzles count:', this.completedPuzzles.size);
+      
       // Reduced delay for faster response
       setTimeout(() => {
-        this.cameraAnimator.animateToNextPuzzle(this.getCompletedPuzzleNames());
+        this.cameraAnimator.animateToNextPuzzle(completedNames);
       }, 300);
     }
 
@@ -60,12 +66,18 @@ export class PuzzleManager {
 
   getCompletedPuzzleNames() {
     const completedNames = new Set();
+    console.log('Getting completed puzzle names...');
+    console.log('Completed puzzles objects:', this.completedPuzzles);
+    
     for (const puzzleObj of this.completedPuzzles) {
       const puzzleName = this.getPuzzleName(puzzleObj);
+      console.log(`Puzzle object ${puzzleObj.constructor.name} maps to name: ${puzzleName}`);
       if (puzzleName) {
         completedNames.add(puzzleName);
       }
     }
+    
+    console.log('Final completed names set:', completedNames);
     return completedNames;
   }
 
