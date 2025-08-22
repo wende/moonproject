@@ -99,21 +99,4 @@ export function t(key, language = currentLanguage) {
   return lang[key] || key;
 }
 
-// Set current language
-export function setLanguage(language) {
-  if (translations[language]) {
-    currentLanguage = language;
-    return true;
-  }
-  return false;
-}
 
-// Get current language
-export function getCurrentLanguage() {
-  return currentLanguage;
-}
-
-// Get available languages
-export function getAvailableLanguages() {
-  return Object.keys(translations);
-}

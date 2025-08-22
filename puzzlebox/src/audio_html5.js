@@ -302,64 +302,29 @@ class AudioManager {
 
   fadeBetweenTracks(fromTrack, toTrack, fadeDuration = 5.0) {
     const fromAudio = this.musicElements.get(fromTrack);
-    const toAudio = this.musicElements.get(toTrack);
     
-    if (fromAudio && toAudio) {
-      // Both tracks are already playing, use precise timestamp synchronization
-      // Get the current position of the from track
-      const fromTrackPosition = fromAudio.currentTime;
-      
-      // Ensure both tracks are ready before synchronization
-      const syncTracks = () => {
-        // Set the to track to the exact same timestamp
-        toAudio.currentTime = fromTrackPosition;
-        
-        // Log synchronization for debugging
-        console.log(`Synchronizing tracks: ${fromTrack} at ${fromTrackPosition}s -> ${toTrack} at ${toAudio.currentTime}s`);
-        
-        // Start the to track at 0 volume and fade it in
-        toAudio.volume = 0;
-        
-        // Ensure the to track is actually playing
-        if (toAudio.paused) {
-          toAudio.play().then(() => {
-            // Double-check synchronization after play starts
-            toAudio.currentTime = fromTrackPosition;
-            console.log(`Re-synchronized after play: ${toTrack} at ${toAudio.currentTime}s`);
-          }).catch(error => {
-            console.warn('Failed to play synchronized track:', error);
-          });
-        } else {
-          // If already playing, ensure it's at the right position
-          toAudio.currentTime = fromTrackPosition;
-        }
-        
-        // Fade in the to track
-        this.fadeInAudio(toAudio, this.musicVolume * this.masterVolume, fadeDuration);
-        
-        // Fade out the from track
-        this.fadeOutAudio(fromAudio, fadeDuration);
-        
-        // Remove the from track after fade
-        setTimeout(() => {
-          fromAudio.pause();
-          this.musicElements.delete(fromTrack);
-        }, fadeDuration * 1000);
-      };
-      
-      // Wait a frame to ensure audio is ready
-      requestAnimationFrame(syncTracks);
-      
-    } else if (fromAudio) {
+    if (fromAudio) {
       // Only from track is playing, fade it out and start the to track
-      this.fadeOutAudio(fromAudio, fadeDuration);
+      // Capture the current position of the from track
+      const fromTrackPosition = fromAudio.currentTime;
+      console.log(`Starting ${toTrack} at position ${fromTrackPosition}s (same as ${fromTrack})`);
+      
+      this.fadeOutAudio(fromAudio, fadeDuration * 1.5);
       setTimeout(() => {
         fromAudio.pause();
         this.musicElements.delete(fromTrack);
       }, fadeDuration * 1000);
       
-      // Start new track
-      this.playMusic(toTrack, { fadeIn: fadeDuration, loop: true });
+      // Start new track and ensure it starts at the correct position
+      const newAudio = this.playMusic(toTrack, { fadeIn: fadeDuration, loop: true, startTime: fromTrackPosition });
+      
+      // Double-check and set the position after a short delay to ensure it's correct
+      if (newAudio) {
+        setTimeout(() => {
+          newAudio.currentTime = fromTrackPosition - 0.05;
+          console.log(`Ensured ${toTrack} is at position ${newAudio.currentTime}s`);
+        }, 100);
+      }
     } else {
       // No from track, just start the to track
       this.playMusic(toTrack, { fadeIn: fadeDuration, loop: true });
@@ -457,7 +422,7 @@ class AudioManager {
     this.lastButtonClickTime = Date.now();
     
     // Use the original playSound method for button clicks - simpler and more reliable
-    return this.playSound('button_click', { volume: BUTTON_CLICK_VOLUME });
+    return this.playSound('button_click', { volume: BUTTON_CLICK_VOLUME, startTime: 0.2 });
   }
 
   playPuzzleSolve() {
@@ -566,28 +531,10 @@ export function startMusicAfterInteraction(event) {
   
   // Initialize audio first if not already done
   audioManager.initialize().then(() => {
-    // Start both tracks simultaneously with perfect synchronization
-    const startTime = Date.now();
-    
-    // Start moonproject at full volume
+    // Start only the main moonproject track initially
     const moonprojectAudio = audioManager.playMusic('moonproject', { fadeIn: MUSIC_FADE_IN, loop: true, startTime: 0 });
     
-    // Start moonprojecttrue at very low volume, synchronized to the exact same timestamp
-    const moonprojectTrueAudio = audioManager.playMusic('moonprojecttrue', { fadeIn: 0, loop: true, volume: 0.001, startTime: 0 });
-    
-    // Ensure both tracks are perfectly synchronized
-    if (moonprojectAudio && moonprojectTrueAudio) {
-      // Both tracks start at the beginning
-      const syncTime = 0;
-      moonprojectAudio.currentTime = syncTime;
-      moonprojectTrueAudio.currentTime = syncTime;
-      
-      console.log('Initial sync: both tracks at 0s');
-      
-      // Ensure both are playing
-      moonprojectAudio.play().catch(console.warn);
-      moonprojectTrueAudio.play().catch(console.warn);
-    }
+    console.log('Started main music track: moonproject');
   }).catch(error => {
     console.error('Failed to initialize audio:', error);
   });

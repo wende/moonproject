@@ -219,13 +219,5 @@ export class ParticleSystem {
     this.createLightRays(15); // Slightly more particles
   }
 
-  // Remove all particles
-  removeAllParticles() {
-    this.particleGroups.forEach(group => {
-      this.scene.remove(group);
-      group.geometry.dispose();
-      group.material.dispose();
-    });
-    this.particleGroups.clear();
-  }
+
 }

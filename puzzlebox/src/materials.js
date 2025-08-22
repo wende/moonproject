@@ -158,27 +158,7 @@ export class MaterialManager {
     });
   }
 
-  // Create environment map for reflections
-  createEnvironmentMap() {
-    // Create a simple environment map using cube texture
-    const cubeTexture = this.cubeTextureLoader.load([
-      '/textures/px.jpg', '/textures/nx.jpg',
-      '/textures/py.jpg', '/textures/ny.jpg',
-      '/textures/pz.jpg', '/textures/nz.jpg'
-    ]);
-    
-    return cubeTexture;
-  }
 
-  // Apply environment map to all materials
-  applyEnvironmentMap(envMap) {
-    this.materials.forEach(material => {
-      if (material.envMap !== envMap) {
-        material.envMap = envMap;
-        material.needsUpdate = true;
-      }
-    });
-  }
 }
 
 // Global material manager instance

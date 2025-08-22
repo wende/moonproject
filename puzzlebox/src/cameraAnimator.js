@@ -382,32 +382,7 @@ export class CameraAnimator {
     return null;
   }
 
-  // Smooth easing function
-  easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  }
 
-  // Smoother easing function for better animation
-  easeInOutQuart(t) {
-    return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
-  }
-
-  // Very smooth easing function with minimal deceleration
-  easeInOutSmooth(t) {
-    // Use a gentler curve that doesn't slow down as much in the middle
-    return t * t * (3 - 2 * t);
-  }
-
-  // Easing that starts quick and slows down
-  easeOutQuart(t) {
-    return 1 - Math.pow(1 - t, 4);
-  }
-
-  // Simple easing that starts immediately and slows down gently
-  easeOutSimple(t) {
-    // Simple quadratic ease-out: starts fast, slows down
-    return 1 - (1 - t) * (1 - t);
-  }
 
   // Get current puzzle position name based on camera position
   getCurrentPuzzlePosition() {
@@ -426,14 +401,7 @@ export class CameraAnimator {
     return closestPuzzle;
   }
 
-  // Check if camera is currently at a specific puzzle position
-  isAtPuzzlePosition(puzzleName, threshold = 1.0) {
-    const targetPosition = this.puzzlePositions[puzzleName];
-    if (!targetPosition) return false;
-    
-    const distance = this.camera.position.distanceTo(targetPosition.position);
-    return distance < threshold;
-  }
+
 
 
   goToPuzzle(puzzleName) {
