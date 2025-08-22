@@ -3,7 +3,7 @@ import { audioManager } from './audio_html5.js';
 // Audio controls constants
 const VOLUME_SLIDER_MAX = 100;
 const VOLUME_SLIDER_DEFAULT_MASTER = 100;
-const VOLUME_SLIDER_DEFAULT_MUSIC = 30;
+const VOLUME_SLIDER_DEFAULT_MUSIC = 0.8; // Updated to match new DEFAULT_MUSIC_VOLUME (0.008 * 100)
 const VOLUME_SLIDER_DEFAULT_SFX = 50;
 const VOLUME_CONVERSION_FACTOR = 100; // Convert percentage to decimal
 
@@ -85,7 +85,9 @@ class AudioControls {
     });
 
     musicSlider.addEventListener('input', (e) => {
-      const volume = e.target.value / VOLUME_CONVERSION_FACTOR;
+      // Reduce the impact of the slider - 100% slider = 15% actual volume
+      const sliderValue = e.target.value / VOLUME_CONVERSION_FACTOR;
+      const volume = sliderValue * 0.15; // Scale down the slider impact more aggressively
       audioManager.setMusicVolume(volume);
       this.updateVolumeDisplay(e.target);
     });
@@ -177,7 +179,8 @@ class AudioControls {
     const sfxSlider = this.container.querySelector('#sfx-volume');
 
     masterSlider.value = Math.round(audioManager.masterVolume * VOLUME_CONVERSION_FACTOR);
-    musicSlider.value = Math.round(audioManager.musicVolume * VOLUME_CONVERSION_FACTOR);
+    // Convert actual volume back to slider position (reverse the scaling)
+    musicSlider.value = Math.round((audioManager.musicVolume / 0.15) * VOLUME_CONVERSION_FACTOR);
     sfxSlider.value = Math.round(audioManager.sfxVolume * VOLUME_CONVERSION_FACTOR);
 
     // Update volume displays

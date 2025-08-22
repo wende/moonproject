@@ -66,8 +66,6 @@ loadGLTFModel('/scene.glb', scene, mixer)
     };
     setupDebugHelpers(puzzleManager, cameraAnimator, puzzles);
 
-    // Apply any saved progress if present
-    puzzleManager.loadProgress();
   });
 
 setupUI();

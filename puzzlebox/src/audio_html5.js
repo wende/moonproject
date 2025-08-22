@@ -1,5 +1,5 @@
 // Audio constants
-const DEFAULT_MUSIC_VOLUME = 0.3;
+const DEFAULT_MUSIC_VOLUME = 0.7; // Reduced from 0.3 to 0.12 (40% of original)
 const DEFAULT_SFX_VOLUME = 0.5;
 const DEFAULT_MASTER_VOLUME = 1.0;
 const TEMP_MUSIC_VOLUME_REDUCTION = 0.3;
@@ -51,7 +51,16 @@ class AudioManager {
       const savedSettings = localStorage.getItem('puzzleBoxAudioSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        this.musicVolume = settings.musicVolume ?? DEFAULT_MUSIC_VOLUME;
+        
+        // Check if this is an old settings version with high music volume
+        if (settings.musicVolume && settings.musicVolume > 0.1) {
+          // Convert old music volume to new scale (40% of old value)
+          this.musicVolume = settings.musicVolume * 0.4;
+          console.log(`Converted old music volume ${settings.musicVolume} to new scale: ${this.musicVolume}`);
+        } else {
+          this.musicVolume = settings.musicVolume ?? DEFAULT_MUSIC_VOLUME;
+        }
+        
         this.sfxVolume = settings.sfxVolume ?? DEFAULT_SFX_VOLUME;
         this.masterVolume = settings.masterVolume ?? DEFAULT_MASTER_VOLUME;
         this.isMuted = settings.isMuted ?? false;
@@ -296,37 +305,51 @@ class AudioManager {
     const toAudio = this.musicElements.get(toTrack);
     
     if (fromAudio && toAudio) {
-      // Both tracks are already playing, use simple timestamp synchronization
+      // Both tracks are already playing, use precise timestamp synchronization
       // Get the current position of the from track
       const fromTrackPosition = fromAudio.currentTime;
       
-      // Set the to track to the exact same timestamp
-      toAudio.currentTime = fromTrackPosition;
+      // Ensure both tracks are ready before synchronization
+      const syncTracks = () => {
+        // Set the to track to the exact same timestamp
+        toAudio.currentTime = fromTrackPosition;
+        
+        // Log synchronization for debugging
+        console.log(`Synchronizing tracks: ${fromTrack} at ${fromTrackPosition}s -> ${toTrack} at ${toAudio.currentTime}s`);
+        
+        // Start the to track at 0 volume and fade it in
+        toAudio.volume = 0;
+        
+        // Ensure the to track is actually playing
+        if (toAudio.paused) {
+          toAudio.play().then(() => {
+            // Double-check synchronization after play starts
+            toAudio.currentTime = fromTrackPosition;
+            console.log(`Re-synchronized after play: ${toTrack} at ${toAudio.currentTime}s`);
+          }).catch(error => {
+            console.warn('Failed to play synchronized track:', error);
+          });
+        } else {
+          // If already playing, ensure it's at the right position
+          toAudio.currentTime = fromTrackPosition;
+        }
+        
+        // Fade in the to track
+        this.fadeInAudio(toAudio, this.musicVolume * this.masterVolume, fadeDuration);
+        
+        // Fade out the from track
+        this.fadeOutAudio(fromAudio, fadeDuration);
+        
+        // Remove the from track after fade
+        setTimeout(() => {
+          fromAudio.pause();
+          this.musicElements.delete(fromTrack);
+        }, fadeDuration * 1000);
+      };
       
-      // Log synchronization for debugging
-      console.log(`Synchronizing tracks: ${fromTrack} at ${fromTrackPosition}s -> ${toTrack} at ${toAudio.currentTime}s`);
+      // Wait a frame to ensure audio is ready
+      requestAnimationFrame(syncTracks);
       
-      // Start the to track at 0 volume and fade it in
-      toAudio.volume = 0;
-      
-      // Ensure the to track is actually playing
-      if (toAudio.paused) {
-        toAudio.play().catch(error => {
-          console.warn('Failed to play synchronized track:', error);
-        });
-      }
-      
-      // Fade in the to track
-      this.fadeInAudio(toAudio, this.musicVolume * this.masterVolume, fadeDuration);
-      
-      // Fade out the from track
-      this.fadeOutAudio(fromAudio, fadeDuration);
-      
-      // Remove the from track after fade
-      setTimeout(() => {
-        fromAudio.pause();
-        this.musicElements.delete(fromTrack);
-      }, fadeDuration * 1000);
     } else if (fromAudio) {
       // Only from track is playing, fade it out and start the to track
       this.fadeOutAudio(fromAudio, fadeDuration);
