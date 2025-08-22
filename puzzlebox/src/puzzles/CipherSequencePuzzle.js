@@ -3,7 +3,7 @@ import { audioManager } from '../audio_html5.js';
 
 export class CipherSequencePuzzle extends BaseSequencePuzzle {
   constructor(actions, scene) {
-    super(['N', 'E', 'S'], actions, scene);
+    super(['N', 'E', 'S'], actions, scene, 'cipher');
   }
 
   markAsCompleted() {

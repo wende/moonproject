@@ -1,8 +1,8 @@
 import { Puzzle } from './Puzzle.js'
 
 export class BaseSequencePuzzle extends Puzzle {
-  constructor(sequence, actions, scene) {
-    super(actions, scene);
+  constructor(sequence, actions, scene, puzzleName) {
+    super(actions, scene, puzzleName);
     this.sequence = sequence;
     this.workingArray = Array(sequence.length).fill(null);
   }

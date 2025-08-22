@@ -15,14 +15,22 @@ export class PuzzleManager {
     this.puzzles.push(puzzleObj);
     puzzleObj.on('completed', () => this.handlePuzzleComplete(puzzleObj));
     
-    // Map puzzle object to its name based on constructor
+    // Map puzzle object to its name using a more reliable method
     const puzzleName = this.getPuzzleName(puzzleObj);
     if (puzzleName) {
       this.puzzleMap.set(puzzleName, puzzleObj);
+      // Store the puzzle name directly on the object to avoid constructor.name issues
+      puzzleObj._puzzleName = puzzleName;
     }
   }
 
   getPuzzleName(puzzleObj) {
+    // First try to get the stored puzzle name
+    if (puzzleObj._puzzleName) {
+      return puzzleObj._puzzleName;
+    }
+    
+    // Fallback to constructor name (for backward compatibility)
     const constructorName = puzzleObj.constructor.name;
     const nameMap = {
       'StartSequencePuzzle': 'start',
@@ -39,7 +47,8 @@ export class PuzzleManager {
   }
 
   handlePuzzleComplete(puzzleObj) {
-    console.log('Puzzle completed:', puzzleObj.constructor.name);
+    const puzzleName = this.getPuzzleName(puzzleObj);
+    console.log('Puzzle completed:', puzzleName, '(constructor:', puzzleObj.constructor.name, ')');
     this.completedPuzzles.add(puzzleObj);
 
     // Trigger camera animation to next puzzle
@@ -71,7 +80,7 @@ export class PuzzleManager {
     
     for (const puzzleObj of this.completedPuzzles) {
       const puzzleName = this.getPuzzleName(puzzleObj);
-      console.log(`Puzzle object ${puzzleObj.constructor.name} maps to name: ${puzzleName}`);
+      console.log(`Puzzle object ${puzzleName} (constructor: ${puzzleObj.constructor.name}) maps to name: ${puzzleName}`);
       if (puzzleName) {
         completedNames.add(puzzleName);
       }

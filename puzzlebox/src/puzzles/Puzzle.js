@@ -3,12 +3,13 @@ import { PuzzleManager } from './PuzzleManager';
 import { audioManager } from '../audio_html5.js';
 
 export class Puzzle {
-  constructor(actions = {}, scene = null) {
+  constructor(actions = {}, scene = null, puzzleName = null) {
     this.isCompleted = false;
     this.interactiveButtons = [];
     this.actions = actions;
     this.scene = scene;
     this.listeners = [];
+    this._puzzleName = puzzleName; // Store puzzle name to avoid constructor.name issues
 
     this.lightMaterials = {
       off: null,

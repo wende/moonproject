@@ -3,7 +3,7 @@ import { BaseSequencePuzzle } from './BaseSequencePuzzle.js';
 export class StartSequencePuzzle extends BaseSequencePuzzle {
   constructor(actions) {
     
-    super(['S', 'E', 'W', 'N'], actions);
+    super(['S', 'E', 'W', 'N'], actions, null, 'start');
 
     actions["Moon_Panel_Open"].play()
     setTimeout(() => 

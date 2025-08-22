@@ -5,7 +5,7 @@ import { audioManager } from '../audio_html5.js';
 
 export class ScalesPuzzle extends Puzzle {
   constructor(actions, scene) {
-    super(actions, scene);
+    super(actions, scene, 'scales');
 
     this.lastBalanceState = [0, 0];
     this.isInitializing = true;

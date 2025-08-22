@@ -3,7 +3,7 @@ import { Puzzle } from './Puzzle';
 
 export class MoonPuzzle extends Puzzle {
   constructor(actions, scene) {
-    super(actions, scene);
+    super(actions, scene, 'moon');
 
     this.CORRECT_BUTTONS = [5,6,7,0];
     this.buttonStates = Array(8).fill(false);

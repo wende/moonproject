@@ -2,7 +2,7 @@ import { BaseSequencePuzzle } from './BaseSequencePuzzle.js';
 
 export class MazeSequencePuzzle extends BaseSequencePuzzle {
   constructor(actions, scene) {
-    super(['N', 'E', 'N', 'W', 'N'], actions, scene);
+    super(['N', 'E', 'N', 'W', 'N'], actions, scene, 'maze');
   }
 
   markAsCompleted() {
