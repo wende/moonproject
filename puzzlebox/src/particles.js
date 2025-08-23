@@ -5,6 +5,10 @@ export class ParticleSystem {
     this.scene = scene;
     this.particles = [];
     this.particleGroups = new Map();
+    
+    // Performance optimization: Add frame skipping - less aggressive
+    this.frameCount = 0;
+    this.updateInterval = 1; // Update every frame (removed frame skipping)
   }
 
   // Create floating dust particles (background only)
@@ -256,92 +260,99 @@ export class ParticleSystem {
     return points;
   }
 
-  // Update particle animations
-  update(deltaTime) {
+  // Optimized update method with reduced frame skipping
+  update(delta) {
+    this.frameCount++;
+    
+    // Only skip updates on every 4th frame to maintain visual quality
+    if (this.frameCount % 4 === 0) {
+      return;
+    }
+    
     this.particleGroups.forEach((group, name) => {
       const positions = group.geometry.attributes.position.array;
       const velocities = group.userData.velocities;
       const originalSizes = group.userData.originalSizes;
 
       if (name === 'dust' && velocities) {
-        // Update dust particle positions with enhanced movement
+        // Update dust particle positions with enhanced movement - optimized
+        const time = Date.now() * 0.0003;
         for (let i = 0; i < positions.length; i += 3) {
           positions[i] += velocities[i];
           positions[i + 1] += velocities[i + 1];
           positions[i + 2] += velocities[i + 2];
 
-          // Wrap around boundaries (keep in background)
+          // Wrap around boundaries (keep in background) - simplified checks
           if (positions[i] > 15) positions[i] = -15;
-          if (positions[i] < -15) positions[i] = 15;
+          else if (positions[i] < -15) positions[i] = 15;
           if (positions[i + 1] > 10) positions[i + 1] = 0;
-          if (positions[i + 1] < 0) positions[i + 1] = 10;
+          else if (positions[i + 1] < 0) positions[i + 1] = 10;
           if (positions[i + 2] > 15) positions[i + 2] = -15;
-          if (positions[i + 2] < -15) positions[i + 2] = 15;
+          else if (positions[i + 2] < -15) positions[i + 2] = 15;
         }
 
-        // Subtle size pulsing for dust
+        // Subtle size pulsing for dust - update more particles
         const sizes = group.geometry.attributes.size.array;
-        for (let i = 0; i < sizes.length; i++) {
-          const time = Date.now() * 0.0003;
+        for (let i = 0; i < sizes.length; i += 1) { // Update every particle
           const pulse = Math.sin(time + i * 0.1) * 0.2 + 0.8;
           sizes[i] = originalSizes[i] * pulse;
         }
         group.geometry.attributes.size.needsUpdate = true;
       } else if (name === 'sparkles' && velocities) {
-        // Update sparkle positions with enhanced twinkling effect
+        // Update sparkle positions with enhanced twinkling effect - optimized
+        const time = Date.now() * 0.002;
         for (let i = 0; i < positions.length; i += 3) {
           positions[i] += velocities[i];
           positions[i + 1] += velocities[i + 1];
           positions[i + 2] += velocities[i + 2];
 
-          // Wrap around boundaries (keep in background)
+          // Wrap around boundaries (keep in background) - simplified checks
           if (positions[i] > 12.5) positions[i] = -12.5;
-          if (positions[i] < -12.5) positions[i] = 12.5;
+          else if (positions[i] < -12.5) positions[i] = 12.5;
           if (positions[i + 1] > 8) positions[i + 1] = 0;
-          if (positions[i + 1] < 0) positions[i + 1] = 8;
+          else if (positions[i + 1] < 0) positions[i + 1] = 8;
           if (positions[i + 2] > 12.5) positions[i + 2] = -12.5;
-          if (positions[i + 2] < -12.5) positions[i + 2] = 12.5;
+          else if (positions[i + 2] < -12.5) positions[i + 2] = 12.5;
         }
 
-        // Enhanced twinkling effect
+        // Enhanced twinkling effect - update more particles
         const sizes = group.geometry.attributes.size.array;
-        for (let i = 0; i < sizes.length; i++) {
-          const time = Date.now() * 0.002;
+        for (let i = 0; i < sizes.length; i += 1) { // Update every particle
           const twinkle = Math.sin(time * 4 + i * 0.5) * 0.5 + 0.5;
           const slowPulse = Math.sin(time * 0.5 + i * 0.1) * 0.3 + 0.7;
           sizes[i] = originalSizes[i] * (0.3 + twinkle * 0.7) * slowPulse;
         }
         group.geometry.attributes.size.needsUpdate = true;
       } else if (name === 'lightRays' && originalSizes) {
-        // Enhanced movement for light rays
+        // Enhanced movement for light rays - optimized
+        const time = Date.now() * 0.0008;
         const sizes = group.geometry.attributes.size.array;
-        for (let i = 0; i < sizes.length; i++) {
-          const time = Date.now() * 0.0008;
+        for (let i = 0; i < sizes.length; i += 1) { // Update every particle
           const pulse = Math.sin(time + i * 0.2) * 0.4 + 0.6;
           const slowPulse = Math.sin(time * 0.3 + i * 0.1) * 0.2 + 0.8;
           sizes[i] = originalSizes[i] * pulse * slowPulse;
         }
         group.geometry.attributes.size.needsUpdate = true;
       } else if (name === 'cosmicOrbs' && velocities) {
-        // Update cosmic orb positions with mystical movement
+        // Update cosmic orb positions with mystical movement - optimized
+        const time = Date.now() * 0.001;
         for (let i = 0; i < positions.length; i += 3) {
           positions[i] += velocities[i];
           positions[i + 1] += velocities[i + 1];
           positions[i + 2] += velocities[i + 2];
 
-          // Wrap around boundaries
+          // Wrap around boundaries - simplified checks
           if (positions[i] > 10) positions[i] = -10;
-          if (positions[i] < -10) positions[i] = 10;
+          else if (positions[i] < -10) positions[i] = 10;
           if (positions[i + 1] > 10) positions[i + 1] = 2;
-          if (positions[i + 1] < 2) positions[i + 1] = 10;
+          else if (positions[i + 1] < 2) positions[i + 1] = 10;
           if (positions[i + 2] > 10) positions[i + 2] = -10;
-          if (positions[i + 2] < -10) positions[i + 2] = 10;
+          else if (positions[i + 2] < -10) positions[i + 2] = 10;
         }
 
-        // Mystical orb pulsing
+        // Mystical orb pulsing - update every particle
         const sizes = group.geometry.attributes.size.array;
-        for (let i = 0; i < sizes.length; i++) {
-          const time = Date.now() * 0.001;
+        for (let i = 0; i < sizes.length; i += 1) { // Update every particle
           const pulse = Math.sin(time * 2 + i * 0.3) * 0.3 + 0.7;
           const slowPulse = Math.sin(time * 0.5 + i * 0.1) * 0.2 + 0.8;
           sizes[i] = originalSizes[i] * pulse * slowPulse;

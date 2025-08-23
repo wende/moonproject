@@ -1062,28 +1062,7 @@ button {
   }
 }
 
-/* Next puzzle indicator */
-.next-puzzle-indicator {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: linear-gradient(135deg, rgba(40, 56, 66, 0.9) 0%, rgba(52, 58, 64, 0.9) 100%);
-  color: var(--clr-primary-light);
-  padding: var(--space-4) var(--space-8);
-  border-radius: var(--radius-xl);
-  font-size: var(--font-size-lg);
-  font-weight: 500;
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-  pointer-events: none;
-  text-align: center;
-  box-shadow: var(--shadow-2xl);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  letter-spacing: var(--letter-spacing-wide);
-}
+
 
 /* Audio Loading Bar */
 .loading-bar-container {

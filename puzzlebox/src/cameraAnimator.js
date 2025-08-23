@@ -23,6 +23,12 @@ export class CameraAnimator {
     this.isAnimating = false;
     this.currentAnimation = null;
     
+    // Performance optimization: Cache frequently used vectors
+    this._tempVector1 = new THREE.Vector3();
+    this._tempVector2 = new THREE.Vector3();
+    this._tempVector3 = new THREE.Vector3();
+    this._lastUpdateTime = 0;
+    
     // Define camera positions for each puzzle side
     this.puzzlePositions = {
       start: {
@@ -54,6 +60,18 @@ export class CameraAnimator {
     
     // Puzzle completion order
     this.puzzleOrder = ['start', 'maze', 'scales', 'moon', 'cipher'];
+    
+    // Cache puzzle name lookups for performance
+    this._puzzleNameCache = new Map();
+    this._buildPuzzleNameCache();
+  }
+
+  // Build cache for puzzle name lookups
+  _buildPuzzleNameCache() {
+    for (const [puzzleName, puzzlePosition] of Object.entries(this.puzzlePositions)) {
+      const key = `${puzzlePosition.position.x},${puzzlePosition.position.y},${puzzlePosition.position.z}`;
+      this._puzzleNameCache.set(key, puzzleName);
+    }
   }
 
   // Get the next puzzle position based on current completion state
@@ -109,7 +127,7 @@ export class CameraAnimator {
     return this.puzzlePositions[nextPuzzleName];
   }
 
-  // Animate camera to a specific position
+  // Animate camera to a specific position - optimized version
   animateToPosition(targetPosition, targetTarget, duration = DEFAULT_ANIMATION_DURATION) {
     if (this.isAnimating) {
       // Stop current animation
@@ -123,9 +141,9 @@ export class CameraAnimator {
     // Disable controls during animation
     this.controls.setEnabled(false);
     
-    // Store initial positions
-    const startPosition = this.camera.position.clone();
-    const startTarget = this.controls.target.clone();
+    // Store initial positions - reuse cached vectors
+    const startPosition = this._tempVector1.copy(this.camera.position);
+    const startTarget = this._tempVector2.copy(this.controls.target);
     
     // Add safety timeout to prevent getting stuck
     const safetyTimeout = setTimeout(() => {
@@ -133,33 +151,24 @@ export class CameraAnimator {
         console.warn('Camera animation timeout - forcing completion');
         this.forceAnimationComplete(targetPosition, targetTarget);
       }
-    }, (duration + 1) * ANIMATION_TIMEOUT_BUFFER); // 1 second extra buffer
+    }, (duration + 1) * ANIMATION_TIMEOUT_BUFFER);
     
     // Start immediately with first frame
     const startTime = performance.now();
-    let lastTime = startTime;
-    let frameCount = 0;
     
     const animate = (currentTime) => {
-      frameCount++;
-      
-      // Calculate delta time for smoother animation
-      lastTime = currentTime;
-      
       const elapsed = (currentTime - startTime) / 1000;
       const progress = Math.min(elapsed / duration, 1);
       
       // Use completely linear animation for immediate start
       const easedProgress = progress;
       
-      // Direct position assignment without controls interference
+      // Direct position assignment without controls interference - reuse cached vectors
       this.camera.position.lerpVectors(startPosition, targetPosition, easedProgress);
       this.controls.target.lerpVectors(startTarget, targetTarget, easedProgress);
       
-      // Force controls update every few frames to prevent gimbal lock
-      if (frameCount % FRAME_UPDATE_INTERVAL === 0) {
-        this.controls.update();
-      }
+      // Update controls every frame for smooth camera movement
+      this.controls.update();
       
       // Only update controls at the end to avoid interference
       if (progress >= PROGRESS_COMPLETE_THRESHOLD) {
@@ -205,15 +214,14 @@ export class CameraAnimator {
     this.setDialogueForPuzzlePosition(targetPosition);
   }
 
-  // Fade out UI elements during completion
-  fadeOutUI() {
-    const uiElements = [
-      '.intro-button',
-      '.audio-toggle-btn',
-      '.dialogue-button',
-      '.audio-controls',
-      '#next-puzzle-indicator'
-    ];
+      // Fade out UI elements during completion
+    fadeOutUI() {
+      const uiElements = [
+        '.intro-button',
+        '.audio-toggle-btn',
+        '.dialogue-button',
+        '.audio-controls'
+      ];
     
     uiElements.forEach(selector => {
       const elements = document.querySelectorAll(selector);
@@ -240,12 +248,9 @@ export class CameraAnimator {
     
     if (nextPosition) {
       // Find the puzzle name for this position
-      const nextPuzzleName = this.getPuzzleNameForPosition(nextPosition);
+      const nextPuzzleName = this.getPuzzleNameForPosition(nextPosition.position);
       
-      // Show next puzzle indicator
-      if (window.PuzzleBox?.showNextPuzzleIndicator && nextPuzzleName) {
-        window.PuzzleBox.showNextPuzzleIndicator(nextPuzzleName);
-      }
+
       
       // If all puzzles are completed, skip the normal transition and go directly to far distance
       if (completedPuzzleNames && completedPuzzleNames.size >= PUZZLE_COMPLETION_THRESHOLD) {
@@ -292,7 +297,7 @@ export class CameraAnimator {
       // Explosion-like easing: fast start, slow end
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       
-            // Move to far position
+      // Move to far position
       this.camera.position.lerpVectors(currentPosition, farPosition, easedProgress);
       
       // Restore controls and handle rotation (only once)
@@ -309,11 +314,12 @@ export class CameraAnimator {
         this.controls.target.x = THREE.MathUtils.lerp(currentTarget.x, targetTarget.x, easedTargetProgress);
         this.controls.target.y = THREE.MathUtils.lerp(currentTarget.y, targetTarget.y, easedTargetProgress);
         this.controls.target.z = THREE.MathUtils.lerp(currentTarget.z, targetTarget.z, easedTargetProgress);
-        
-        this.controls.update();
       }
       
-
+      // Update controls every frame for smooth movement
+      if (this.controls) {
+        this.controls.update();
+      }
       
       if (progress >= 0.99) {
         // Ensure final position and restore controls
@@ -345,8 +351,6 @@ export class CameraAnimator {
 
   // Start a slow linear zoom as far as possible after completion
   startCompletionZoom(farPosition) {
-
-    
     if (this.isAnimating) {
       // Stop current animation
       if (this.currentAnimation) {
@@ -370,13 +374,8 @@ export class CameraAnimator {
     
     // Start immediately with first frame
     const startTime = performance.now();
-    let lastTime = startTime;
     
     const animate = (currentTime) => {
-      // Calculate delta time for smoother animation
-      const deltaTime = currentTime - lastTime;
-      lastTime = currentTime;
-      
       const elapsed = (currentTime - startTime) / 1000;
       const progress = Math.min(elapsed / ZOOM_DURATION, 1);
       
@@ -385,6 +384,11 @@ export class CameraAnimator {
       
       // Direct position assignment without controls interference
       this.camera.position.lerpVectors(startPosition, targetPosition, easedProgress);
+      
+      // Update controls every frame for smooth movement
+      if (this.controls) {
+        this.controls.update();
+      }
       
       // Only update controls at the very end to avoid interference
       if (progress >= 0.99) {
@@ -404,7 +408,6 @@ export class CameraAnimator {
         }
         
         // Show the outro modal after completion zoom
-        
         setTimeout(() => {
           const outroModal = document.getElementById('outro');
       
@@ -420,7 +423,6 @@ export class CameraAnimator {
             // Start fade-in
             outroModal.style.opacity = '1';
         
-            
             // Optionally, focus the modal for accessibility
             outroModal.focus?.();
           } else {
@@ -437,25 +439,23 @@ export class CameraAnimator {
     this.currentAnimation = requestAnimationFrame(animate);
   }
 
+  // Optimized puzzle name lookup using cache
   getPuzzleNameForPosition(position) {
-    for (const [puzzleName, puzzlePosition] of Object.entries(this.puzzlePositions)) {
-      if (puzzlePosition.position.equals(position)) {
-        return puzzleName;
-      }
-    }
-    return null;
+    const key = `${position.x},${position.y},${position.z}`;
+    return this._puzzleNameCache.get(key) || null;
   }
 
 
 
-  // Get current puzzle position name based on camera position
+  // Get current puzzle position name based on camera position - optimized
   getCurrentPuzzlePosition() {
     const currentPos = this.camera.position;
     let closestPuzzle = 'start';
     let closestDistance = Infinity;
     
+    // Use cached distance calculations
     for (const [puzzleName, position] of Object.entries(this.puzzlePositions)) {
-      const distance = currentPos.distanceTo(position.position);
+      const distance = currentPos.distanceToSquared(position.position); // Use squared distance for performance
       if (distance < closestDistance) {
         closestDistance = distance;
         closestPuzzle = puzzleName;

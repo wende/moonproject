@@ -145,28 +145,7 @@ export function setupUI() {
 
   window.PuzzleBox.setDialogueButton(t('startSequence'))
 
-  // Global function to show next puzzle indicator
-  window.PuzzleBox.showNextPuzzleIndicator = function(puzzleName) {
-    const indicator = document.getElementById('next-puzzle-indicator');
-    if (indicator) {
-      const puzzleNames = {
-        'start': t('startSequenceName'),
-        'maze': t('mazePuzzleName'), 
-        'scales': t('scalesPuzzleName'),
-        'moon': t('moonPuzzleName'),
-        'cipher': t('cipherPuzzleName')
-      };
-      
-      const displayName = puzzleNames[puzzleName] || puzzleName;
-      indicator.textContent = `${t('next')}: ${displayName}`;
-      indicator.style.opacity = '1';
-      
-      // Fade out after 3 seconds
-      setTimeout(() => {
-        indicator.style.opacity = '0';
-      }, 3000);
-    }
-  };
+
 
   modals.forEach(({ id, openClass, closeClass }) => {
     const modal = document.getElementById(id);

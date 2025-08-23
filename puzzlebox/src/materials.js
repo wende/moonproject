@@ -7,6 +7,11 @@ export class MaterialManager {
     this.textureLoader = new THREE.TextureLoader();
     this.cubeTextureLoader = new THREE.CubeTextureLoader();
     
+    // Performance optimization: Track animated materials separately - less aggressive
+    this.animatedMaterials = new Set();
+    this.frameCount = 0;
+    this.updateInterval = 2; // Update every 2nd frame instead of 3rd
+    
     // Initialize default materials
     this.initializeDefaultMaterials();
   }
@@ -127,7 +132,7 @@ export class MaterialManager {
     }
   }
 
-  // Create animated glowing material
+  // Create animated glowing material - optimized
   createAnimatedGlowingMaterial(baseColor = 0x4a90e2, pulseSpeed = 2.0) {
     const material = this.createMaterial({
       color: baseColor,
@@ -144,12 +149,23 @@ export class MaterialManager {
       time: 0
     };
 
+    // Track this material for animation updates
+    this.animatedMaterials.add(material);
+
     return material;
   }
 
-  // Update animated materials
+  // Update animated materials - optimized with reduced frame skipping
   updateAnimatedMaterials(deltaTime) {
-    this.materials.forEach(material => {
+    this.frameCount++;
+    
+    // Skip updates on every 3rd frame instead of every 3rd frame
+    if (this.frameCount % 3 === 0) {
+      return;
+    }
+    
+    // Only update materials that are actually animated
+    this.animatedMaterials.forEach(material => {
       if (material.userData && material.userData.pulseSpeed) {
         material.userData.time += deltaTime * material.userData.pulseSpeed;
         const pulse = Math.sin(material.userData.time) * 0.5 + 0.5;

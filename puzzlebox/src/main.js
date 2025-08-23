@@ -121,54 +121,115 @@ window.downloadBirthdayCard = function() {
   document.body.removeChild(link);
 };
 
-// Background animation function
+// Performance optimization constants - adjusted for better balance
+const BACKGROUND_UPDATE_INTERVAL = 50; // Update background every 50ms instead of 100ms
+const PARTICLE_UPDATE_INTERVAL = 8; // Update particles every 8ms (120fps equivalent)
+const MATERIAL_UPDATE_INTERVAL = 16; // Update materials every 16ms (60fps equivalent)
+
+// Background animation function - optimized with throttling
 function updateBackgroundAnimation(delta) {
   const background = scene.userData.earthBackground;
   if (background) {
     const time = Date.now() * 0.0001;
     
-    // Position stars to always be visible
+    // Position stars to always be visible - only update when camera moves significantly
     const camera = window.PuzzleBox?.camera;
     if (camera && background.stars) {
-      // Position stars relative to camera but in a way that ensures visibility
-      background.stars.position.copy(camera.position);
-      // Move stars in the opposite direction of camera look direction
-      const lookDirection = new THREE.Vector3();
-      camera.getWorldDirection(lookDirection);
-      background.stars.position.add(lookDirection.multiplyScalar(-500));
+      // Cache camera position to avoid unnecessary updates
+      if (!background.lastCameraPosition) {
+        background.lastCameraPosition = camera.position.clone();
+      }
+      
+      const cameraMoved = camera.position.distanceTo(background.lastCameraPosition) > 0.1;
+      if (cameraMoved) {
+        background.stars.position.copy(camera.position);
+        // Move stars in the opposite direction of camera look direction
+        const lookDirection = new THREE.Vector3();
+        camera.getWorldDirection(lookDirection);
+        background.stars.position.add(lookDirection.multiplyScalar(-500));
+        background.lastCameraPosition.copy(camera.position);
+      }
     }
     
-    // Subtle nebula pulsing
+    // Subtle nebula pulsing - only update opacity, not geometry
     const nebulaPulse = Math.sin(time * 2) * 0.05 + 0.95;
-    background.nebula.material.opacity = 0.1 * nebulaPulse;
-    
-    // Twinkling stars effect
-    const starSizes = background.stars.geometry.attributes.size.array;
-    const originalSizes = background.stars.userData.originalSizes;
-    for (let i = 0; i < starSizes.length; i++) {
-      const twinkle = Math.sin(time * 3 + i * 0.1) * 0.3 + 0.7;
-      starSizes[i] = originalSizes[i] * twinkle;
+    if (background.nebula && background.nebula.material) {
+      background.nebula.material.opacity = 0.1 * nebulaPulse;
     }
-    background.stars.geometry.attributes.size.needsUpdate = true;
+    
+    // Twinkling stars effect - optimize array access
+    if (background.stars && background.stars.geometry && background.stars.geometry.attributes.size) {
+      const starSizes = background.stars.geometry.attributes.size.array;
+      const originalSizes = background.stars.userData.originalSizes;
+      if (originalSizes && starSizes.length === originalSizes.length) {
+        // Only update every few frames to reduce CPU load
+        const updateFrequency = 3; // Update every 3rd frame
+        if (Math.floor(time * 100) % updateFrequency === 0) {
+          for (let i = 0; i < starSizes.length; i++) {
+            const twinkle = Math.sin(time * 3 + i * 0.1) * 0.3 + 0.7;
+            starSizes[i] = originalSizes[i] * twinkle;
+          }
+          background.stars.geometry.attributes.size.needsUpdate = true;
+        }
+      }
+    }
   }
 }
 
-function animate() {
-  requestAnimationFrame(animate);
+// Performance tracking
+let backgroundUpdateTime = 0;
+let particleUpdateTime = 0;
+let materialUpdateTime = 0;
+
+function animate(currentTime) {
   const delta = clock.getDelta();
+  
+  // Update mixer (essential for animations)
   mixer.update(delta);
   
-  // Update animated materials
-  materialManager.updateAnimatedMaterials(delta);
+  // Check if camera is animating
+  const isCameraAnimating = cameraAnimator.isAnimating;
   
-  // Update particle effects
-  particleSystem.update(delta);
+  // During camera animations, prioritize smooth camera movement
+  if (isCameraAnimating) {
+    // Skip all expensive operations during camera animations to ensure smooth movement
+    // Only update essential components
+    mixer.update(delta);
+    
+    // Update controls during animation (needed for smooth camera movement)
+    if (controls.enabled) {
+      controls.update();
+    }
+    
+    // Render immediately for smooth camera movement
+    composer.render();
+    requestAnimationFrame(animate);
+    return;
+  }
   
-  // Update background animation
-  updateBackgroundAnimation(delta);
+  // Normal operation - throttle expensive operations
+  if (currentTime - materialUpdateTime > MATERIAL_UPDATE_INTERVAL) {
+    materialManager.updateAnimatedMaterials(delta);
+    materialUpdateTime = currentTime;
+  }
+  
+  if (currentTime - particleUpdateTime > PARTICLE_UPDATE_INTERVAL) {
+    particleSystem.update(delta);
+    particleUpdateTime = currentTime;
+  }
+  
+  if (currentTime - backgroundUpdateTime > BACKGROUND_UPDATE_INTERVAL) {
+    updateBackgroundAnimation(delta);
+    backgroundUpdateTime = currentTime;
+  }
 
-  controls.update();
+  // Update controls if they're enabled
+  if (controls.enabled) {
+    controls.update();
+  }
+  
   composer.render();
+  requestAnimationFrame(animate);
 }
 
 animate();
