@@ -19,25 +19,25 @@ const BLOOM_THRESHOLD = 0.5;
 
 export function setupScene() {
   const scene = new THREE.Scene();
-  
+
   // Enhanced renderer with better settings
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true,
-    powerPreference: "high-performance",
+    powerPreference: 'high-performance',
     stencil: false,
     depth: true,
     logarithmicDepthBuffer: false
   });
-  
+
   // Add cosmic background
   setupCosmicBackground(scene);
-  
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = TONE_MAPPING_EXPOSURE;
-  
+
   document.body.appendChild(renderer.domElement);
 
   // Enhanced camera with better settings
@@ -69,7 +69,7 @@ export function setupScene() {
 
 function setupPostProcessing(scene, camera, renderer) {
   const composer = new EffectComposer(renderer);
-  
+
   // Render pass
   const renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
@@ -98,21 +98,21 @@ function setupPostProcessing(scene, camera, renderer) {
 
 function setupCosmicBackground(scene) {
   // Remove Earth sphere - just use stars and nebula for cleaner look
-  
+
   // Add stars to the background
   const starsGeometry = new THREE.BufferGeometry();
   const starCount = 3000; // More stars to fill the larger space
   const starPositions = new Float32Array(starCount * 3);
   const starColors = new Float32Array(starCount * 3);
   const starSizes = new Float32Array(starCount);
-  
+
   for (let i = 0; i < starCount; i++) {
     // Position stars in a very large cube to ensure they're always visible
     const size = 500; // Very large size to ensure coverage
     starPositions[i * 3] = (Math.random() - 0.5) * size; // X
     starPositions[i * 3 + 1] = (Math.random() - 0.5) * size; // Y
     starPositions[i * 3 + 2] = (Math.random() - 0.5) * size; // Z
-    
+
     // Vary star colors (white, blue, yellow)
     const starType = Math.random();
     if (starType < 0.7) {
@@ -131,15 +131,15 @@ function setupCosmicBackground(scene) {
       starColors[i * 3 + 1] = 0.9;
       starColors[i * 3 + 2] = 0.7;
     }
-    
+
     // Vary star sizes
     starSizes[i] = 0.1 + Math.random() * 0.3;
   }
-  
+
   starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
   starsGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
   starsGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
-  
+
   const starsMaterial = new THREE.PointsMaterial({
     size: 0.5,
     vertexColors: true,
@@ -150,13 +150,13 @@ function setupCosmicBackground(scene) {
     depthWrite: false, // Prevent depth buffer issues
     depthTest: true   // Ensure stars always render
   });
-  
+
   const stars = new THREE.Points(starsGeometry, starsMaterial);
   stars.userData = { originalSizes: [...starSizes] };
   stars.frustumCulled = false; // Disable frustum culling to prevent stars from disappearing
   stars.renderOrder = -1; // Render stars first (behind everything)
   scene.add(stars);
-  
+
   // Add a subtle nebula effect
   const nebulaGeometry = new THREE.SphereGeometry(70, 32, 32);
   const nebulaMaterial = new THREE.MeshBasicMaterial({
@@ -165,12 +165,12 @@ function setupCosmicBackground(scene) {
     opacity: 0.15,
     side: THREE.BackSide
   });
-  
+
   const nebula = new THREE.Mesh(nebulaGeometry, nebulaMaterial);
   nebula.position.set(0, 0, -60);
   nebula.frustumCulled = false; // Disable frustum culling for nebula
   scene.add(nebula);
-  
+
   // Store references for animation
   scene.userData.earthBackground = {
     stars,

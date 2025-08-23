@@ -40,12 +40,12 @@ export class ScalesPuzzle extends Puzzle {
 
     this.setupMaterials();
     this.scaleAnimator = new ScaleAnimator(scene);
-    
+
 
     Object.keys(this.weights).forEach((key) => {
       this.updateLightColor(key);
     });
-    
+
     this.isInitializing = false;
 
     this.checkBalance();
@@ -90,7 +90,7 @@ export class ScalesPuzzle extends Puzzle {
     const weightKey = buttonMap[button.name];
 
     if (!weightKey) return;
-    const rem = weightKey === 'weightC' ? 6 : 5
+    const rem = weightKey === 'weightC' ? 6 : 5;
 
     this.weights[weightKey] = (this.weights[weightKey] + 1) % rem;
 
@@ -102,20 +102,20 @@ export class ScalesPuzzle extends Puzzle {
 
   updateLightColor(weightKey) {
     const index = this.weights[weightKey];
-    
+
     // Safety check to prevent array index out of bounds
     if (index >= this.colorOptions.length) {
       console.warn(`Index ${index} is out of bounds for colorOptions array`);
       return;
     }
-    
+
     const colorName = this.colorOptions[index].name;
-    
+
     // Only update dialogue button if this is called from button interaction (not constructor)
     if (!this.isInitializing) {
-              window.PuzzleBox?.setDialogueButton(colorName);
+      window.PuzzleBox?.setDialogueButton(colorName);
     }
-    
+
     // Add 'col' prefix to match the material naming convention
     const materialName = 'col' + colorName;
     const material = this.colorMaterials[materialName];
@@ -146,7 +146,6 @@ export class ScalesPuzzle extends Puzzle {
 
     const leftSide = value('weightA') + value('weightB') + value('weightC');
     const rightSide = value('weightC') + value('weightC') + value('weightD');
-
 
 
     this.handleStateChange(leftSide, rightSide);

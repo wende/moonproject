@@ -2,13 +2,13 @@ import { BaseSequencePuzzle } from './BaseSequencePuzzle.js';
 
 export class StartSequencePuzzle extends BaseSequencePuzzle {
   constructor(actions) {
-    
+
     super(['S', 'E', 'W', 'N'], actions, null, 'start');
 
-    actions["Moon_Panel_Open"].play()
-    setTimeout(() => 
-      actions["Moon_Panel_Open"].halt()
-    , 1)
+    actions['Moon_Panel_Open'].play();
+    setTimeout(() =>
+      actions['Moon_Panel_Open'].halt()
+    , 1);
   }
 
   markAsCompleted() {

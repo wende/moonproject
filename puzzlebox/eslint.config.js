@@ -12,11 +12,28 @@ export default [
         document: 'readonly',
         console: 'readonly',
         navigator: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        // Audio APIs
+        Audio: 'readonly',
+        AudioContext: 'readonly',
+        webkitAudioContext: 'readonly',
+        // Timing APIs
+        setTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearTimeout: 'readonly',
+        clearInterval: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        performance: 'readonly',
+        // Event APIs
+        CustomEvent: 'readonly',
         // Three.js globals
         THREE: 'readonly',
-        // Audio context
-        AudioContext: 'readonly',
-        webkitAudioContext: 'readonly'
+        // Node.js globals (for module.exports)
+        module: 'readonly',
+        exports: 'readonly',
+        require: 'readonly'
       }
     },
     rules: {

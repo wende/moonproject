@@ -6,12 +6,12 @@ export class MaterialManager {
     this.materials = new Map();
     this.textureLoader = new THREE.TextureLoader();
     this.cubeTextureLoader = new THREE.CubeTextureLoader();
-    
+
     // Performance optimization: Track animated materials separately - less aggressive
     this.animatedMaterials = new Set();
     this.frameCount = 0;
     this.updateInterval = 2; // Update every 2nd frame instead of 3rd
-    
+
     // Initialize default materials
     this.initializeDefaultMaterials();
   }
@@ -158,12 +158,12 @@ export class MaterialManager {
   // Update animated materials - optimized with reduced frame skipping
   updateAnimatedMaterials(deltaTime) {
     this.frameCount++;
-    
+
     // Skip updates on every 3rd frame instead of every 3rd frame
     if (this.frameCount % 3 === 0) {
       return;
     }
-    
+
     // Only update materials that are actually animated
     this.animatedMaterials.forEach(material => {
       if (material.userData && material.userData.pulseSpeed) {
@@ -187,19 +187,19 @@ export function enhanceModelMaterials(scene) {
       // Enable shadows for all meshes
       object.castShadow = true;
       object.receiveShadow = true;
-      
+
       // Apply specific enhanced materials for certain objects (excluding brass and buttons)
-      if (object.name.toLowerCase().includes('metal') && 
-          !object.name.toLowerCase().includes('brass') && 
+      if (object.name.toLowerCase().includes('metal') &&
+          !object.name.toLowerCase().includes('brass') &&
           !object.name.toLowerCase().includes('button')) {
         materialManager.applyEnhancedMaterials(object, 'enhancedMetal');
-      } else if (object.name.toLowerCase().includes('wood') && 
+      } else if (object.name.toLowerCase().includes('wood') &&
                  !object.name.toLowerCase().includes('brass')) {
         materialManager.applyEnhancedMaterials(object, 'enhancedWood');
-      } else if (object.name.toLowerCase().includes('glass') && 
+      } else if (object.name.toLowerCase().includes('glass') &&
                  !object.name.toLowerCase().includes('brass')) {
         materialManager.applyEnhancedMaterials(object, 'glass');
-      } else if (object.name.toLowerCase().includes('light') && 
+      } else if (object.name.toLowerCase().includes('light') &&
                  !object.name.toLowerCase().includes('brass')) {
         materialManager.applyEnhancedMaterials(object, 'glowing');
       }

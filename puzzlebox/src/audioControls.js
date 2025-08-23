@@ -121,7 +121,6 @@ class AudioControls {
     });
 
 
-
     // Close on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.isVisible) {
@@ -184,7 +183,7 @@ class AudioControls {
   show() {
     this.container.style.display = 'block';
     this.isVisible = true;
-    
+
     // Update controls with current audio manager state
     this.updateControls();
   }
@@ -212,7 +211,7 @@ class AudioControls {
 
     // Update mute button state
     this.updateMuteButton(audioManager.isMuted);
-    
+
     // Update voice overs toggle state - hidden for now
     // this.updateVoiceOversToggle(audioManager.areVoiceOversEnabled());
   }
@@ -241,7 +240,7 @@ function createAudioToggleButton() {
   audioToggleBtn.innerHTML = 'Audio';
   audioToggleBtn.setAttribute('aria-label', 'Audio Settings');
   audioToggleBtn.title = 'Audio Settings';
-  
+
   audioToggleBtn.addEventListener('click', () => {
     audioControls.toggle();
   });

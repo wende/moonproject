@@ -10,7 +10,7 @@ export class MazeSequencePuzzle extends BaseSequencePuzzle {
 
     const puzzleClearLight = this.initLightMaterials(this.scene, 'Light_Top_E');
     this.updateLightMaterial(puzzleClearLight, true);
-    
+
     // Delay sliding door animation by 1 second
     setTimeout(() => {
       this.playAnimation('SlidePanel_W_Open');

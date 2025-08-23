@@ -11,13 +11,13 @@ class MicroInteractions {
   initializeEventListeners() {
     // Handle button loading states
     this.setupButtonLoadingStates();
-    
+
     // Handle success/error states
     this.setupStateAnimations();
-    
+
     // Handle modal animations
     this.setupModalAnimations();
-    
+
     // Handle progress indicators
     this.setupProgressIndicators();
   }
@@ -28,7 +28,7 @@ class MicroInteractions {
       const button = e.target.closest('.btn, .btn-dark, .continue-button, .download-button');
       if (button && !button.classList.contains('loading')) {
         // Add loading state for buttons that might take time
-        if (button.classList.contains('download-button') || 
+        if (button.classList.contains('download-button') ||
             button.classList.contains('continue-button')) {
           this.addLoadingState(button, 1000); // 1 second loading
         }
@@ -39,7 +39,7 @@ class MicroInteractions {
   addLoadingState(button, duration = 2000) {
     button.classList.add('loading');
     button.disabled = true;
-    
+
     setTimeout(() => {
       button.classList.remove('loading');
       button.disabled = false;
@@ -109,7 +109,7 @@ class MicroInteractions {
     element.addEventListener('mouseenter', () => {
       element.style.transform = effect === 'lift' ? 'translateY(-2px)' : 'scale(1.05)';
     });
-    
+
     element.addEventListener('mouseleave', () => {
       element.style.transform = '';
     });
@@ -132,14 +132,14 @@ class MicroInteractions {
       const size = Math.max(rect.width, rect.height);
       const x = e.clientX - rect.left - size / 2;
       const y = e.clientY - rect.top - size / 2;
-      
+
       ripple.style.width = ripple.style.height = size + 'px';
       ripple.style.left = x + 'px';
       ripple.style.top = y + 'px';
       ripple.classList.add('ripple');
-      
+
       button.appendChild(ripple);
-      
+
       setTimeout(() => {
         ripple.remove();
       }, 600);

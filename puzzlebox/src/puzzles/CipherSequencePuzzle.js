@@ -7,16 +7,15 @@ export class CipherSequencePuzzle extends BaseSequencePuzzle {
   }
 
   markAsCompleted() {
-    if(!this.scene.getObjectByName('FindTheMoon')?.visible) return;
+    if (!this.scene.getObjectByName('FindTheMoon')?.visible) return;
     super.markAsCompleted();
 
     const puzzleClearLight = this.initLightMaterials(this.scene, 'Light_Top_S');
     this.updateLightMaterial(puzzleClearLight, true);
 
     this.triggerEpicBackgroundFlash();
-    
 
-    
+
     // Fade from moonproject to moonprojecttrue with beat alignment
     audioManager.fadeBetweenTracks('moonproject', 'moonprojecttrue', 3);
   }

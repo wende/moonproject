@@ -29,7 +29,7 @@ class AudioManager {
     this.masterVolume = DEFAULT_MASTER_VOLUME;
     this.tempMusicVolumeReduction = TEMP_MUSIC_VOLUME_REDUCTION;
     this.voiceOversEnabled = false;
-    
+
     // Audio file paths
     this.audioFiles = {
       moonproject: '/audio/moonproject.mp3',
@@ -51,7 +51,7 @@ class AudioManager {
       const savedSettings = localStorage.getItem('puzzleBoxAudioSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        
+
         // Check if this is an old settings version with high music volume
         if (settings.musicVolume && settings.musicVolume > 0.1) {
           // Convert old music volume to new scale (40% of old value)
@@ -60,7 +60,7 @@ class AudioManager {
         } else {
           this.musicVolume = settings.musicVolume ?? DEFAULT_MUSIC_VOLUME;
         }
-        
+
         this.sfxVolume = settings.sfxVolume ?? DEFAULT_SFX_VOLUME;
         this.masterVolume = settings.masterVolume ?? DEFAULT_MASTER_VOLUME;
         this.isMuted = settings.isMuted ?? false;
@@ -91,10 +91,10 @@ class AudioManager {
 
     try {
       console.log('Initializing audio with HTML5 Audio elements (no microphone permissions needed)');
-      
+
       // Create HTML5 audio elements for each sound
       await this.preloadAudioElements();
-      
+
       this.isInitialized = true;
       console.log('Audio system initialized successfully without Web Audio API');
     } catch (error) {
@@ -105,32 +105,32 @@ class AudioManager {
   async preloadAudioElements() {
     const audioFiles = Object.entries(this.audioFiles);
     let loadedCount = 0;
-    
+
     const loadPromises = audioFiles.map(async ([key, path]) => {
       try {
         const audio = new Audio();
         audio.preload = 'auto';
         audio.volume = this.calculateVolume(key);
         audio.src = path;
-        
+
         // Wait for audio to be ready
         await new Promise((resolve, reject) => {
           audio.addEventListener('canplaythrough', resolve, { once: true });
           audio.addEventListener('error', reject, { once: true });
           audio.load();
         });
-        
+
         this.audioElements.set(key, audio);
         loadedCount++;
-        
+
         // Update loading progress
         const progress = (loadedCount / audioFiles.length) * 100;
         this.updateLoadingProgress(progress, `${loadedCount}/${audioFiles.length} files loaded`);
-        
+
       } catch (error) {
         console.warn(`Failed to load audio file ${path}:`, error);
         loadedCount++;
-        
+
         // Update progress even for failed loads
         const progress = (loadedCount / audioFiles.length) * 100;
         this.updateLoadingProgress(progress, `Failed to load ${key}`);
@@ -138,7 +138,7 @@ class AudioManager {
     });
 
     await Promise.all(loadPromises);
-    
+
     // Create button click audio pool for instant playback
     this.createButtonClickPool();
   }
@@ -167,16 +167,16 @@ class AudioManager {
     const progressBar = document.getElementById('audio-loading-progress');
     const progressText = document.getElementById('audio-loading-text');
     const loadingContainer = document.getElementById('audio-loading-container');
-    
+
     if (progressBar && progressText && loadingContainer) {
       // Show loading container if it's hidden
       if (loadingContainer.classList.contains('fade-out')) {
         loadingContainer.classList.remove('fade-out');
       }
-      
+
       progressBar.style.width = `${percentage}%`;
       progressText.textContent = `${Math.round(percentage)}% - ${text}`;
-      
+
       if (percentage >= 100) {
         setTimeout(() => {
           loadingContainer.classList.add('fade-out');
@@ -187,30 +187,30 @@ class AudioManager {
 
   playSound(soundName, options = {}) {
     if (!this.isInitialized || this.isMuted) return null;
-    
+
     const originalAudio = this.audioElements.get(soundName);
     if (!originalAudio) {
       console.warn(`Sound not found: ${soundName}`);
       return null;
     }
-    
+
     // Clone the audio element to allow multiple simultaneous plays
     const audio = originalAudio.cloneNode();
-    
+
     // Set volume
     const volume = options.volume !== undefined ? options.volume : 1;
     audio.volume = volume * this.sfxVolume * this.masterVolume;
-    
+
     // Set start time
     if (options.startTime) {
       audio.currentTime = options.startTime;
     }
-    
+
     // Play the sound
     audio.play().catch(error => {
       console.warn(`Failed to play sound ${soundName}:`, error);
     });
-    
+
     return audio;
   }
 
@@ -218,34 +218,34 @@ class AudioManager {
     if (!this.isInitialized || this.isMuted) {
       return null;
     }
-    
+
     const originalAudio = this.audioElements.get(musicName);
     if (!originalAudio) {
       console.warn(`Music not found: ${musicName}`);
       return null;
     }
-    
+
     // Clone the audio element
     const audio = originalAudio.cloneNode();
-    
+
     // Set volume
     const volume = options.volume !== undefined ? options.volume : 1;
     audio.volume = volume * this.musicVolume * this.masterVolume;
-    
+
     // Set loop
     if (options.loop !== false) {
       audio.loop = true;
     }
-    
+
     // Set start time
     if (options.startTime) {
       audio.currentTime = options.startTime;
     }
-    
+
     // Track start time for elapsed time calculation
     const startTime = Date.now();
     audio.startTime = startTime;
-    
+
     // Handle fade in
     if (options.fadeIn && options.fadeIn > 0) {
       audio.volume = 0;
@@ -259,10 +259,10 @@ class AudioManager {
         console.warn(`Failed to play music ${musicName}:`, error);
       });
     }
-    
+
     // Store the music element
     this.musicElements.set(musicName, audio);
-    
+
     return audio;
   }
 
@@ -273,11 +273,11 @@ class AudioManager {
     const stepTime = (duration * 1000) / steps;
     const volumeIncrement = volumeDifference / steps;
     let currentStep = 0;
-    
+
     const fadeInterval = setInterval(() => {
       currentStep++;
       audio.volume = Math.min(currentVolume + (volumeIncrement * currentStep), targetVolume);
-      
+
       if (currentStep >= steps) {
         clearInterval(fadeInterval);
       }
@@ -304,21 +304,21 @@ class AudioManager {
 
   fadeBetweenTracks(fromTrack, toTrack, fadeDuration = 5.0) {
     const fromAudio = this.musicElements.get(fromTrack);
-    
+
     if (fromAudio) {
       // Capture the current position of the from track
       const fromTrackPosition = fromAudio.currentTime;
-      
+
       // Pre-load the new track to minimize start delay
       const originalAudio = this.audioElements.get(toTrack);
       if (!originalAudio) {
         console.warn(`Music not found: ${toTrack}`);
         return;
       }
-      
+
       // Clone and prepare the new audio element
       const newAudio = originalAudio.cloneNode();
-      
+
       // Compensate for play delay by starting slightly ahead
       // The delay varies but is typically 50-200ms, so we start 100ms ahead
       const playDelayCompensation = 0.001; // 100ms
@@ -326,13 +326,13 @@ class AudioManager {
       newAudio.currentTime = Math.max(0, compensatedPosition);
       newAudio.loop = true;
       newAudio.volume = 0; // Start at 0 volume for fade-in
-      
+
       // Store the new audio element
       this.musicElements.set(toTrack, newAudio);
-      
+
       // Start playing immediately to minimize delay
       const playPromise = newAudio.play();
-      
+
       // Handle any play errors and start fade-in
       if (playPromise !== undefined) {
         playPromise.then(() => {
@@ -342,18 +342,18 @@ class AudioManager {
           console.warn(`Failed to play music ${toTrack}:`, error);
         });
       }
-      
+
       console.log(`Crossfading from ${fromTrack} at ${fromTrackPosition}s to ${toTrack} at ${newAudio.currentTime}s (compensated by ${playDelayCompensation}s)`);
-      
+
       // Now fade out the old track while new track is already playing
       this.fadeOutAudio(fromAudio, fadeDuration * 1.2);
-      
+
       // Stop and clean up the old track after fade completes
       setTimeout(() => {
         fromAudio.pause();
         this.musicElements.delete(fromTrack);
       }, fadeDuration * 1200);
-      
+
     } else {
       // No from track, just start the to track
       this.playMusic(toTrack, { fadeIn: fadeDuration, loop: true });
@@ -365,11 +365,11 @@ class AudioManager {
     const stepTime = (duration * 1000) / steps;
     const volumeDecrement = audio.volume / steps;
     let currentStep = 0;
-    
+
     const fadeInterval = setInterval(() => {
       currentStep++;
       audio.volume = Math.max(audio.volume - volumeDecrement, 0);
-      
+
       if (currentStep >= steps) {
         clearInterval(fadeInterval);
       }
@@ -418,7 +418,7 @@ class AudioManager {
         }
       }
     });
-    
+
     // Update button click pool volumes
     this.buttonClickPool.forEach(audio => {
       if (this.isMuted) {
@@ -457,7 +457,7 @@ class AudioManager {
       return null; // Ignore clicks within 100ms of each other
     }
     this.lastButtonClickTime = Date.now();
-    
+
     // Use the original playSound method for button clicks - simpler and more reliable
     return this.playSound('button_click', { volume: BUTTON_CLICK_VOLUME, startTime: 0.2 });
   }
@@ -465,7 +465,6 @@ class AudioManager {
   playPuzzleSolve() {
     return this.playSound('puzzle_solve', { volume: PUZZLE_SOLVE_VOLUME, startTime: PUZZLE_SOLVE_START_TIME });
   }
-
 
 
   playMazeVO() {
@@ -551,9 +550,9 @@ export function startMusicAfterInteraction(event) {
   // Ignore clicks on audio control elements
   if (event && event.target) {
     const target = event.target;
-    
+
     // Ignore clicks on any audio control elements
-    if (target.closest('.audio-controls') || 
+    if (target.closest('.audio-controls') ||
         target.closest('.audio-toggle-btn') ||
         target.closest('.volume-slider') ||
         target.closest('#master-volume') ||
@@ -573,17 +572,17 @@ export function startMusicAfterInteraction(event) {
 
   console.log('Starting music after interaction:', event?.type, event?.target?.tagName, event?.target?.className);
   musicStarted = true;
-  
+
   // Initialize audio first if not already done
   audioManager.initialize().then(() => {
     // Start only the main moonproject track initially
     const moonprojectAudio = audioManager.playMusic('moonproject', { fadeIn: MUSIC_FADE_IN, loop: true, startTime: 0 });
-    
+
     console.log('Started main music track: moonproject');
   }).catch(error => {
     console.error('Failed to initialize audio:', error);
   });
-  
+
   // Remove the event listener after first interaction
   document.removeEventListener('click', startMusicAfterInteraction);
   document.removeEventListener('keydown', startMusicAfterInteraction);
@@ -597,7 +596,7 @@ export function initializeAudioSystem() {
   if (loadingContainer) {
     loadingContainer.classList.remove('fade-out');
   }
-  
+
   // Don't initialize audio system yet - wait for user interaction
   // This prevents microphone permission requests on page load
 }

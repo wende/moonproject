@@ -14,7 +14,7 @@ export class PuzzleManager {
   addPuzzle(puzzleObj) {
     this.puzzles.push(puzzleObj);
     puzzleObj.on('completed', () => this.handlePuzzleComplete(puzzleObj));
-    
+
     // Map puzzle object to its name using a more reliable method
     const puzzleName = this.getPuzzleName(puzzleObj);
     if (puzzleName) {
@@ -23,7 +23,7 @@ export class PuzzleManager {
       puzzleObj._puzzleName = puzzleName;
 
     } else {
-      console.warn(`Could not determine puzzle name for puzzle object`);
+      console.warn('Could not determine puzzle name for puzzle object');
     }
   }
 
@@ -50,7 +50,7 @@ export class PuzzleManager {
     // Trigger camera animation to next puzzle
     if (this.cameraAnimator) {
       const completedNames = this.getCompletedPuzzleNames();
-      
+
       // Reduced delay for faster response
       setTimeout(() => {
         this.cameraAnimator.animateToNextPuzzle(completedNames);
@@ -65,14 +65,14 @@ export class PuzzleManager {
 
   getCompletedPuzzleNames() {
     const completedNames = new Set();
-    
+
     for (const puzzleObj of this.completedPuzzles) {
       const puzzleName = this.getPuzzleName(puzzleObj);
       if (puzzleName) {
         completedNames.add(puzzleName);
       }
     }
-    
+
     return completedNames;
   }
 

@@ -1,4 +1,4 @@
-import { Puzzle } from './Puzzle.js'
+import { Puzzle } from './Puzzle.js';
 
 export class BaseSequencePuzzle extends Puzzle {
   constructor(sequence, actions, scene, puzzleName) {

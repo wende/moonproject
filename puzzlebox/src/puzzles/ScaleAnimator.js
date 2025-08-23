@@ -2,8 +2,8 @@ export class ScaleAnimator {
   constructor(scene) {
     this.scene = scene;
     this.bones = {
-      left: scene.getObjectByName("Bone_L"),
-      right: scene.getObjectByName("Bone_R")
+      left: scene.getObjectByName('Bone_L'),
+      right: scene.getObjectByName('Bone_R')
     };
     this.animation = {
       active: false,
@@ -45,12 +45,12 @@ export class ScaleAnimator {
     const progress = Math.min(elapsed / this.animation.duration, 1);
 
     // Interpolate positions
-    this.bones.left.position.x = 
-      this.animation.from.left + 
+    this.bones.left.position.x =
+      this.animation.from.left +
         (this.animation.to.left - this.animation.from.left) * progress;
 
-    this.bones.right.position.x = 
-      this.animation.from.right + 
+    this.bones.right.position.x =
+      this.animation.from.right +
         (this.animation.to.right - this.animation.from.right) * progress;
 
     // continue animation or stop

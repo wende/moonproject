@@ -131,7 +131,7 @@ function updateBackgroundAnimation(delta) {
   const background = scene.userData.earthBackground;
   if (background) {
     const time = Date.now() * 0.0001;
-    
+
     // Position stars to always be visible - only update when camera moves significantly
     const camera = window.PuzzleBox?.camera;
     if (camera && background.stars) {
@@ -139,7 +139,7 @@ function updateBackgroundAnimation(delta) {
       if (!background.lastCameraPosition) {
         background.lastCameraPosition = camera.position.clone();
       }
-      
+
       const cameraMoved = camera.position.distanceTo(background.lastCameraPosition) > 0.1;
       if (cameraMoved) {
         background.stars.position.copy(camera.position);
@@ -150,13 +150,13 @@ function updateBackgroundAnimation(delta) {
         background.lastCameraPosition.copy(camera.position);
       }
     }
-    
+
     // Subtle nebula pulsing - only update opacity, not geometry
     const nebulaPulse = Math.sin(time * 2) * 0.05 + 0.95;
     if (background.nebula && background.nebula.material) {
       background.nebula.material.opacity = 0.1 * nebulaPulse;
     }
-    
+
     // Twinkling stars effect - optimize array access
     if (background.stars && background.stars.geometry && background.stars.geometry.attributes.size) {
       const starSizes = background.stars.geometry.attributes.size.array;
@@ -183,41 +183,41 @@ let materialUpdateTime = 0;
 
 function animate(currentTime) {
   const delta = clock.getDelta();
-  
+
   // Update mixer (essential for animations)
   mixer.update(delta);
-  
+
   // Check if camera is animating
   const isCameraAnimating = cameraAnimator.isAnimating;
-  
+
   // During camera animations, prioritize smooth camera movement
   if (isCameraAnimating) {
     // Skip all expensive operations during camera animations to ensure smooth movement
     // Only update essential components
     mixer.update(delta);
-    
+
     // Update controls during animation (needed for smooth camera movement)
     if (controls.enabled) {
       controls.update();
     }
-    
+
     // Render immediately for smooth camera movement
     composer.render();
     requestAnimationFrame(animate);
     return;
   }
-  
+
   // Normal operation - throttle expensive operations
   if (currentTime - materialUpdateTime > MATERIAL_UPDATE_INTERVAL) {
     materialManager.updateAnimatedMaterials(delta);
     materialUpdateTime = currentTime;
   }
-  
+
   if (currentTime - particleUpdateTime > PARTICLE_UPDATE_INTERVAL) {
     particleSystem.update(delta);
     particleUpdateTime = currentTime;
   }
-  
+
   if (currentTime - backgroundUpdateTime > BACKGROUND_UPDATE_INTERVAL) {
     updateBackgroundAnimation(delta);
     backgroundUpdateTime = currentTime;
@@ -227,7 +227,7 @@ function animate(currentTime) {
   if (controls.enabled) {
     controls.update();
   }
-  
+
   composer.render();
   requestAnimationFrame(animate);
 }

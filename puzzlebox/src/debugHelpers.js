@@ -3,16 +3,16 @@
 export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
   // Create namespace for debug helpers
   window.PuzzleBox = window.PuzzleBox || {};
-  
+
   // Expose helpers for skipping to a specific puzzle from the browser console
   window.PuzzleBox.puzzleManager = puzzleManager;
   window.PuzzleBox.puzzles = puzzles;
   window.PuzzleBox.cameraAnimator = cameraAnimator;
-  
+
   window.PuzzleBox.skipTo = (target) => {
     const intro = document.getElementById('intro');
     if (intro) intro.style.display = 'none';
-    
+
     const order = ['start', 'maze', 'scales', 'moon', 'cipher', 'end'];
     const index = typeof target === 'number'
       ? target
@@ -21,7 +21,7 @@ export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
       console.warn('skipTo: invalid target. Use name or index from', order);
       return;
     }
-    
+
     // Complete puzzles up to the target
     for (let i = 0; i < index; i++) {
       const key = order[i];
@@ -30,7 +30,7 @@ export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
         puzzle.markAsCompleted();
       }
     }
-    
+
     // Handle special case for 'end' - simple direct completion
     if (target === 'end' || index === order.length - 1) {
       // Set all puzzles as completed
@@ -41,7 +41,7 @@ export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
           puzzle.isCompleted = true;
         }
       }
-      
+
       // Update puzzle manager state
       const puzzleManager = window.PuzzleBox.puzzleManager;
       if (puzzleManager) {
@@ -53,7 +53,7 @@ export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
         }
         puzzleManager.allPuzzlesCompleted = true;
       }
-      
+
       // Trigger the completion sequence - let camera animation handle the outro modal
       document.dispatchEvent(new CustomEvent('allPuzzlesCompleted'));
     } else {

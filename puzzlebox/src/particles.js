@@ -5,7 +5,7 @@ export class ParticleSystem {
     this.scene = scene;
     this.particles = [];
     this.particleGroups = new Map();
-    
+
     // Performance optimization: Add frame skipping - less aggressive
     this.frameCount = 0;
     this.updateInterval = 1; // Update every frame (removed frame skipping)
@@ -46,7 +46,7 @@ export class ParticleSystem {
       colors[i * 3] = color.r;
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
-      
+
       // Varying sizes
       sizes[i] = 0.01 + Math.random() * 0.02;
     }
@@ -67,10 +67,10 @@ export class ParticleSystem {
     const points = new THREE.Points(geometry, material);
     points.userData = { velocities: velocities, originalSizes: [...sizes] };
     points.frustumCulled = false; // Disable frustum culling
-    
+
     this.particleGroups.set('dust', points);
     this.scene.add(points);
-    
+
     return points;
   }
 
@@ -133,10 +133,10 @@ export class ParticleSystem {
     const points = new THREE.Points(geometry, material);
     points.userData = { velocities: velocities, originalSizes: [...sizes] };
     points.frustumCulled = false; // Disable frustum culling
-    
+
     this.particleGroups.set('sparkles', points);
     this.scene.add(points);
-    
+
     return points;
   }
 
@@ -190,10 +190,10 @@ export class ParticleSystem {
     const points = new THREE.Points(geometry, material);
     points.userData = { originalSizes: [...sizes] };
     points.frustumCulled = false; // Disable frustum culling
-    
+
     this.particleGroups.set('lightRays', points);
     this.scene.add(points);
-    
+
     return points;
   }
 
@@ -253,22 +253,22 @@ export class ParticleSystem {
     const points = new THREE.Points(geometry, material);
     points.userData = { velocities: velocities, originalSizes: [...sizes] };
     points.frustumCulled = false; // Disable frustum culling
-    
+
     this.particleGroups.set('cosmicOrbs', points);
     this.scene.add(points);
-    
+
     return points;
   }
 
   // Optimized update method with reduced frame skipping
   update(delta) {
     this.frameCount++;
-    
+
     // Only skip updates on every 4th frame to maintain visual quality
     if (this.frameCount % 4 === 0) {
       return;
     }
-    
+
     this.particleGroups.forEach((group, name) => {
       const positions = group.geometry.attributes.position.array;
       const velocities = group.userData.velocities;

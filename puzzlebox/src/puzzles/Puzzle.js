@@ -14,7 +14,7 @@ export class Puzzle {
     this.lightMaterials = {
       off: null,
       on: null,
-    }
+    };
   }
 
   handleButtonClick(button) {
@@ -92,13 +92,13 @@ export class Puzzle {
         greenOverlay.style.pointerEvents = 'none';
         greenOverlay.style.zIndex = '-2';
         greenOverlay.style.transition = 'opacity 3s ease-in-out';
-        
+
         document.body.appendChild(greenOverlay);
-        
+
         // Force reflow and then fade in
         void greenOverlay.offsetWidth;
         greenOverlay.style.opacity = '1';
-        
+
         return;
       }
       const current = flashSequence[step];
@@ -136,11 +136,11 @@ export class Puzzle {
     const action = this.actions[name];
 
     // Stop and reset the action to ensure it starts cleanly
-    action.stop()
+    action.stop();
 
     action.setLoop(THREE.LoopOnce);
     action.clampWhenFinished = true;
-    
+
     // Make sliding door animations slower
     if (name.includes('SlidePanel')) {
       action.timeScale = 0.2; // Make it 5x slower (0.2 = 1/5 speed)
@@ -149,7 +149,7 @@ export class Puzzle {
     } else {
       action.timeScale = 1.0; // Normal speed for other animations
     }
-    
+
     action.play();
   }
 

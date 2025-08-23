@@ -13,7 +13,7 @@ export class MoonPuzzle extends Puzzle {
     this.initializeButtons();
     this.initializeLights();
 
-    
+
   }
 
   initializeButtons() {

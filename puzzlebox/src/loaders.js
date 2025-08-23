@@ -1,4 +1,4 @@
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export function loadGLTFModel(modelFilePath, scene, mixer) {
   return new Promise((resolve, reject) => {
@@ -13,7 +13,7 @@ export function loadGLTFModel(modelFilePath, scene, mixer) {
         gltf.animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
           actions[clip.name] = action;
-        })
+        });
 
         resolve({ gltf, actions });
       },
