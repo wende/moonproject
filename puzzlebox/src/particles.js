@@ -9,21 +9,43 @@ export class ParticleSystem {
     // Performance optimization: Add frame skipping - less aggressive
     this.frameCount = 0;
     this.updateInterval = 1; // Update every frame (removed frame skipping)
+    
+    // Store original spread values for each particle type
+    this.originalSpreads = {
+      dust: { x: 30, y: 10, z: 30 },
+      sparkles: { x: 25, y: 8, z: 25 },
+      lightRays: { x: 22, y: 10, z: 22 },
+      cosmicOrbs: { x: 20, y: 8, z: 20 }
+    };
+    
+    // Store original particle counts for each type
+    this.originalCounts = {
+      dust: 150,
+      sparkles: 80,
+      lightRays: 25,
+      cosmicOrbs: 15
+    };
+    
+    // Current completion progress (0.0 to 1.0)
+    this.completionProgress = 0;
   }
 
   // Create floating dust particles (background only)
-  createDustParticles(count = 150) {
+  createDustParticles(count = 150, customSpread = null, sizeMultiplier = 1.0) {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
 
+    // Use custom spread or default to original values
+    const spread = customSpread || this.originalSpreads.dust;
+
     for (let i = 0; i < count; i++) {
       // Random positions in background areas only
-      positions[i * 3] = (Math.random() - 0.5) * 30; // Wider spread
-      positions[i * 3 + 1] = Math.random() * 10; // Various heights, not just high up
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 30; // Deeper background
+      positions[i * 3] = (Math.random() - 0.5) * spread.x; // Wider spread
+      positions[i * 3 + 1] = (Math.random() - 0.5) * spread.y; // Full height range, including below ground
+      positions[i * 3 + 2] = (Math.random() - 0.5) * spread.z; // Deeper background
 
       // Reduced velocities for subtler movement
       velocities[i * 3] = (Math.random() - 0.5) * 0.006;
@@ -47,8 +69,8 @@ export class ParticleSystem {
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
 
-      // Varying sizes
-      sizes[i] = 0.01 + Math.random() * 0.02;
+      // Varying sizes with size multiplier
+      sizes[i] = (0.01 + Math.random() * 0.02) * sizeMultiplier;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -75,18 +97,21 @@ export class ParticleSystem {
   }
 
   // Create magical sparkles (background only)
-  createSparkles(count = 80) {
+  createSparkles(count = 80, customSpread = null, sizeMultiplier = 1.0) {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
 
+    // Use custom spread or default to original values
+    const spread = customSpread || this.originalSpreads.sparkles;
+
     for (let i = 0; i < count; i++) {
       // Random positions in background areas only
-      positions[i * 3] = (Math.random() - 0.5) * 25; // Wider spread
-      positions[i * 3 + 1] = Math.random() * 8; // Various heights, not just high up
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 25; // Deeper background
+      positions[i * 3] = (Math.random() - 0.5) * spread.x; // Wider spread
+      positions[i * 3 + 1] = (Math.random() - 0.5) * spread.y; // Full height range, including below ground
+      positions[i * 3 + 2] = (Math.random() - 0.5) * spread.z; // Deeper background
 
       // Reduced velocities for subtler movement
       velocities[i * 3] = (Math.random() - 0.5) * 0.01;
@@ -113,8 +138,8 @@ export class ParticleSystem {
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
 
-      // Varying sizes for more dynamic effect
-      sizes[i] = 0.003 + Math.random() * 0.005;
+      // Varying sizes for more dynamic effect with size multiplier
+      sizes[i] = (0.003 + Math.random() * 0.005) * sizeMultiplier;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -141,17 +166,20 @@ export class ParticleSystem {
   }
 
   // Create ambient light rays (background only)
-  createLightRays(count = 25) {
+  createLightRays(count = 25, customSpread = null, sizeMultiplier = 1.0) {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
 
+    // Use custom spread or default to original values
+    const spread = customSpread || this.originalSpreads.lightRays;
+
     for (let i = 0; i < count; i++) {
       // Position rays in background areas only
-      positions[i * 3] = (Math.random() - 0.5) * 22; // Wider spread
-      positions[i * 3 + 1] = 3 + Math.random() * 10; // Various heights in background
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 22; // Deeper background
+      positions[i * 3] = (Math.random() - 0.5) * spread.x; // Wider spread
+      positions[i * 3 + 1] = (Math.random() - 0.5) * spread.y; // Full height range, including below ground
+      positions[i * 3 + 2] = (Math.random() - 0.5) * spread.z; // Deeper background
 
       // Enhanced light ray colors
       const color = new THREE.Color();
@@ -170,8 +198,8 @@ export class ParticleSystem {
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
 
-      // Varying sizes for more dynamic effect
-      sizes[i] = 0.01 + Math.random() * 0.015;
+      // Varying sizes for more dynamic effect with size multiplier
+      sizes[i] = (0.01 + Math.random() * 0.015) * sizeMultiplier;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -198,18 +226,21 @@ export class ParticleSystem {
   }
 
   // Create cosmic energy orbs (new particle type)
-  createCosmicOrbs(count = 15) {
+  createCosmicOrbs(count = 15, customSpread = null, sizeMultiplier = 1.0) {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
 
+    // Use custom spread or default to original values
+    const spread = customSpread || this.originalSpreads.cosmicOrbs;
+
     for (let i = 0; i < count; i++) {
       // Position orbs in background areas
-      positions[i * 3] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 1] = 2 + Math.random() * 8;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      positions[i * 3] = (Math.random() - 0.5) * spread.x;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * spread.y; // Full height range, including below ground
+      positions[i * 3 + 2] = (Math.random() - 0.5) * spread.z;
 
       // Very slow, mystical movement
       velocities[i * 3] = (Math.random() - 0.5) * 0.003;
@@ -233,8 +264,8 @@ export class ParticleSystem {
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
 
-      // Larger sizes for orbs
-      sizes[i] = 0.02 + Math.random() * 0.03;
+      // Larger sizes for orbs with size multiplier
+      sizes[i] = (0.02 + Math.random() * 0.03) * sizeMultiplier;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -277,18 +308,30 @@ export class ParticleSystem {
       if (name === 'dust' && velocities) {
         // Update dust particle positions with enhanced movement - optimized
         const time = Date.now() * 0.0003;
+        const currentSpread = this.originalSpreads.dust;
+        let spreadMultiplier;
+        if (this.completionProgress <= 0.2) {
+          const phase1Progress = this.completionProgress / 0.2;
+          spreadMultiplier = 0.4 + (1.0 - 0.4) * Math.pow(phase1Progress, 3);
+        } else {
+          spreadMultiplier = 1.0;
+        }
+        const boundaryX = currentSpread.x * spreadMultiplier * 0.5;
+        const boundaryY = currentSpread.y * spreadMultiplier * 0.5;
+        const boundaryZ = currentSpread.z * spreadMultiplier * 0.5;
+        
         for (let i = 0; i < positions.length; i += 3) {
           positions[i] += velocities[i];
           positions[i + 1] += velocities[i + 1];
           positions[i + 2] += velocities[i + 2];
 
-          // Wrap around boundaries (keep in background) - simplified checks
-          if (positions[i] > 15) positions[i] = -15;
-          else if (positions[i] < -15) positions[i] = 15;
-          if (positions[i + 1] > 10) positions[i + 1] = 0;
-          else if (positions[i + 1] < 0) positions[i + 1] = 10;
-          if (positions[i + 2] > 15) positions[i + 2] = -15;
-          else if (positions[i + 2] < -15) positions[i + 2] = 15;
+          // Wrap around boundaries based on current spread
+          if (positions[i] > boundaryX) positions[i] = -boundaryX;
+          else if (positions[i] < -boundaryX) positions[i] = boundaryX;
+          if (positions[i + 1] > boundaryY) positions[i + 1] = -boundaryY;
+          else if (positions[i + 1] < -boundaryY) positions[i + 1] = boundaryY;
+          if (positions[i + 2] > boundaryZ) positions[i + 2] = -boundaryZ;
+          else if (positions[i + 2] < -boundaryZ) positions[i + 2] = boundaryZ;
         }
 
         // Subtle size pulsing for dust - update more particles
@@ -301,18 +344,30 @@ export class ParticleSystem {
       } else if (name === 'sparkles' && velocities) {
         // Update sparkle positions with enhanced twinkling effect - optimized
         const time = Date.now() * 0.002;
+        const currentSpread = this.originalSpreads.sparkles;
+        let spreadMultiplier;
+        if (this.completionProgress <= 0.2) {
+          const phase1Progress = this.completionProgress / 0.2;
+          spreadMultiplier = 0.4 + (1.0 - 0.4) * Math.pow(phase1Progress, 3);
+        } else {
+          spreadMultiplier = 1.0;
+        }
+        const boundaryX = currentSpread.x * spreadMultiplier * 0.5;
+        const boundaryY = currentSpread.y * spreadMultiplier * 0.5;
+        const boundaryZ = currentSpread.z * spreadMultiplier * 0.5;
+        
         for (let i = 0; i < positions.length; i += 3) {
           positions[i] += velocities[i];
           positions[i + 1] += velocities[i + 1];
           positions[i + 2] += velocities[i + 2];
 
-          // Wrap around boundaries (keep in background) - simplified checks
-          if (positions[i] > 12.5) positions[i] = -12.5;
-          else if (positions[i] < -12.5) positions[i] = 12.5;
-          if (positions[i + 1] > 8) positions[i + 1] = 0;
-          else if (positions[i + 1] < 0) positions[i + 1] = 8;
-          if (positions[i + 2] > 12.5) positions[i + 2] = -12.5;
-          else if (positions[i + 2] < -12.5) positions[i + 2] = 12.5;
+          // Wrap around boundaries based on current spread
+          if (positions[i] > boundaryX) positions[i] = -boundaryX;
+          else if (positions[i] < -boundaryX) positions[i] = boundaryX;
+          if (positions[i + 1] > boundaryY) positions[i + 1] = -boundaryY;
+          else if (positions[i + 1] < -boundaryY) positions[i + 1] = boundaryY;
+          if (positions[i + 2] > boundaryZ) positions[i + 2] = -boundaryZ;
+          else if (positions[i + 2] < -boundaryZ) positions[i + 2] = boundaryZ;
         }
 
         // Enhanced twinkling effect - update more particles
@@ -336,18 +391,30 @@ export class ParticleSystem {
       } else if (name === 'cosmicOrbs' && velocities) {
         // Update cosmic orb positions with mystical movement - optimized
         const time = Date.now() * 0.001;
+        const currentSpread = this.originalSpreads.cosmicOrbs;
+        let spreadMultiplier;
+        if (this.completionProgress <= 0.2) {
+          const phase1Progress = this.completionProgress / 0.2;
+          spreadMultiplier = 0.4 + (1.0 - 0.4) * Math.pow(phase1Progress, 3);
+        } else {
+          spreadMultiplier = 1.0;
+        }
+        const boundaryX = currentSpread.x * spreadMultiplier * 0.5;
+        const boundaryY = currentSpread.y * spreadMultiplier * 0.5;
+        const boundaryZ = currentSpread.z * spreadMultiplier * 0.5;
+        
         for (let i = 0; i < positions.length; i += 3) {
           positions[i] += velocities[i];
           positions[i + 1] += velocities[i + 1];
           positions[i + 2] += velocities[i + 2];
 
-          // Wrap around boundaries - simplified checks
-          if (positions[i] > 10) positions[i] = -10;
-          else if (positions[i] < -10) positions[i] = 10;
-          if (positions[i + 1] > 10) positions[i + 1] = 2;
-          else if (positions[i + 1] < 2) positions[i + 1] = 10;
-          if (positions[i + 2] > 10) positions[i + 2] = -10;
-          else if (positions[i + 2] < -10) positions[i + 2] = 10;
+          // Wrap around boundaries based on current spread
+          if (positions[i] > boundaryX) positions[i] = -boundaryX;
+          else if (positions[i] < -boundaryX) positions[i] = boundaryX;
+          if (positions[i + 1] > boundaryY) positions[i + 1] = -boundaryY;
+          else if (positions[i + 1] < -boundaryY) positions[i + 1] = boundaryY;
+          if (positions[i + 2] > boundaryZ) positions[i + 2] = -boundaryZ;
+          else if (positions[i + 2] < -boundaryZ) positions[i + 2] = boundaryZ;
         }
 
         // Mystical orb pulsing - update every particle
@@ -362,6 +429,142 @@ export class ParticleSystem {
 
       group.geometry.attributes.position.needsUpdate = true;
     });
+  }
+
+  // Update particle spread and count based on completion progress
+  updateParticleSpread(completionProgress) {
+    this.completionProgress = completionProgress;
+    
+    // Two-phase progression:
+    // Phase 1 (0-1 puzzles): Particle count, spread, and size grow cubically from 0x to 1.0x
+    // Phase 2 (2-4 puzzles): Particle count, spread, and size stay at 1.0x
+    let spreadMultiplier, countMultiplier, sizeMultiplier;
+    
+    if (completionProgress <= 0.2) { // First 1 puzzle (0.2 = 1/5)
+      // Phase 1: Particle count, spread, and size growth
+      const phase1Progress = completionProgress / 0.2; // 0 to 1
+      const minMultiplier = 0.0; // Start with 0 particles
+      const maxMultiplier = 1.0;
+      const cubicProgress = Math.pow(phase1Progress, 3);
+      spreadMultiplier = minMultiplier + (maxMultiplier - minMultiplier) * cubicProgress;
+      countMultiplier = minMultiplier + (maxMultiplier - minMultiplier) * cubicProgress;
+      sizeMultiplier = 0.3 + (maxMultiplier - 0.3) * cubicProgress; // Size grows from 0.3x to 1.0x
+    } else {
+      // Phase 2: Particle count, spread, and size stay at maximum
+      spreadMultiplier = 1.0;
+      countMultiplier = 1.0;
+      sizeMultiplier = 1.0;
+    }
+    
+    this.particleGroups.forEach((group, name) => {
+      if (this.originalSpreads[name]) {
+        const originalSpread = this.originalSpreads[name];
+        const newSpread = {
+          x: originalSpread.x * spreadMultiplier,
+          y: originalSpread.y * spreadMultiplier,
+          z: originalSpread.z * spreadMultiplier
+        };
+        
+        // Update particle positions to new spread
+        this.updateParticlePositions(group, newSpread);
+        
+        // Update particle count if needed
+        if (this.originalCounts[name]) {
+          const newCount = Math.floor(this.originalCounts[name] * countMultiplier);
+          this.updateParticleCount(group, name, newCount, newSpread, sizeMultiplier);
+        }
+        
+        console.log(`${name} particles updated: spread=${spreadMultiplier.toFixed(2)}x, count=${countMultiplier.toFixed(2)}x, range=${newSpread.x.toFixed(1)}x${newSpread.y.toFixed(1)}x${newSpread.z.toFixed(1)}`);
+      }
+    });
+  }
+  
+  // Update particle positions to new spread range
+  updateParticlePositions(group, newSpread) {
+    const positions = group.geometry.attributes.position.array;
+    
+    for (let i = 0; i < positions.length; i += 3) {
+      // Redistribute particles within the new spread range
+      positions[i] = (Math.random() - 0.5) * newSpread.x; // X
+      positions[i + 1] = Math.random() * newSpread.y; // Y
+      positions[i + 2] = (Math.random() - 0.5) * newSpread.z; // Z
+    }
+    
+    group.geometry.attributes.position.needsUpdate = true;
+  }
+  
+  // Update particle count by recreating the particle group
+  updateParticleCount(group, name, newCount, newSpread, sizeMultiplier) {
+    const currentCount = group.geometry.attributes.position.count;
+    
+    // Only update if the count has changed significantly (more than 10% difference)
+    if (Math.abs(newCount - currentCount) / currentCount > 0.1) {
+      // Remove the old group
+      this.scene.remove(group);
+      this.particleGroups.delete(name);
+      
+      // Recreate the particle group with new count
+      switch (name) {
+        case 'dust':
+          this.createDustParticles(newCount, newSpread, sizeMultiplier);
+          break;
+        case 'sparkles':
+          this.createSparkles(newCount, newSpread, sizeMultiplier);
+          break;
+        case 'lightRays':
+          this.createLightRays(newCount, newSpread, sizeMultiplier);
+          break;
+        case 'cosmicOrbs':
+          this.createCosmicOrbs(newCount, newSpread, sizeMultiplier);
+          break;
+      }
+    }
+  }
+
+  // Get current particle spread, count, and size information for debugging
+  getCurrentSpreadInfo() {
+    let spreadMultiplier, countMultiplier, sizeMultiplier;
+    if (this.completionProgress <= 0.2) {
+      const phase1Progress = this.completionProgress / 0.2;
+      const cubicProgress = Math.pow(phase1Progress, 3);
+      spreadMultiplier = 0.0 + (1.0 - 0.0) * cubicProgress;
+      countMultiplier = 0.0 + (1.0 - 0.0) * cubicProgress;
+      sizeMultiplier = 0.3 + (1.0 - 0.3) * cubicProgress;
+    } else {
+      spreadMultiplier = 1.0;
+      countMultiplier = 1.0;
+      sizeMultiplier = 1.0;
+    }
+    
+    const info = {
+      completionProgress: this.completionProgress,
+      spreadMultiplier: spreadMultiplier,
+      countMultiplier: countMultiplier,
+      sizeMultiplier: sizeMultiplier,
+      particleTypes: {}
+    };
+    
+    Object.keys(this.originalSpreads).forEach(name => {
+      const original = this.originalSpreads[name];
+      const originalCount = this.originalCounts[name];
+      info.particleTypes[name] = {
+        original: {
+          spread: original,
+          count: originalCount
+        },
+        current: {
+          spread: {
+            x: original.x * spreadMultiplier,
+            y: original.y * spreadMultiplier,
+            z: original.z * spreadMultiplier
+          },
+          count: Math.floor(originalCount * countMultiplier),
+          size: sizeMultiplier
+        }
+      };
+    });
+    
+    return info;
   }
 
   // Create all particle effects

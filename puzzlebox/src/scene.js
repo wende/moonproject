@@ -174,6 +174,55 @@ function setupCosmicBackground(scene) {
   // Store references for animation
   scene.userData.earthBackground = {
     stars,
-    nebula
+    nebula,
+    originalStarOpacity: 0.8 // Store original opacity for reference
+  };
+
+  // Function to update star visibility based on puzzle completion
+  scene.userData.updateStarVisibility = function(completionProgress) {
+    const background = scene.userData.earthBackground;
+    if (background && background.stars && background.stars.material) {
+      // Star opacity progression:
+      // Puzzles 0-1: 0 opacity
+      // Puzzle 2: 0.5 opacity
+      // Puzzle 3: 0.9 opacity
+      // Puzzle 4: 1.0 opacity
+      let starOpacity;
+      if (completionProgress <= 0.4) { // First 2 puzzles (0.4 = 2/5)
+        starOpacity = 0;
+      } else if (completionProgress <= 0.6) { // Puzzle 3 (0.6 = 3/5)
+        starOpacity = 0.5;
+      } else if (completionProgress <= 0.8) { // Puzzle 4 (0.8 = 4/5)
+        starOpacity = 0.9;
+      } else { // Puzzle 4 completed (1.0 = 5/5)
+        starOpacity = 1.0;
+      }
+      
+      // Calculate final star opacity (0 to 0.8 range)
+      const finalStarOpacity = starOpacity * background.originalStarOpacity;
+      
+      // Smooth transition for star opacity
+      const currentOpacity = background.stars.material.opacity;
+      const opacityDiff = finalStarOpacity - currentOpacity;
+      if (Math.abs(opacityDiff) > 0.01) {
+        background.stars.material.opacity = finalStarOpacity;
+      }
+      
+      // Also increase star size based on star opacity
+      const minSize = 0.3;
+      const maxSize = 0.5;
+      const newSize = minSize + (maxSize - minSize) * starOpacity;
+      background.stars.material.size = newSize;
+      
+      // Update nebula visibility based on star opacity
+      if (background.nebula && background.nebula.material) {
+        const minNebulaOpacity = 0.05;
+        const maxNebulaOpacity = 0.15;
+        const newNebulaOpacity = minNebulaOpacity + (maxNebulaOpacity - minNebulaOpacity) * starOpacity;
+        background.nebula.material.opacity = newNebulaOpacity;
+      }
+      
+      console.log(`Stars updated: opacity=${finalStarOpacity.toFixed(2)}, size=${newSize.toFixed(2)}, progress=${(completionProgress * 100).toFixed(0)}%, starOpacity=${starOpacity.toFixed(1)}`);
+    }
   };
 }

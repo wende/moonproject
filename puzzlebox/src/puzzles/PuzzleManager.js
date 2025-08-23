@@ -9,6 +9,27 @@ export class PuzzleManager {
     this.cameraAnimator = null;
     this.puzzleNames = ['start', 'maze', 'scales', 'moon', 'cipher'];
     this.puzzleMap = new Map(); // Map puzzle names to puzzle objects
+    this.onPuzzleCompleteCallbacks = []; // Callbacks to run when puzzles are completed
+  }
+
+  // Add callback to be called when a puzzle is completed
+  onPuzzleComplete(callback) {
+    this.onPuzzleCompleteCallbacks.push(callback);
+  }
+
+  // Get completion progress (0.0 to 1.0)
+  getCompletionProgress() {
+    return this.completedPuzzles.size / this.puzzles.length;
+  }
+
+  // Get number of completed puzzles
+  getCompletedCount() {
+    return this.completedPuzzles.size;
+  }
+
+  // Get total number of puzzles
+  getTotalPuzzles() {
+    return this.puzzles.length;
   }
 
   addPuzzle(puzzleObj) {
@@ -61,6 +82,10 @@ export class PuzzleManager {
       this.allPuzzlesCompleted = true;
       document.dispatchEvent(new CustomEvent('allPuzzlesCompleted'));
     }
+
+    // Notify callbacks with completion progress
+    const progress = this.getCompletionProgress();
+    this.onPuzzleCompleteCallbacks.forEach(callback => callback(puzzleName, progress));
   }
 
   getCompletedPuzzleNames() {
@@ -137,5 +162,9 @@ export class PuzzleManager {
         puzzle.markAsCompleted();
       }
     });
+
+    // Update star visibility after loading progress
+    const completionProgress = this.getCompletionProgress();
+    this.onPuzzleCompleteCallbacks.forEach(callback => callback(null, completionProgress));
   }
 }

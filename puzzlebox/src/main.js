@@ -28,6 +28,18 @@ const particleSystem = new ParticleSystem(scene);
 const cameraAnimator = new CameraAnimator(camera, controls);
 puzzleManager.setCameraAnimator(cameraAnimator);
 
+// Set up star visibility and particle spread updates when puzzles are completed
+puzzleManager.onPuzzleComplete((puzzleName, progress) => {
+  if (scene.userData.updateStarVisibility) {
+    scene.userData.updateStarVisibility(progress);
+  }
+  
+  // Update particle spread based on completion progress
+  if (particleSystem) {
+    particleSystem.updateParticleSpread(progress);
+  }
+});
+
 console.log('Camera animator initialized with puzzle positions:', cameraAnimator.getPuzzlePositions());
 
 // Expose debug methods globally for testing
@@ -43,6 +55,12 @@ window.debugPuzzles = {
   verifyNames: () => puzzleManager.verifyPuzzleNames(),
   getCompletedNames: () => puzzleManager.getCompletedPuzzleNames(),
   getPuzzleCount: () => puzzleManager.puzzles.length
+};
+
+// Expose particle system debug methods
+window.debugParticles = {
+  getSpreadInfo: () => particleSystem.getCurrentSpreadInfo(),
+  getCompletionProgress: () => puzzleManager.getCompletionProgress()
 };
 
 loadGLTFModel('/scene.glb', scene, mixer)
@@ -86,6 +104,18 @@ loadGLTFModel('/scene.glb', scene, mixer)
       cipher: cipherPuzzle,
     };
     setupDebugHelpers(puzzleManager, cameraAnimator, puzzles);
+
+    // Load saved progress and initialize star visibility and particle spread
+    puzzleManager.loadProgress();
+    const initialProgress = puzzleManager.getCompletionProgress();
+    if (scene.userData.updateStarVisibility) {
+      scene.userData.updateStarVisibility(initialProgress);
+    }
+    
+    // Initialize particle spread based on current progress
+    if (particleSystem) {
+      particleSystem.updateParticleSpread(initialProgress);
+    }
 
   });
 
