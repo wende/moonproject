@@ -553,6 +553,13 @@ button {
   margin-top: var(--space-4);
 }
 
+.time-counter {
+  font-size: var(--font-size-sm);
+  color: var(--clr-neutral-600);
+  font-style: italic;
+  margin-top: var(--space-4);
+}
+
 .modal-image {
   width: 100%;
   margin-inline: auto;

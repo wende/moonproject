@@ -58,7 +58,8 @@ export const translations = {
     outroText1: 'Sometimes it takes too many riddles to realize',
     outroText2: 'Sometimes moon wanes',
     outroText3: 'Happy Birthday Moon',
-    postscript: 'PS. Did you know that Moon waxes religiously?',
+    postscript: 'PS2 Did you know that Moon waxes religiously?',
+    timeCounterText: 'PS In orbit for: {years} years, {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds',
 
     // Credits
     gameDesignDevelopment: 'Game Design & Development',

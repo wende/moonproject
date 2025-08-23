@@ -17,6 +17,7 @@ import { materialManager, enhanceModelMaterials } from './materials';
 import { ParticleSystem } from './particles';
 import { CameraAnimator } from './cameraAnimator';
 import { setupDebugHelpers } from './debugHelpers';
+import { initializeTimeCounter } from './timeCounter';
 
 const { scene, renderer, camera, mixer, mouse, raycaster, composer } = setupScene();
 const controls = setupControls(camera, renderer);
@@ -97,6 +98,7 @@ updateHTMLContent();
 document.addEventListener('DOMContentLoaded', () => {
   createAudioToggleButton();
   initializeAudioSystem();
+  initializeTimeCounter();
 });
 
 // Wait for user interaction before starting music (browser requirement)

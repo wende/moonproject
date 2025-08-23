@@ -1,5 +1,31 @@
 import { t } from './i18n.js';
 
+// Helper function to get current time values
+function getCurrentTimeValues() {
+  const startDate = new Date('2020-01-19T00:00:00');
+  const now = new Date();
+  const timeDiff = now - startDate;
+  
+  const totalSeconds = Math.floor(timeDiff / 1000);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const totalDays = Math.floor(totalHours / 24);
+  const totalYears = Math.floor(totalDays / 365.25);
+  
+  const remainingDays = totalDays - Math.floor(totalYears * 365.25);
+  const remainingHours = totalHours - (totalDays * 24);
+  const remainingMinutes = totalMinutes - (totalHours * 60);
+  const remainingSeconds = totalSeconds - (totalMinutes * 60);
+  
+  return { 
+    years: totalYears, 
+    days: remainingDays, 
+    hours: remainingHours, 
+    minutes: remainingMinutes, 
+    seconds: remainingSeconds 
+  };
+}
+
 // Function to update HTML content with translations
 export function updateHTMLContent() {
   // Update page title
@@ -58,6 +84,19 @@ export function updateHTMLContent() {
 
   const postscript = document.querySelector('#outro .postscript');
   if (postscript) postscript.textContent = t('postscript');
+
+  // Initialize time counter text
+  const timeCounter = document.querySelector('#outro .time-counter');
+  if (timeCounter) {
+    const { years, days, hours, minutes, seconds } = getCurrentTimeValues();
+    const text = t('timeCounterText')
+      .replace('{years}', years.toLocaleString())
+      .replace('{days}', days.toLocaleString())
+      .replace('{hours}', hours.toLocaleString())
+      .replace('{minutes}', minutes.toLocaleString())
+      .replace('{seconds}', seconds.toLocaleString());
+    timeCounter.innerHTML = text;
+  }
 
   const creditsButton = document.querySelector('.end-button');
   if (creditsButton) creditsButton.textContent = t('creditsButton');
