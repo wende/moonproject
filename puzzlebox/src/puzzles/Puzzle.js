@@ -87,7 +87,7 @@ export class Puzzle {
         greenOverlay.style.left = '0';
         greenOverlay.style.width = '100%';
         greenOverlay.style.height = '100%';
-        greenOverlay.style.backgroundImage = 'radial-gradient(black, white)';
+        greenOverlay.style.backgroundImage = 'radial-gradient(white, rgba(0,0,0,0.7))';
         greenOverlay.style.opacity = '0';
         greenOverlay.style.pointerEvents = 'none';
         greenOverlay.style.zIndex = '-2';

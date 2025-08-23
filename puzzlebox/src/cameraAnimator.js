@@ -10,8 +10,9 @@ const NEXT_PUZZLE_ANIMATION_DURATION = 2.2;
 const PUZZLE_COMPLETION_THRESHOLD = 5;
 const ANIMATION_BUFFER_DELAY = 2500; // 2.2s animation + 0.3s buffer
 const UI_FADE_DURATION = 3000; // 3 seconds
-const MAX_ZOOM_DISTANCE = 2.5;
-const ZOOM_DURATION = 10.0;
+const END_ZOOM_DISTANCE = 2.6; // Final position after zoom
+const ZOOM_DURATION = 15.0;
+const FAR_ANIMATION_DURATION = 2.0;
 const OUTRO_DELAY = 500;
 const OUTRO_FADE_DURATION = 2000; // 2 seconds
 
@@ -57,37 +58,25 @@ export class CameraAnimator {
 
   // Get the next puzzle position based on current completion state
   getNextPuzzlePosition(completedPuzzleNames) {
-    console.log('getNextPuzzlePosition called with:', completedPuzzleNames);
-    console.log('Puzzle order:', this.puzzleOrder);
-    
     // Ensure completedPuzzleNames is a Set
     if (!(completedPuzzleNames instanceof Set)) {
       console.warn('completedPuzzleNames is not a Set, converting...');
       completedPuzzleNames = new Set(completedPuzzleNames);
     }
     
-    // Log the current state for debugging
-    for (const puzzleName of this.puzzleOrder) {
-      const isCompleted = completedPuzzleNames.has(puzzleName);
-      console.log(`Puzzle ${puzzleName}: ${isCompleted ? 'completed' : 'not completed'}`);
-    }
-    
     // Check if we have a valid completion state
     if (completedPuzzleNames.size === 0) {
-      console.log('No puzzles completed, going to first puzzle (start)');
       return this.puzzlePositions.start;
     }
     
     // Find the next incomplete puzzle
     for (const puzzleName of this.puzzleOrder) {
       if (!completedPuzzleNames.has(puzzleName)) {
-        console.log(`Next puzzle to go to: ${puzzleName}`);
         return this.puzzlePositions[puzzleName];
       }
     }
     
     // If all puzzles are completed, return to start view
-    console.log('All puzzles completed, returning to start view');
     return this.puzzlePositions.start;
   }
 
@@ -110,14 +99,12 @@ export class CameraAnimator {
     
     // If we can't determine current position, start from beginning
     if (currentPuzzleIndex === -1) {
-      console.log('Cannot determine current position, starting from first puzzle');
       return this.puzzlePositions.start;
     }
     
     // Go to next puzzle in sequence
     const nextIndex = (currentPuzzleIndex + 1) % this.puzzleOrder.length;
     const nextPuzzleName = this.puzzleOrder[nextIndex];
-    console.log(`Moving from ${this.puzzleOrder[currentPuzzleIndex]} to ${nextPuzzleName}`);
     
     return this.puzzlePositions[nextPuzzleName];
   }
@@ -221,7 +208,9 @@ export class CameraAnimator {
   // Fade out UI elements during completion
   fadeOutUI() {
     const uiElements = [
-      '.nav-buttons',
+      '.intro-button',
+      '.audio-toggle-btn',
+      '.dialogue-button',
       '.audio-controls',
       '#next-puzzle-indicator'
     ];
@@ -239,50 +228,123 @@ export class CameraAnimator {
 
   // Animate to next puzzle after completion
   animateToNextPuzzle(completedPuzzleNames) {
-    console.log('animateToNextPuzzle called with:', completedPuzzleNames);
     
     let nextPosition;
     
     // Try to get next position based on completion state
     if (completedPuzzleNames && completedPuzzleNames.size > 0) {
       nextPosition = this.getNextPuzzlePosition(completedPuzzleNames);
-      console.log('Next position determined by completion state:', nextPosition);
     } else {
-      console.log('No completion state available, using position-based fallback');
       nextPosition = this.getNextPuzzlePositionByCurrentPosition();
-      console.log('Next position determined by current position:', nextPosition);
     }
     
     if (nextPosition) {
       // Find the puzzle name for this position
       const nextPuzzleName = this.getPuzzleNameForPosition(nextPosition);
-      console.log('Next puzzle name:', nextPuzzleName);
       
       // Show next puzzle indicator
       if (window.PuzzleBox?.showNextPuzzleIndicator && nextPuzzleName) {
         window.PuzzleBox.showNextPuzzleIndicator(nextPuzzleName);
       }
       
-      console.log('Starting camera animation to:', nextPosition.position, nextPosition.target);
-      this.animateToPosition(nextPosition.position, nextPosition.target, NEXT_PUZZLE_ANIMATION_DURATION);
-      
-      // If all puzzles are completed (we're going to start position), trigger the zoom
+      // If all puzzles are completed, skip the normal transition and go directly to far distance
       if (completedPuzzleNames && completedPuzzleNames.size >= PUZZLE_COMPLETION_THRESHOLD) {
-        console.log('All puzzles completed, will trigger completion zoom');
-    
-        // Wait for the camera animation to complete, then start the zoom
-        setTimeout(() => {
-          console.log('Starting completion zoom');
-          this.startCompletionZoom();
-        }, ANIMATION_BUFFER_DELAY); // 2.2s animation + 0.3s buffer
+        this.goToFarDistance();
+      } else {
+        // Only do normal animation if not all puzzles are completed
+        this.animateToPosition(nextPosition.position, nextPosition.target, NEXT_PUZZLE_ANIMATION_DURATION);
       }
     } else {
       console.warn('No next puzzle position found');
     }
   }
 
+  // Go to far distance first, then start the completion zoom
+  goToFarDistance() {
+    if (this.isAnimating) {
+      // Stop current animation
+      if (this.currentAnimation) {
+        cancelAnimationFrame(this.currentAnimation);
+      }
+    }
+
+    this.isAnimating = true;
+    
+    // Fade out UI buttons during the zoom
+    this.fadeOutUI();
+    
+          // Store original controls and target
+      const originalControls = this.controls;
+      const currentTarget = this.controls.target.clone();
+      this.controls = null;
+    
+    // Calculate transition parameters
+    const currentPosition = this.camera.position.clone();
+    const farPosition = new THREE.Vector3(0, 11.0, 0.01); // Within OrbitControls maxDistance
+    const targetTarget = new THREE.Vector3(0, 0, 0);
+    
+    // Animate to far position
+    const startTime = performance.now();
+    
+    const animateToFar = (currentTime) => {
+      const elapsed = (currentTime - startTime) / 1000;
+      const progress = Math.min(elapsed / FAR_ANIMATION_DURATION, 1);
+      // Explosion-like easing: fast start, slow end
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      
+            // Move to far position
+      this.camera.position.lerpVectors(currentPosition, farPosition, easedProgress);
+      
+      // Restore controls and handle rotation (only once)
+      if (progress >= 0.1 && !this.controls) {
+        this.controls = originalControls;
+        this.controls.enableDamping = false;
+      }
+      
+      // Update target smoothly
+      if (this.controls && progress >= 0.1) {
+        const targetProgress = (progress - 0.1) / 0.9;
+        const easedTargetProgress = Math.sin(targetProgress * Math.PI / 2);
+        
+        this.controls.target.x = THREE.MathUtils.lerp(currentTarget.x, targetTarget.x, easedTargetProgress);
+        this.controls.target.y = THREE.MathUtils.lerp(currentTarget.y, targetTarget.y, easedTargetProgress);
+        this.controls.target.z = THREE.MathUtils.lerp(currentTarget.z, targetTarget.z, easedTargetProgress);
+        
+        this.controls.update();
+      }
+      
+
+      
+      if (progress >= 0.99) {
+        // Ensure final position and restore controls
+        this.camera.position.copy(farPosition);
+        
+        if (!this.controls) {
+          this.controls = originalControls;
+        }
+        this.controls.target.copy(targetTarget);
+        this.controls.enableDamping = true;
+        this.controls.update();
+        
+        // Start completion zoom
+        setTimeout(() => {
+          this.startCompletionZoom(farPosition);
+        }, 500);
+      } else {
+        this.currentAnimation = requestAnimationFrame(animateToFar);
+      }
+    };
+    
+    this.currentAnimation = requestAnimationFrame(animateToFar);
+  }
+
+  // Smooth easing function for natural camera movement
+  easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
   // Start a slow linear zoom as far as possible after completion
-  startCompletionZoom() {
+  startCompletionZoom(farPosition) {
 
     
     if (this.isAnimating) {
@@ -297,16 +359,14 @@ export class CameraAnimator {
     // Fade out UI buttons during the zoom
     this.fadeOutUI();
     
-    // Disable controls during animation
-    this.controls.setEnabled(false);
+    // Disable controls during animation (if they exist)
+    if (this.controls) {
+      this.controls.setEnabled(false);
+    }
     
-    // Store initial position
-    const startPosition = this.camera.position.clone();
-    
-    // Calculate the maximum zoom distance (as far as possible while keeping the scene visible)
-    // We'll zoom out to a very far distance
-    const zoomDirection = this.camera.position.clone().normalize();
-    const targetPosition = zoomDirection.multiplyScalar(MAX_ZOOM_DISTANCE);
+    // Use the provided far position as starting point and calculate final position
+    const startPosition = farPosition.clone();
+    const targetPosition = new THREE.Vector3(0, END_ZOOM_DISTANCE, 0); // Top-down final position
     
     // Start immediately with first frame
     const startTime = performance.now();
@@ -326,20 +386,24 @@ export class CameraAnimator {
       // Direct position assignment without controls interference
       this.camera.position.lerpVectors(startPosition, targetPosition, easedProgress);
       
-      // Only update controls at the end to avoid interference
-      if (progress >= PROGRESS_COMPLETE_THRESHOLD) {
-        this.controls.update();
+      // Only update controls at the very end to avoid interference
+      if (progress >= 0.99) {
+        if (this.controls) {
+          this.controls.update();
+          this.controls.setEnabled(true);
+        }
         this.isAnimating = false;
         this.currentAnimation = null;
         
-        // Re-enable controls after animation
-        this.controls.setEnabled(true);
+        // Make dialogue button reappear as "Look Inside"
+        const dialogueButton = document.querySelector('.dialogue-button');
+        if (dialogueButton) {
+          dialogueButton.textContent = t('lookInside');
+          dialogueButton.style.transition = 'opacity 3s ease-in';
+          dialogueButton.style.opacity = '1';
+        }
         
         // Show the outro modal after completion zoom
-    
-        
-        // Trigger the allPuzzlesCompleted event to show the outro button
-        document.dispatchEvent(new CustomEvent('allPuzzlesCompleted'));
         
         setTimeout(() => {
           const outroModal = document.getElementById('outro');
@@ -458,7 +522,6 @@ export class CameraAnimator {
 
   // Debug method to manually go to a specific puzzle
   debugGoToPuzzle(puzzleName) {
-    console.log(`Debug: Manually going to puzzle: ${puzzleName}`);
     const position = this.puzzlePositions[puzzleName];
     if (position) {
       this.animateToPosition(position.position, position.target, 2.0);
@@ -487,7 +550,6 @@ export class CameraAnimator {
     // Go to next puzzle in sequence
     const nextIndex = (currentPuzzleIndex + 1) % this.puzzleOrder.length;
     const nextPuzzleName = this.puzzleOrder[nextIndex];
-    console.log(`Debug: Cycling from ${this.puzzleOrder[currentPuzzleIndex] || 'unknown'} to ${nextPuzzleName}`);
     
     this.debugGoToPuzzle(nextPuzzleName);
   }

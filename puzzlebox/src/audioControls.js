@@ -26,35 +26,40 @@ class AudioControls {
       <div class="audio-controls-content">
         <div class="audio-control-group">
           <label for="master-volume">Master Volume</label>
-          <input type="range" id="master-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_MASTER}" class="volume-slider">
+          <div class="volume-control-wrapper">
+            <input type="range" id="master-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_MASTER}" class="volume-slider" aria-label="Master volume control">
+            <div class="volume-indicator">
+              <div class="volume-bar" id="master-volume-bar"></div>
+            </div>
+          </div>
           <span class="volume-value">${VOLUME_SLIDER_DEFAULT_MASTER}%</span>
         </div>
         
         <div class="audio-control-group">
           <label for="music-volume">Music Volume</label>
-          <input type="range" id="music-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_MUSIC}" class="volume-slider">
+          <div class="volume-control-wrapper">
+            <input type="range" id="music-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_MUSIC}" class="volume-slider" aria-label="Music volume control">
+            <div class="volume-indicator">
+              <div class="volume-bar" id="music-volume-bar"></div>
+            </div>
+          </div>
           <span class="volume-value">${VOLUME_SLIDER_DEFAULT_MUSIC}%</span>
         </div>
         
         <div class="audio-control-group">
           <label for="sfx-volume">Sound Effects Volume</label>
-          <input type="range" id="sfx-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_SFX}" class="volume-slider">
+          <div class="volume-control-wrapper">
+            <input type="range" id="sfx-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_SFX}" class="volume-slider" aria-label="Sound effects volume control">
+            <div class="volume-indicator">
+              <div class="volume-bar" id="sfx-volume-bar"></div>
+            </div>
+          </div>
           <span class="volume-value">${VOLUME_SLIDER_DEFAULT_SFX}%</span>
         </div>
         
-        <!-- Voice Overs toggle hidden for now
-        <div class="audio-control-group">
-          <label for="voice-overs-toggle">Voice Overs</label>
-          <button class="btn toggle-btn" id="voice-overs-toggle">
-            <span class="toggle-icon">🎤</span>
-            <span class="toggle-text">Enabled</span>
-          </button>
-        </div>
-        -->
-        
         <div class="audio-control-buttons">
-          <button class="btn mute-btn" id="mute-btn">
-            <span class="mute-icon">Audio</span>
+          <button class="btn mute-btn" id="mute-btn" aria-label="Mute all audio">
+            <span class="mute-icon">🔊</span>
             <span class="mute-text">Mute</span>
           </button>
         </div>
@@ -82,6 +87,7 @@ class AudioControls {
       const volume = e.target.value / VOLUME_CONVERSION_FACTOR;
       audioManager.setMasterVolume(volume);
       this.updateVolumeDisplay(e.target);
+      this.updateVolumeIndicator('master-volume-bar', e.target.value);
     });
 
     musicSlider.addEventListener('input', (e) => {
@@ -90,12 +96,14 @@ class AudioControls {
       const volume = sliderValue * 0.15; // Scale down the slider impact more aggressively
       audioManager.setMusicVolume(volume);
       this.updateVolumeDisplay(e.target);
+      this.updateVolumeIndicator('music-volume-bar', e.target.value);
     });
 
     sfxSlider.addEventListener('input', (e) => {
       const volume = e.target.value / VOLUME_CONVERSION_FACTOR;
       audioManager.setSFXVolume(volume);
       this.updateVolumeDisplay(e.target);
+      this.updateVolumeIndicator('sfx-volume-bar', e.target.value);
     });
 
     // Voice overs toggle - hidden for now
@@ -111,6 +119,8 @@ class AudioControls {
       const isMuted = audioManager.toggleMute();
       this.updateMuteButton(isMuted);
     });
+
+
 
     // Close on escape key
     document.addEventListener('keydown', (e) => {
@@ -132,8 +142,15 @@ class AudioControls {
   }
 
   updateVolumeDisplay(slider) {
-    const valueDisplay = slider.parentNode.querySelector('.volume-value');
+    const valueDisplay = slider.closest('.audio-control-group').querySelector('.volume-value');
     valueDisplay.textContent = `${slider.value}%`;
+  }
+
+  updateVolumeIndicator(barId, value) {
+    const volumeBar = document.getElementById(barId);
+    if (volumeBar) {
+      volumeBar.style.width = `${value}%`;
+    }
   }
 
   updateMuteButton(isMuted) {
@@ -188,6 +205,11 @@ class AudioControls {
     this.updateVolumeDisplay(musicSlider);
     this.updateVolumeDisplay(sfxSlider);
 
+    // Update volume indicators
+    this.updateVolumeIndicator('master-volume-bar', masterSlider.value);
+    this.updateVolumeIndicator('music-volume-bar', musicSlider.value);
+    this.updateVolumeIndicator('sfx-volume-bar', sfxSlider.value);
+
     // Update mute button state
     this.updateMuteButton(audioManager.isMuted);
     
@@ -224,10 +246,10 @@ function createAudioToggleButton() {
     audioControls.toggle();
   });
 
-  // Add to navigation at the beginning
+  // Add to navigation at the end (rightmost position)
   const navButtons = document.querySelector('.nav-buttons');
   if (navButtons) {
-    navButtons.insertBefore(audioToggleBtn, navButtons.firstChild);
+    navButtons.appendChild(audioToggleBtn);
   }
 
   return audioToggleBtn;

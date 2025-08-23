@@ -102,8 +102,7 @@ export function updateHTMLContent() {
   const dedicationText = document.querySelector('#credits h3:nth-of-type(6) + p');
   if (dedicationText) dedicationText.textContent = t('dedicationText');
   
-  const closeButton = document.querySelector('.credits-close');
-  if (closeButton) closeButton.textContent = t('close');
+
   
   // Update loading text
   const loadingText = document.querySelector('#audio-loading-container p');

@@ -31,8 +31,33 @@ export function setupDebugHelpers(puzzleManager, cameraAnimator, puzzles) {
       }
     }
     
-    // Animate camera to the target puzzle position
-    if (index < order.length - 1) { // Don't animate for 'end'
+    // Handle special case for 'end' - simple direct completion
+    if (target === 'end' || index === order.length - 1) {
+      // Set all puzzles as completed
+      for (let i = 0; i < order.length - 1; i++) {
+        const key = order[i];
+        const puzzle = window.PuzzleBox.puzzles[key];
+        if (puzzle) {
+          puzzle.isCompleted = true;
+        }
+      }
+      
+      // Update puzzle manager state
+      const puzzleManager = window.PuzzleBox.puzzleManager;
+      if (puzzleManager) {
+        puzzleManager.completedPuzzles.clear();
+        for (const puzzle of puzzleManager.puzzles) {
+          if (puzzle.isCompleted) {
+            puzzleManager.completedPuzzles.add(puzzle);
+          }
+        }
+        puzzleManager.allPuzzlesCompleted = true;
+      }
+      
+      // Trigger the completion sequence - let camera animation handle the outro modal
+      document.dispatchEvent(new CustomEvent('allPuzzlesCompleted'));
+    } else {
+      // Animate camera to the target puzzle position
       const targetPuzzle = order[index];
       setTimeout(() => {
         cameraAnimator.goToPuzzle(targetPuzzle);

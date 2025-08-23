@@ -169,15 +169,17 @@ class AudioManager {
     const loadingContainer = document.getElementById('audio-loading-container');
     
     if (progressBar && progressText && loadingContainer) {
+      // Show loading container if it's hidden
+      if (loadingContainer.classList.contains('fade-out')) {
+        loadingContainer.classList.remove('fade-out');
+      }
+      
       progressBar.style.width = `${percentage}%`;
       progressText.textContent = `${Math.round(percentage)}% - ${text}`;
       
       if (percentage >= 100) {
         setTimeout(() => {
           loadingContainer.classList.add('fade-out');
-          setTimeout(() => {
-            loadingContainer.style.display = 'none';
-          }, FADE_OUT_DELAY);
         }, COMPLETE_DELAY);
       }
     }
@@ -392,6 +394,14 @@ class AudioManager {
     this.saveSettings();
   }
 
+  setMusicVolumeTemporary(volume) {
+    // Temporarily set music volume without saving to settings
+    const originalVolume = this.musicVolume;
+    this.musicVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
+    this.updateAllVolumes();
+    return originalVolume; // Return original volume for restoration
+  }
+
   updateAllVolumes() {
     // Update all currently playing music volumes
     this.musicElements.forEach((audio, name) => {
@@ -585,7 +595,7 @@ export function initializeAudioSystem() {
   // Show loading bar (but don't start audio loading yet)
   const loadingContainer = document.getElementById('audio-loading-container');
   if (loadingContainer) {
-    loadingContainer.style.display = 'block';
+    loadingContainer.classList.remove('fade-out');
   }
   
   // Don't initialize audio system yet - wait for user interaction

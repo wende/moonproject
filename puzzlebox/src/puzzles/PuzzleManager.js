@@ -21,7 +21,7 @@ export class PuzzleManager {
       this.puzzleMap.set(puzzleName, puzzleObj);
       // Store the puzzle name directly on the object to avoid constructor.name issues
       puzzleObj._puzzleName = puzzleName;
-      console.log(`Puzzle added: ${puzzleName}`);
+
     } else {
       console.warn(`Could not determine puzzle name for puzzle object`);
     }
@@ -29,10 +29,8 @@ export class PuzzleManager {
 
   // Debug method to verify all puzzle names are properly set
   verifyPuzzleNames() {
-    console.log('Verifying puzzle names...');
-    this.puzzles.forEach((puzzle, index) => {
-      const puzzleName = this.getPuzzleName(puzzle);
-      console.log(`Puzzle ${index}: ${puzzleName}`);
+    this.puzzles.forEach((puzzle) => {
+      this.getPuzzleName(puzzle);
     });
   }
 
@@ -47,15 +45,11 @@ export class PuzzleManager {
 
   handlePuzzleComplete(puzzleObj) {
     const puzzleName = this.getPuzzleName(puzzleObj);
-    console.log('Puzzle completed:', puzzleName);
     this.completedPuzzles.add(puzzleObj);
 
     // Trigger camera animation to next puzzle
     if (this.cameraAnimator) {
       const completedNames = this.getCompletedPuzzleNames();
-      console.log('Completed puzzle names:', completedNames);
-      console.log('Total puzzles:', this.puzzles.length);
-      console.log('Completed puzzles count:', this.completedPuzzles.size);
       
       // Reduced delay for faster response
       setTimeout(() => {
@@ -66,26 +60,19 @@ export class PuzzleManager {
     if (this.completedPuzzles.size === this.puzzles.length) {
       this.allPuzzlesCompleted = true;
       document.dispatchEvent(new CustomEvent('allPuzzlesCompleted'));
-      
-      // Play special completion sound when all puzzles are done
-      audioManager.playSuccessChime();
     }
   }
 
   getCompletedPuzzleNames() {
     const completedNames = new Set();
-    console.log('Getting completed puzzle names...');
-    console.log('Completed puzzles objects:', this.completedPuzzles);
     
     for (const puzzleObj of this.completedPuzzles) {
       const puzzleName = this.getPuzzleName(puzzleObj);
-      console.log(`Puzzle object ${puzzleName} maps to name: ${puzzleName}`);
       if (puzzleName) {
         completedNames.add(puzzleName);
       }
     }
     
-    console.log('Final completed names set:', completedNames);
     return completedNames;
   }
 

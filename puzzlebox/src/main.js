@@ -121,6 +121,38 @@ window.downloadBirthdayCard = function() {
   document.body.removeChild(link);
 };
 
+// Background animation function
+function updateBackgroundAnimation(delta) {
+  const background = scene.userData.earthBackground;
+  if (background) {
+    const time = Date.now() * 0.0001;
+    
+    // Position stars to always be visible
+    const camera = window.PuzzleBox?.camera;
+    if (camera && background.stars) {
+      // Position stars relative to camera but in a way that ensures visibility
+      background.stars.position.copy(camera.position);
+      // Move stars in the opposite direction of camera look direction
+      const lookDirection = new THREE.Vector3();
+      camera.getWorldDirection(lookDirection);
+      background.stars.position.add(lookDirection.multiplyScalar(-500));
+    }
+    
+    // Subtle nebula pulsing
+    const nebulaPulse = Math.sin(time * 2) * 0.05 + 0.95;
+    background.nebula.material.opacity = 0.1 * nebulaPulse;
+    
+    // Twinkling stars effect
+    const starSizes = background.stars.geometry.attributes.size.array;
+    const originalSizes = background.stars.userData.originalSizes;
+    for (let i = 0; i < starSizes.length; i++) {
+      const twinkle = Math.sin(time * 3 + i * 0.1) * 0.3 + 0.7;
+      starSizes[i] = originalSizes[i] * twinkle;
+    }
+    background.stars.geometry.attributes.size.needsUpdate = true;
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
@@ -131,6 +163,9 @@ function animate() {
   
   // Update particle effects
   particleSystem.update(delta);
+  
+  // Update background animation
+  updateBackgroundAnimation(delta);
 
   controls.update();
   composer.render();

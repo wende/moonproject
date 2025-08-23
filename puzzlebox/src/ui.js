@@ -28,6 +28,11 @@ export function setupUI() {
   
   // Global function to set dialogue button text and audio
   window.PuzzleBox.setDialogueButton = function(text, audioFile) {
+    // Don't update dialogue button if all puzzles are completed
+    if (window.PuzzleBox?.puzzleManager?.allPuzzlesCompleted) {
+      return;
+    }
+    
     // Get fresh reference to button in case it was replaced
     let currentButton = document.querySelector('.dialogue-button');
     
@@ -75,6 +80,16 @@ export function setupUI() {
       let originalVolume = null;
       
       newButton.addEventListener('click', () => {
+        // Check if all puzzles are completed - if so, open outro modal
+        if (window.PuzzleBox?.puzzleManager?.allPuzzlesCompleted) {
+          audioManager.playButtonClick();
+          const outroModal = document.getElementById('outro');
+          if (outroModal) {
+            toggleModal(outroModal, true);
+          }
+          return;
+        }
+        
         // Clear any pending volume restore timeout
         if (volumeRestoreTimeout) {
           clearTimeout(volumeRestoreTimeout);
@@ -171,7 +186,7 @@ export function setupUI() {
     closeButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         audioManager.playButtonClick();
-                toggleModal(modal, false);
+        toggleModal(modal, false);
         
         // Voice overs disabled for now - uncomment when ready to re-enable
         // if (id === 'intro' && audioManager.areVoiceOversEnabled()) {
@@ -195,16 +210,34 @@ export function setupUI() {
         // }
       });
     });
+
+      // Add click-outside functionality for intro modal
+  if (id === 'intro') {
+    let isFirstDisplay = true;
+    
+    modal.addEventListener('click', (e) => {
+      // Only close if clicking on the modal backdrop (not the content) and not first display
+      if (e.target === modal && !isFirstDisplay) {
+        audioManager.playButtonClick();
+        toggleModal(modal, false);
+      }
+    });
+    
+    // Track when modal is opened via button (not first display)
+    openButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        isFirstDisplay = false;
+        modal.classList.add('clickable-backdrop');
+      });
+    });
+  }
   });
 
   function toggleModal(modal, isVisible) {
     modal.style.display = isVisible ? 'block' : 'none';
   }
 
-  document.addEventListener('allPuzzlesCompleted', () => {
-    const outroButton = document.querySelector('.outro-button');
-    if (outroButton) outroButton.style.display = 'block';
-  });
 
-  toggleModal(document.getElementById('intro'), true);
+
+  // toggleModal(document.getElementById('intro'), true); // Commented out for debugging
 }
