@@ -348,6 +348,7 @@ button {
   letter-spacing: var(--letter-spacing-wider);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   margin-bottom: var(--space-6);
+  margin-top: var(--space-4);
   font-family: var(--font-family-primary);
   color: var(--clr-primary-dark);
 }

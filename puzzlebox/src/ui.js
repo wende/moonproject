@@ -216,5 +216,5 @@ export function setupUI() {
   }
 
 
-  // toggleModal(document.getElementById('intro'), true); // Commented out for debugging
+  toggleModal(document.getElementById('intro'), true); // Restored intro modal
 }

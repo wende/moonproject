@@ -4,7 +4,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Project Overview
 
-"The Box For The Moon" is a narrative-driven 3D interactive puzzle game built with Three.js and Vite. It's a birthday gift featuring multiple interconnected puzzles that tell a story as they're solved in sequence.
+"The Box for Moon" is a narrative-driven 3D interactive puzzle game built with Three.js and Vite. It's a birthday gift featuring multiple interconnected puzzles that tell a story as they're solved in sequence.
 
 ## Essential Commands
 

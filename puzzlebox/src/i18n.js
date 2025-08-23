@@ -1,11 +1,11 @@
-// Internationalization (i18n) file for The Box For The Moon
+// Internationalization (i18n) file for The Box for Moon
 // Contains all text strings used throughout the application
 
 export const translations = {
   en: {
     // Page titles and headers
-    pageTitle: 'The Box For The Moon',
-    siteTitle: 'The box for the Moon',
+    pageTitle: 'The Box for Moon',
+    siteTitle: 'The Box for Moon',
     congratulations: 'Congratulations',
     credits: 'Credits',
 

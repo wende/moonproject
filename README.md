@@ -1,4 +1,4 @@
-# The Box For The Moon
+# The Box for Moon
 
 An interactive 3D puzzle game built with Three.js and Vite. Players explore a mysterious box containing a series of interconnected puzzles that must be solved in sequence.
 
