@@ -190,24 +190,35 @@ button {
 .modal-footer {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 1rem;
   margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid var(--clr-primary-dark);
+  flex-wrap: wrap;
 }
 
   .continue-button {
-    color: gray !important;
     padding: 0.75rem 2rem;
     border-radius: 4px;
     font-size: 1.1rem;
     transition: all 0.2s ease;
-    border: none;
     cursor: pointer;
   }
 
 .continue-button:hover {
-  color: #1a252e !important;
-  background-color: #1a252e;
+  transform: translateY(-2px);
+}
+
+.download-button {
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.download-button:hover {
   transform: translateY(-2px);
 }
 

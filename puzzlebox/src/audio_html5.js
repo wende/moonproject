@@ -10,7 +10,7 @@ const COMPLETE_DELAY = 1000;
 const BUTTON_CLICK_VOLUME = 0.2;
 const PUZZLE_SOLVE_VOLUME = 1;
 const PUZZLE_SOLVE_START_TIME = 0.8;
-const SUCCESS_CHIME_VOLUME = 0.9;
+
 const VOICE_OVER_VOLUME = 0.8;
 const MUSIC_FADE_IN = 2.0;
 const MUSIC_LOOP_TIMEOUT = 3.0;
@@ -36,7 +36,7 @@ class AudioManager {
       moonprojecttrue: '/audio/moonprojecttrue.mp3',
       puzzle_solve: '/audio/puzzle_solve.mp3',
       button_click: '/audio/button_click.mp3',
-      success_chime: '/audio/success_chime.mp3',
+
       maze_vo: '/audio/vo/maze.wav',
       start_vo: '/audio/vo/start.wav'
     };
@@ -304,27 +304,54 @@ class AudioManager {
     const fromAudio = this.musicElements.get(fromTrack);
     
     if (fromAudio) {
-      // Only from track is playing, fade it out and start the to track
       // Capture the current position of the from track
       const fromTrackPosition = fromAudio.currentTime;
-      console.log(`Starting ${toTrack} at position ${fromTrackPosition}s (same as ${fromTrack})`);
       
-      this.fadeOutAudio(fromAudio, fadeDuration * 1.5);
+      // Pre-load the new track to minimize start delay
+      const originalAudio = this.audioElements.get(toTrack);
+      if (!originalAudio) {
+        console.warn(`Music not found: ${toTrack}`);
+        return;
+      }
+      
+      // Clone and prepare the new audio element
+      const newAudio = originalAudio.cloneNode();
+      
+      // Compensate for play delay by starting slightly ahead
+      // The delay varies but is typically 50-200ms, so we start 100ms ahead
+      const playDelayCompensation = 0.001; // 100ms
+      const compensatedPosition = fromTrackPosition - playDelayCompensation;
+      newAudio.currentTime = Math.max(0, compensatedPosition);
+      newAudio.loop = true;
+      newAudio.volume = 0; // Start at 0 volume for fade-in
+      
+      // Store the new audio element
+      this.musicElements.set(toTrack, newAudio);
+      
+      // Start playing immediately to minimize delay
+      const playPromise = newAudio.play();
+      
+      // Handle any play errors and start fade-in
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          // Start fade-in after audio begins playing
+          this.fadeInAudio(newAudio, this.musicVolume * this.masterVolume, fadeDuration);
+        }).catch(error => {
+          console.warn(`Failed to play music ${toTrack}:`, error);
+        });
+      }
+      
+      console.log(`Crossfading from ${fromTrack} at ${fromTrackPosition}s to ${toTrack} at ${newAudio.currentTime}s (compensated by ${playDelayCompensation}s)`);
+      
+      // Now fade out the old track while new track is already playing
+      this.fadeOutAudio(fromAudio, fadeDuration * 1.2);
+      
+      // Stop and clean up the old track after fade completes
       setTimeout(() => {
         fromAudio.pause();
         this.musicElements.delete(fromTrack);
-      }, fadeDuration * 1000);
+      }, fadeDuration * 1200);
       
-      // Start new track and ensure it starts at the correct position
-      const newAudio = this.playMusic(toTrack, { fadeIn: fadeDuration, loop: true, startTime: fromTrackPosition });
-      
-      // Double-check and set the position after a short delay to ensure it's correct
-      if (newAudio) {
-        setTimeout(() => {
-          newAudio.currentTime = fromTrackPosition - 0.05;
-          console.log(`Ensured ${toTrack} is at position ${newAudio.currentTime}s`);
-        }, 100);
-      }
     } else {
       // No from track, just start the to track
       this.playMusic(toTrack, { fadeIn: fadeDuration, loop: true });
@@ -429,9 +456,7 @@ class AudioManager {
     return this.playSound('puzzle_solve', { volume: PUZZLE_SOLVE_VOLUME, startTime: PUZZLE_SOLVE_START_TIME });
   }
 
-  playSuccessChime() {
-    return this.playSound('success_chime', { volume: SUCCESS_CHIME_VOLUME });
-  }
+
 
   playMazeVO() {
     if (!this.voiceOversEnabled) return null;
@@ -485,6 +510,16 @@ window.PuzzleBox = window.PuzzleBox || {};
 
 // Make audioManager globally accessible
 window.PuzzleBox.audioManager = audioManager;
+
+// Expose fadeBetweenTracks for testing
+window.PuzzleBox.fadeBetweenTracks = (fromTrack, toTrack, duration) => {
+  return audioManager.fadeBetweenTracks(fromTrack, toTrack, duration);
+};
+
+// Expose cipher puzzle completion audio transition for testing
+window.PuzzleBox.testCipherAudioTransition = () => {
+  return audioManager.fadeBetweenTracks('moonproject', 'moonprojecttrue', 2);
+};
 
 // Global function to ensure audio context is resumed (no-op for HTML5 Audio)
 window.PuzzleBox.resumeAudioContext = async () => {

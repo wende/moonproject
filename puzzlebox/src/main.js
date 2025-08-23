@@ -110,7 +110,16 @@ setupInput(raycaster, mouse, camera, puzzleManager, renderer.domElement);
 
 const clock = new THREE.Clock();
 
-
+// Global function to download birthday card
+window.downloadBirthdayCard = function() {
+  const link = document.createElement('a');
+  link.href = '/neshabababa.png';
+  link.download = 'neshabababa.png';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 function animate() {
   requestAnimationFrame(animate);

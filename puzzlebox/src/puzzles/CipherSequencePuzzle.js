@@ -17,7 +17,7 @@ export class CipherSequencePuzzle extends BaseSequencePuzzle {
     
 
     
-    // Fade from moonproject to moonprojecttrue with a longer fade for better overlap
-    audioManager.fadeBetweenTracks('moonproject', 'moonprojecttrue', 2);
+    // Fade from moonproject to moonprojecttrue with beat alignment
+    audioManager.fadeBetweenTracks('moonproject', 'moonprojecttrue', 3);
   }
 }

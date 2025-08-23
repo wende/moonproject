@@ -16,7 +16,6 @@ This directory should contain the following audio files for the game:
 ### Sound Effects
 - `button_click.mp3` - Soft click sound for UI interactions
 - `puzzle_solve.mp3` - Satisfying chime when a puzzle is completed
-- `success_chime.mp3` - Bright, celebratory sound for major achievements
 
 ### Voice Overs
 - `maze_vo.wav` - Voice over for maze puzzle
@@ -67,4 +66,4 @@ The audio system is designed to:
 - Support looping for background music
 - Include fade in/out effects for smooth transitions
 
-All audio files will be automatically loaded when the game starts, and the system will gracefully handle missing files with console warnings.
+All required audio files are currently present and will be automatically loaded when the game starts.
