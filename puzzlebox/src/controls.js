@@ -8,7 +8,7 @@ export function setupControls(camera, renderer) {
   controls.dampingFactor = 0.05; // Reduced from default 0.05 for smoother movement
   controls.enablePan = false;
   controls.minDistance = 2.5;
-  controls.maxDistance = 12;
+  controls.maxDistance = 24;
 
   // Reduce sensitivity for smoother rotation
   controls.rotateSpeed = 0.8; // Slightly reduced from default 1.0

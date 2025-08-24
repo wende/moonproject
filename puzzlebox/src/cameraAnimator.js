@@ -284,7 +284,12 @@ export class CameraAnimator {
 
     // Calculate transition parameters
     const currentPosition = this.camera.position.clone();
-    const farPosition = new THREE.Vector3(0, 11.0, 0.01); // Within OrbitControls maxDistance
+    
+    // Double the zoom out distance after all puzzles are solved
+    const baseFarDistance = 11.0;
+    const completionMultiplier = 2.0; // Double the distance
+    const farDistance = baseFarDistance * completionMultiplier;
+    const farPosition = new THREE.Vector3(0, farDistance, 0.01); // Within OrbitControls maxDistance
     const targetTarget = new THREE.Vector3(0, 0, 0);
 
     // Animate to far position

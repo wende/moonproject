@@ -9,8 +9,7 @@ export default defineConfig({
       output: {
         // Optimize chunk splitting for better caching
         manualChunks: {
-          three: ['three'],
-          vendor: ['three']
+          three: ['three']
         }
       }
     },
