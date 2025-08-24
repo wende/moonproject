@@ -303,5 +303,98 @@ export function setupUI() {
     }
   }
 
-  toggleModal(document.getElementById('intro'), true); // Restored intro modal
+
+
+  // Setup read letter button functionality
+  function setupReadLetterButton() {
+    const readButton = document.getElementById('read-letter-btn');
+    const hiddenContent = document.querySelector('.modal-content-hidden');
+    const visibleContent = document.querySelector('.modal-body-visible');
+    const continueButtonContainer = document.getElementById('continue-button-container');
+    const audioLoadingContainer = document.getElementById('audio-loading-container');
+    
+    if (!readButton || !hiddenContent || !visibleContent) return;
+
+    // Hide the continue button container and loading container initially
+    if (continueButtonContainer) {
+      continueButtonContainer.style.display = 'none';
+    }
+    if (audioLoadingContainer) {
+      audioLoadingContainer.style.display = 'none';
+    }
+
+    readButton.addEventListener('click', () => {
+      // Play button click sound
+      audioManager.playButtonClick();
+      
+      // Prevent multiple clicks while playing
+      if (readButton.classList.contains('playing')) {
+        return;
+      }
+
+      // Set playing state
+      readButton.classList.add('playing');
+      const originalText = readButton.textContent;
+      readButton.textContent = 'Playing...';
+
+      // Temporarily enable voice-overs
+      const originalVoiceOverState = audioManager.voiceOversEnabled;
+      audioManager.setVoiceOversEnabled(true);
+
+      // Temporarily lower background music volume
+      const originalMusicVolume = audioManager.musicVolume;
+      audioManager.setMusicVolumeTemporary(originalMusicVolume * audioManager.getTempMusicVolumeReduction());
+
+      // Play start voice over
+      const audioSource = audioManager.playStartVO();
+
+      // Get the duration of the audio file
+      let audioDuration = 10000; // Default fallback duration (10 seconds)
+      if (audioSource && audioSource.buffer) {
+        audioDuration = audioSource.buffer.duration * 1000; // Convert to milliseconds
+      } else if (audioSource && audioSource.duration) {
+        audioDuration = audioSource.duration * 1000; // Convert to milliseconds
+      }
+
+      // Hide the visible content and show the hidden content
+      visibleContent.style.display = 'none';
+      hiddenContent.style.display = 'block';
+      
+      // Show the loading bar and continue button after a short delay
+      setTimeout(() => {
+        if (audioLoadingContainer) {
+          audioLoadingContainer.style.display = 'block';
+        }
+        if (continueButtonContainer) {
+          continueButtonContainer.style.display = 'block';
+        }
+      }, 500); // 500ms delay to allow content to load
+
+      // Restore original states after audio finishes
+      setTimeout(() => {
+        // Restore original music volume
+        audioManager.setMusicVolumeTemporary(originalMusicVolume);
+        
+        // Restore original voice-over state
+        audioManager.setVoiceOversEnabled(originalVoiceOverState);
+        
+        // Reset button state
+        readButton.classList.remove('playing');
+        readButton.textContent = originalText;
+      }, audioDuration);
+    });
+  }
+
+  // Initialize read letter button
+  setupReadLetterButton();
+
+  // Show the intro modal by default
+  const introModal = document.getElementById('intro');
+  if (introModal) {
+    console.log('Showing intro modal');
+    introModal.style.display = 'block';
+    toggleModal(introModal, true);
+  } else {
+    console.error('Intro modal not found');
+  }
 }

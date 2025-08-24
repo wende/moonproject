@@ -51,6 +51,8 @@
       <div class="modal-header">
         <h1 class="site-title">The Box for Moon</h1>
       </div>
+      
+      <div class="modal-content-hidden" style="display: none;">
       <div class="modal-body">
         <div class="modal-column">
           <i>
@@ -84,9 +86,24 @@
           </div>
         </div>
       </div>
+      </div>
+      
+      <!-- Visible body content with "Read Letter" button -->
+      <div class="modal-body-visible">
+        <div class="modal-body">
+          <div class="modal-column">
+            <div class="read-letter-container">
+              <button type="button" class="btn always-hovered-btn" id="read-letter-btn" aria-label="Read the letter" title="Read the letter">
+                Read The Letter
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div class="modal-footer">
-        <!-- Audio Loading Progress / Continue Button Container -->
-        <div id="audio-loading-container" class="fade-out">
+        <!-- Audio Loading Progress Container -->
+        <div id="audio-loading-container" class="fade-out" style="display: none;">
           <div class="loading-content">
             <p>Loading...</p>
             <div class="loading-bar-container">
@@ -96,8 +113,12 @@
               <div class="loading-text" id="audio-loading-text">0%</div>
             </div>
           </div>
-          <button type="button" class="btn continue-button intro-close loading-complete-button" style="display: none;">Continue</button>
         </div>
+      </div>
+      
+      <!-- Continue button positioned outside footer -->
+      <div id="continue-button-container" style="display: none; position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+        <button type="button" class="btn always-hovered-btn intro-close loading-complete-button">Continue</button>
       </div>
     </div>
   </div>
