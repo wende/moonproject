@@ -62,6 +62,13 @@ export function setupScene() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
+    
+    // Update FXAA resolution for proper anti-aliasing
+    const fxaaPass = composer.passes.find(pass => pass.material && pass.material.uniforms && pass.material.uniforms['resolution']);
+    if (fxaaPass) {
+      fxaaPass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * renderer.getPixelRatio());
+      fxaaPass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * renderer.getPixelRatio());
+    }
   });
 
   return { scene, renderer, camera, mixer, mouse, raycaster, composer };
