@@ -59,7 +59,7 @@ export const translations = {
     outroText2: 'Sometimes moon wanes',
     outroText3: 'Happy Birthday Moon',
     postscript: 'PS2 Did you know that Moon waxes religiously?',
-    timeCounterText: 'PS In orbit for: {years} years, {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds',
+    timeCounterText: 'PS Adrift in orbit these past {years} years, {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds',
 
     // Credits
     gameDesignDevelopment: 'Game Design & Development',

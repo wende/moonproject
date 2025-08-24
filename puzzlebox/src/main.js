@@ -19,6 +19,51 @@ import { CameraAnimator } from './cameraAnimator';
 import { setupDebugHelpers } from './debugHelpers';
 import { initializeTimeCounter } from './timeCounter';
 
+// Memory monitoring utility
+class MemoryMonitor {
+  constructor() {
+    this.lastMemoryCheck = Date.now();
+    this.memoryCheckInterval = 30000; // Check every 30 seconds
+    this.startMonitoring();
+  }
+
+  startMonitoring() {
+    setInterval(() => {
+      this.logMemoryUsage();
+    }, this.memoryCheckInterval);
+  }
+
+  logMemoryUsage() {
+    if (performance.memory) {
+      const memory = performance.memory;
+      const usedMB = Math.round(memory.usedJSHeapSize / 1024 / 1024);
+      const totalMB = Math.round(memory.totalJSHeapSize / 1024 / 1024);
+      const limitMB = Math.round(memory.jsHeapSizeLimit / 1024 / 1024);
+      
+      console.log(`Memory Usage: ${usedMB}MB / ${totalMB}MB (${limitMB}MB limit)`);
+      
+      // Warn if memory usage is high
+      if (usedMB > limitMB * 0.8) {
+        console.warn('High memory usage detected! Consider optimizing assets.');
+      }
+    }
+  }
+
+  getMemoryInfo() {
+    if (performance.memory) {
+      return {
+        used: performance.memory.usedJSHeapSize,
+        total: performance.memory.totalJSHeapSize,
+        limit: performance.memory.jsHeapSizeLimit
+      };
+    }
+    return null;
+  }
+}
+
+// Initialize memory monitor
+const memoryMonitor = new MemoryMonitor();
+
 const { scene, renderer, camera, mixer, mouse, raycaster, composer } = setupScene();
 const controls = setupControls(camera, renderer);
 const puzzleManager = new PuzzleManager();
@@ -61,6 +106,12 @@ window.debugPuzzles = {
 window.debugParticles = {
   getSpreadInfo: () => particleSystem.getCurrentSpreadInfo(),
   getCompletionProgress: () => puzzleManager.getCompletionProgress()
+};
+
+// Expose memory monitor debug methods
+window.debugMemory = {
+  getMemoryInfo: () => memoryMonitor.getMemoryInfo(),
+  logMemoryUsage: () => memoryMonitor.logMemoryUsage()
 };
 
 loadGLTFModel('/scene.glb', scene, mixer)
@@ -253,6 +304,14 @@ function animate(currentTime) {
   if (currentTime - backgroundUpdateTime > BACKGROUND_UPDATE_INTERVAL) {
     updateBackgroundAnimation(delta);
     backgroundUpdateTime = currentTime;
+  }
+
+  // Memory optimization: Periodic cleanup (every 60 seconds)
+  if (currentTime % 60000 < 16) { // Check every ~60 seconds
+    // Trigger cleanup in various systems
+    if (materialManager.cleanupUnusedMaterials) {
+      materialManager.cleanupUnusedMaterials();
+    }
   }
 
   // Update controls if they're enabled

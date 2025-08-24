@@ -16,6 +16,11 @@ const MUSIC_FADE_IN = 2.0;
 const MUSIC_LOOP_TIMEOUT = 3.0;
 const MOONPROJECT_TRUE_VOLUME = 0.001;
 
+// Memory optimization constants
+const MAX_AUDIO_POOL_SIZE = 3; // Reduced from 5
+const MAX_SIMULTANEOUS_SOUNDS = 8; // Limit simultaneous audio elements
+const AUDIO_CLEANUP_INTERVAL = 30000; // Clean up unused audio every 30 seconds
+
 class AudioManager {
   constructor() {
     this.audioElements = new Map(); // HTML5 Audio elements
@@ -30,6 +35,10 @@ class AudioManager {
     this.tempMusicVolumeReduction = TEMP_MUSIC_VOLUME_REDUCTION;
     this.voiceOversEnabled = false;
 
+    // Memory optimization: Track active audio elements
+    this.activeAudioElements = new Set();
+    this.lastCleanupTime = Date.now();
+
     // Audio file paths
     this.audioFiles = {
       moonproject: '/audio/moonproject.mp3',
@@ -43,6 +52,9 @@ class AudioManager {
 
     // Load saved settings from localStorage
     this.loadSettings();
+
+    // Start cleanup interval
+    this.startCleanupInterval();
   }
 
   // localStorage methods
@@ -150,9 +162,9 @@ class AudioManager {
   }
 
   createButtonClickPool() {
-    // Create a pool of 5 pre-loaded button click audio elements for instant playback
+    // Create a pool of 3 pre-loaded button click audio elements for instant playback (reduced from 5)
     const buttonClickSrc = this.audioFiles.button_click;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < MAX_AUDIO_POOL_SIZE; i++) {
       const audio = new Audio(buttonClickSrc);
       audio.preload = 'auto';
       audio.volume = BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
@@ -194,6 +206,9 @@ class AudioManager {
       return null;
     }
 
+    // Memory optimization: Limit active audio elements
+    this.limitActiveAudioElements();
+
     // Clone the audio element to allow multiple simultaneous plays
     const audio = originalAudio.cloneNode();
 
@@ -206,9 +221,18 @@ class AudioManager {
       audio.currentTime = options.startTime;
     }
 
+    // Memory optimization: Track active audio element
+    this.activeAudioElements.add(audio);
+
+    // Add cleanup event listener
+    audio.addEventListener('ended', () => {
+      this.activeAudioElements.delete(audio);
+    }, { once: true });
+
     // Play the sound
     audio.play().catch(error => {
       console.warn(`Failed to play sound ${soundName}:`, error);
+      this.activeAudioElements.delete(audio);
     });
 
     return audio;
@@ -508,6 +532,50 @@ class AudioManager {
     this.stopMusic();
     this.audioElements.clear();
     this.isInitialized = false;
+  }
+
+  // Memory optimization: Start periodic cleanup
+  startCleanupInterval() {
+    setInterval(() => {
+      this.cleanupUnusedAudio();
+    }, AUDIO_CLEANUP_INTERVAL);
+  }
+
+  // Memory optimization: Clean up unused audio elements
+  cleanupUnusedAudio() {
+    const now = Date.now();
+    const timeSinceLastCleanup = now - this.lastCleanupTime;
+    
+    // Only cleanup if enough time has passed
+    if (timeSinceLastCleanup < AUDIO_CLEANUP_INTERVAL) {
+      return;
+    }
+
+    // Clean up finished audio elements
+    this.activeAudioElements.forEach(audio => {
+      if (audio.ended || audio.paused) {
+        this.activeAudioElements.delete(audio);
+        // Remove event listeners to prevent memory leaks
+        audio.onended = null;
+        audio.onerror = null;
+        audio.onload = null;
+      }
+    });
+
+    this.lastCleanupTime = now;
+  }
+
+  // Memory optimization: Limit active audio elements
+  limitActiveAudioElements() {
+    if (this.activeAudioElements.size >= MAX_SIMULTANEOUS_SOUNDS) {
+      // Remove oldest audio element
+      const oldestAudio = this.activeAudioElements.values().next().value;
+      if (oldestAudio) {
+        oldestAudio.pause();
+        oldestAudio.currentTime = 0;
+        this.activeAudioElements.delete(oldestAudio);
+      }
+    }
   }
 }
 

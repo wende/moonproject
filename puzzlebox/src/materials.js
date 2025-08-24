@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// Enhanced material system with PBR materials
+// Enhanced material system with PBR materials and memory optimization
 export class MaterialManager {
   constructor() {
     this.materials = new Map();
@@ -12,8 +12,64 @@ export class MaterialManager {
     this.frameCount = 0;
     this.updateInterval = 2; // Update every 2nd frame instead of 3rd
 
+    // Memory optimization: Track material instances and usage
+    this.materialInstances = new Map(); // Track how many objects use each material
+    this.textureCache = new Map(); // Cache loaded textures
+    this.lastCleanupTime = Date.now();
+    this.cleanupInterval = 60000; // Clean up every minute
+
     // Initialize default materials
     this.initializeDefaultMaterials();
+
+    // Start cleanup interval
+    this.startCleanupInterval();
+  }
+
+  // Memory optimization: Start periodic cleanup
+  startCleanupInterval() {
+    setInterval(() => {
+      this.cleanupUnusedMaterials();
+    }, this.cleanupInterval);
+  }
+
+  // Memory optimization: Clean up unused materials and textures
+  cleanupUnusedMaterials() {
+    const now = Date.now();
+    if (now - this.lastCleanupTime < this.cleanupInterval) {
+      return;
+    }
+
+    // Clean up unused textures
+    this.textureCache.forEach((texture, key) => {
+      if (texture.userData && texture.userData.lastUsed) {
+        const timeSinceLastUse = now - texture.userData.lastUsed;
+        if (timeSinceLastUse > 300000) { // 5 minutes
+          texture.dispose();
+          this.textureCache.delete(key);
+        }
+      }
+    });
+
+    this.lastCleanupTime = now;
+  }
+
+  // Memory optimization: Track material usage
+  trackMaterialUsage(materialName, object) {
+    if (!this.materialInstances.has(materialName)) {
+      this.materialInstances.set(materialName, new Set());
+    }
+    this.materialInstances.get(materialName).add(object);
+  }
+
+  // Memory optimization: Untrack material usage
+  untrackMaterialUsage(materialName, object) {
+    const instances = this.materialInstances.get(materialName);
+    if (instances) {
+      instances.delete(object);
+      if (instances.size === 0) {
+        this.materialInstances.delete(materialName);
+      }
+    }
   }
 
   initializeDefaultMaterials() {
@@ -121,6 +177,9 @@ export class MaterialManager {
     if (object.isMesh) {
       const material = this.getMaterial(materialName);
       if (material) {
+        // Memory optimization: Track material usage
+        this.trackMaterialUsage(materialName, object);
+        
         object.material = material;
         object.castShadow = true;
         object.receiveShadow = true;

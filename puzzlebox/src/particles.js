@@ -18,21 +18,86 @@ export class ParticleSystem {
       cosmicOrbs: { x: 20, y: 8, z: 20 }
     };
     
-    // Store original particle counts for each type
+    // Reduced particle counts for better memory usage
     this.originalCounts = {
-      dust: 150,
-      sparkles: 80,
-      lightRays: 25,
-      cosmicOrbs: 15
+      dust: 100, // Reduced from 150
+      sparkles: 50, // Reduced from 80
+      lightRays: 15, // Reduced from 25
+      cosmicOrbs: 10 // Reduced from 15
     };
     
     // Current completion progress (0.0 to 1.0)
     this.completionProgress = 0;
+
+    // Object pooling for better memory management
+    this.geometryPool = new Map();
+    this.materialPool = new Map();
   }
 
-  // Create floating dust particles (background only)
-  createDustParticles(count = 150, customSpread = null, sizeMultiplier = 1.0) {
-    const geometry = new THREE.BufferGeometry();
+  // Get or create geometry from pool
+  getGeometryFromPool(type, count) {
+    const key = `${type}_${count}`;
+    if (!this.geometryPool.has(key)) {
+      const geometry = new THREE.BufferGeometry();
+      this.geometryPool.set(key, geometry);
+    }
+    return this.geometryPool.get(key);
+  }
+
+  // Get or create material from pool
+  getMaterialFromPool(type, options = {}) {
+    const key = `${type}_${JSON.stringify(options)}`;
+    if (!this.materialPool.has(key)) {
+      const material = this.createMaterial(type, options);
+      this.materialPool.set(key, material);
+    }
+    return this.materialPool.get(key);
+  }
+
+  // Create material with optimized settings
+  createMaterial(type, options = {}) {
+    const baseOptions = {
+      size: 0.1,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true
+    };
+
+    switch (type) {
+      case 'dust':
+        return new THREE.PointsMaterial({
+          ...baseOptions,
+          opacity: 0.3,
+          size: 0.08
+        });
+      case 'sparkles':
+        return new THREE.PointsMaterial({
+          ...baseOptions,
+          opacity: 0.6,
+          size: 0.12
+        });
+      case 'lightRays':
+        return new THREE.PointsMaterial({
+          ...baseOptions,
+          opacity: 0.5,
+          size: 0.15
+        });
+      case 'cosmicOrbs':
+        return new THREE.PointsMaterial({
+          ...baseOptions,
+          opacity: 0.7,
+          size: 0.2
+        });
+      default:
+        return new THREE.PointsMaterial(baseOptions);
+    }
+  }
+
+  // Create floating dust particles (background only) - optimized
+  createDustParticles(count = 100, customSpread = null, sizeMultiplier = 1.0) {
+    const geometry = this.getGeometryFromPool('dust', count);
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
@@ -43,9 +108,9 @@ export class ParticleSystem {
 
     for (let i = 0; i < count; i++) {
       // Random positions in background areas only
-      positions[i * 3] = (Math.random() - 0.5) * spread.x; // Wider spread
-      positions[i * 3 + 1] = (Math.random() - 0.5) * spread.y; // Full height range, including below ground
-      positions[i * 3 + 2] = (Math.random() - 0.5) * spread.z; // Deeper background
+      positions[i * 3] = (Math.random() - 0.5) * spread.x;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * spread.y;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * spread.z;
 
       // Reduced velocities for subtler movement
       velocities[i * 3] = (Math.random() - 0.5) * 0.006;
@@ -56,13 +121,10 @@ export class ParticleSystem {
       const color = new THREE.Color();
       const colorType = Math.random();
       if (colorType < 0.4) {
-        // Blue cosmic dust
         color.setHSL(0.6, 0.2, 0.7 + Math.random() * 0.3);
       } else if (colorType < 0.7) {
-        // Purple cosmic dust
         color.setHSL(0.8, 0.3, 0.6 + Math.random() * 0.4);
       } else {
-        // Golden cosmic dust
         color.setHSL(0.12, 0.4, 0.6 + Math.random() * 0.4);
       }
       colors[i * 3] = color.r;
@@ -77,18 +139,10 @@ export class ParticleSystem {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    const material = new THREE.PointsMaterial({
-      size: 0.1,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.4,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true
-    });
-
+    const material = this.getMaterialFromPool('dust');
     const points = new THREE.Points(geometry, material);
     points.userData = { velocities: velocities, originalSizes: [...sizes] };
-    points.frustumCulled = false; // Disable frustum culling
+    points.frustumCulled = false;
 
     this.particleGroups.set('dust', points);
     this.scene.add(points);
@@ -96,9 +150,9 @@ export class ParticleSystem {
     return points;
   }
 
-  // Create magical sparkles (background only)
-  createSparkles(count = 80, customSpread = null, sizeMultiplier = 1.0) {
-    const geometry = new THREE.BufferGeometry();
+  // Create magical sparkles (background only) - optimized
+  createSparkles(count = 50, customSpread = null, sizeMultiplier = 1.0) {
+    const geometry = this.getGeometryFromPool('sparkles', count);
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
@@ -109,9 +163,9 @@ export class ParticleSystem {
 
     for (let i = 0; i < count; i++) {
       // Random positions in background areas only
-      positions[i * 3] = (Math.random() - 0.5) * spread.x; // Wider spread
-      positions[i * 3 + 1] = (Math.random() - 0.5) * spread.y; // Full height range, including below ground
-      positions[i * 3 + 2] = (Math.random() - 0.5) * spread.z; // Deeper background
+      positions[i * 3] = (Math.random() - 0.5) * spread.x;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * spread.y;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * spread.z;
 
       // Reduced velocities for subtler movement
       velocities[i * 3] = (Math.random() - 0.5) * 0.01;
@@ -122,16 +176,12 @@ export class ParticleSystem {
       const color = new THREE.Color();
       const sparkleType = Math.random();
       if (sparkleType < 0.3) {
-        // Golden sparkles
         color.setHSL(0.12 + Math.random() * 0.05, 0.9, 0.6 + Math.random() * 0.4);
       } else if (sparkleType < 0.6) {
-        // Silver sparkles
         color.setHSL(0.6, 0.1, 0.8 + Math.random() * 0.2);
       } else if (sparkleType < 0.8) {
-        // Purple sparkles
         color.setHSL(0.8, 0.7, 0.5 + Math.random() * 0.5);
       } else {
-        // Rainbow sparkles
         color.setHSL(Math.random(), 0.8, 0.6 + Math.random() * 0.4);
       }
       colors[i * 3] = color.r;
@@ -146,18 +196,10 @@ export class ParticleSystem {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    const material = new THREE.PointsMaterial({
-      size: 0.1,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true
-    });
-
+    const material = this.getMaterialFromPool('sparkles');
     const points = new THREE.Points(geometry, material);
     points.userData = { velocities: velocities, originalSizes: [...sizes] };
-    points.frustumCulled = false; // Disable frustum culling
+    points.frustumCulled = false;
 
     this.particleGroups.set('sparkles', points);
     this.scene.add(points);
@@ -166,7 +208,7 @@ export class ParticleSystem {
   }
 
   // Create ambient light rays (background only)
-  createLightRays(count = 25, customSpread = null, sizeMultiplier = 1.0) {
+  createLightRays(count = 15, customSpread = null, sizeMultiplier = 1.0) {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
@@ -206,15 +248,7 @@ export class ParticleSystem {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    const material = new THREE.PointsMaterial({
-      size: 0.1,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.3,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true
-    });
-
+    const material = this.getMaterialFromPool('lightRays');
     const points = new THREE.Points(geometry, material);
     points.userData = { originalSizes: [...sizes] };
     points.frustumCulled = false; // Disable frustum culling
@@ -226,7 +260,7 @@ export class ParticleSystem {
   }
 
   // Create cosmic energy orbs (new particle type)
-  createCosmicOrbs(count = 15, customSpread = null, sizeMultiplier = 1.0) {
+  createCosmicOrbs(count = 10, customSpread = null, sizeMultiplier = 1.0) {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
@@ -272,15 +306,7 @@ export class ParticleSystem {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    const material = new THREE.PointsMaterial({
-      size: 0.1,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.7,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true
-    });
-
+    const material = this.getMaterialFromPool('cosmicOrbs');
     const points = new THREE.Points(geometry, material);
     points.userData = { velocities: velocities, originalSizes: [...sizes] };
     points.frustumCulled = false; // Disable frustum culling
@@ -474,7 +500,7 @@ export class ParticleSystem {
           this.updateParticleCount(group, name, newCount, newSpread, sizeMultiplier);
         }
         
-        console.log(`${name} particles updated: spread=${spreadMultiplier.toFixed(2)}x, count=${countMultiplier.toFixed(2)}x, range=${newSpread.x.toFixed(1)}x${newSpread.y.toFixed(1)}x${newSpread.z.toFixed(1)}`);
+        // Debug logging removed for cleaner console
       }
     });
   }
@@ -569,10 +595,10 @@ export class ParticleSystem {
 
   // Create all particle effects
   createAllParticles() {
-    this.createDustParticles(150); // Enhanced cosmic dust
-    this.createSparkles(80); // Enhanced magical sparkles
-    this.createLightRays(25); // Enhanced light rays
-    this.createCosmicOrbs(15); // New mystical orbs
+    this.createDustParticles(100); // Enhanced cosmic dust
+    this.createSparkles(50); // Enhanced magical sparkles
+    this.createLightRays(15); // Enhanced light rays
+    this.createCosmicOrbs(10); // New mystical orbs
   }
 
 

@@ -1,3 +1,49 @@
+/* Fullscreen Button */
+.fullscreen-button {
+  position: fixed;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 1000;
+  background: rgba(40, 56, 66, 0.3);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(4px);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(212, 175, 55, 0.6);
+}
+
+.fullscreen-button:hover {
+  background: rgba(40, 56, 66, 0.6);
+  color: rgba(212, 175, 55, 0.9);
+  transform: var(--hover-lift);
+}
+
+.fullscreen-button:active {
+  transform: var(--active-press);
+}
+
+.fullscreen-button:focus {
+  outline: none;
+  box-shadow: var(--focus-glow);
+}
+
+.fullscreen-button svg {
+  width: 18px;
+  height: 18px;
+  transition: transform var(--transition-normal);
+}
+
+.fullscreen-button:hover svg {
+  transform: scale(1.1);
+}
+
 /* VARIABLES */
 :root {
   /* Enhanced Color Palette */
@@ -290,6 +336,21 @@ button {
   position: relative;
 }
 
+/* Center intro and outro modals vertically */
+#intro .modal-content,
+#outro .modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  max-height: 85vh;
+  max-width: 90vw;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
 #credits .modal-content {
   width: 90%;
   height: 90%;
@@ -364,6 +425,17 @@ button {
 
 #intro .modal-body {
   font-size: var(--font-size-2xl);
+  max-height: 50vh;
+  overflow: visible;
+  align-items: start;
+  flex: 1;
+}
+
+#outro .modal-body {
+  max-height: 50vh;
+  overflow: visible;
+  align-items: start;
+  flex: 1;
 }
 
 .modal-footer {
@@ -375,6 +447,7 @@ button {
   padding-top: var(--space-4);
   border-top: 1px solid var(--clr-primary-dark);
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .continue-button {
