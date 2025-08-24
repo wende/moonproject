@@ -33,10 +33,10 @@ export const translations = {
 
     // Puzzle dialogue and text
     startSequence: 'South, East, West, North',
-    mazePuzzle: 'هذا المكان لم يكن لها أبدًا ولكن إذا غادرت ستصبح هي نفسها لغزًا',
-    scalesPuzzle: 'Cœurs légers. Âmes lourdes. Tout cela ne vaut rien sans équilibre.',
     moonPuzzle: 'She traveled the world. But her darkness wasn\'t vanishing — it was the path she had to take to become full again.',
     cipherPuzzle: 'Sometimes riddles are best solved by just asking yourself',
+    scalesPuzzle: 'Cœurs légers. Âmes lourdes. Tout cela ne vaut rien sans équilibre.',
+    mazePuzzle: 'هذا المكان لم يكن لها أبدًا ولكن إذا غادرت ستصبح هي نفسها لغزًا',
 
     // Puzzle status
     solved: 'solved',
@@ -86,6 +86,39 @@ export const translations = {
     weightComparison: 'The left side is evaluated to be',
     theRightSide: 'the right side, so'
   }
+};
+
+// Voice over file configuration
+export const voiceOverFiles = {
+  // Voice over audio files
+  maze_vo: '/audio/vo/maze.mp3',
+  start_vo: '/audio/vo/start.mp3',
+  scales_vo: '/audio/vo/scales.mp3',
+  moon_vo: '/audio/vo/moon.mp3',
+  riddle_vo: '/audio/vo/riddle.mp3',
+  note_vo: '/audio/vo/note.mp3',
+  joie_vo: '/audio/vo/joie.mp3',
+  tristese_vo: '/audio/vo/tristese.mp3',
+  peur_vo: '/audio/vo/peur.mp3',
+  amour_vo: '/audio/vo/amour.mp3',
+  colere_vo: '/audio/vo/colere.mp3',
+  resilience_vo: '/audio/vo/resilience.mp3'
+};
+
+// Voice over method mapping
+export const voiceOverMethods = {
+  start_vo: 'playStartVO',
+  scales_vo: 'playScalesVO',
+  maze_vo: 'playMazeVO',
+  moon_vo: 'playMoonVO',
+  riddle_vo: 'playRiddleVO',
+  note_vo: 'playNoteVO',
+  joie_vo: 'playJoieVO',
+  tristese_vo: 'playTristeseVO',
+  peur_vo: 'playPeurVO',
+  amour_vo: 'playAmourVO',
+  colere_vo: 'playColereVO',
+      resilience_vo: 'playResilienceVO'
 };
 
 // Default language

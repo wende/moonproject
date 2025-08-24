@@ -4,7 +4,6 @@ const DEFAULT_SFX_VOLUME = 0.5;
 const DEFAULT_MASTER_VOLUME = 1.0;
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 1;
-const FADE_OUT_DELAY = 500;
 const COMPLETE_DELAY = 300;
 const BUTTON_CLICK_VOLUME = 0.2;
 const PUZZLE_SOLVE_VOLUME = 1;
@@ -25,13 +24,18 @@ const BUTTON_CLICK_DEBOUNCE = 100; // ms
 const SHOW_BUTTON_DELAY = 100; // ms
 const FADE_DURATION_MULTIPLIER = 1.2;
 const FADE_CLEANUP_DELAY = 1200; // ms
-const PROCESSING_DELAY = 0.1; // seconds
+const PROCESSING_DELAY = 0.05; // seconds
 const PLAY_DELAY_COMPENSATION = 0.001; // seconds
-const TEMP_MUSIC_VOLUME_REDUCTION = 0.3; // Duck to 30% during voice overs
+
 
 // Progress and UI constants
 const PROGRESS_PERCENTAGE_MULTIPLIER = 100;
 const PROGRESS_COMPLETION_THRESHOLD = 100;
+
+// Voice over constants
+const TEMP_MUSIC_VOLUME_REDUCTION = 0.3; // Duck to 30% during voice overs
+
+import { voiceOverFiles, voiceOverMethods } from './i18n.js';
 
 // Audio file configuration
 const AUDIO_FILES = {
@@ -43,36 +47,12 @@ const AUDIO_FILES = {
   puzzle_solve: '/audio/puzzle_solve.mp3',
   button_click: '/audio/button_click.mp3',
   
-  // Voice overs
-  maze_vo: '/audio/vo/maze.mp3',
-  start_vo: '/audio/vo/start.mp3',
-  scales_vo: '/audio/vo/scales.mp3',
-  moon_vo: '/audio/vo/moon.mp3',
-  riddle_vo: '/audio/vo/riddle.mp3',
-  note_vo: '/audio/vo/note.mp3',
-  joie_vo: '/audio/vo/joie.mp3',
-  tristese_vo: '/audio/vo/tristese.mp3',
-  peur_vo: '/audio/vo/peur.mp3',
-  amour_vo: '/audio/vo/amour.mp3',
-  colere_vo: '/audio/vo/colere.mp3',
-  resilience_vo: '/audio/vo/resilience.mp3'
+  // Voice overs - imported from i18n
+  ...voiceOverFiles
 };
 
-// Voice over method mapping
-const VOICE_OVER_METHODS = {
-  start_vo: 'playStartVO',
-  scales_vo: 'playScalesVO',
-  maze_vo: 'playMazeVO',
-  moon_vo: 'playMoonVO',
-  riddle_vo: 'playRiddleVO',
-  note_vo: 'playNoteVO',
-  joie_vo: 'playJoieVO',
-  tristese_vo: 'playTristeseVO',
-  peur_vo: 'playPeurVO',
-  amour_vo: 'playAmourVO',
-  colere_vo: 'playColereVO',
-  resilience_vo: 'playResilienceVO'
-};
+// Voice over method mapping - imported from i18n
+const VOICE_OVER_METHODS = voiceOverMethods;
 
 class AudioManager {
   constructor() {
@@ -108,6 +88,10 @@ class AudioManager {
 
   // ===== SETTINGS MANAGEMENT =====
   
+  _handleError(operation, error) {
+    console.warn(`Failed to ${operation}:`, error);
+  }
+
   loadSettings() {
     try {
       const savedSettings = localStorage.getItem('puzzleBoxAudioSettings');
@@ -121,7 +105,7 @@ class AudioManager {
         this.voiceOversEnabled = settings.voiceOversEnabled ?? true;
       }
     } catch (error) {
-      console.warn('Failed to load audio settings:', error);
+      this._handleError('load audio settings', error);
     }
   }
 
@@ -139,7 +123,7 @@ class AudioManager {
       };
       localStorage.setItem('puzzleBoxAudioSettings', JSON.stringify(settings));
     } catch (error) {
-      console.warn('Failed to save audio settings:', error);
+      this._handleError('save audio settings', error);
     }
   }
 
@@ -147,21 +131,7 @@ class AudioManager {
   
   setVolume(type, volume) {
     const clampedVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
-    
-    switch (type) {
-      case 'music':
-        this.musicVolume = clampedVolume;
-        break;
-      case 'sfx':
-        this.sfxVolume = clampedVolume;
-        break;
-      case 'master':
-        this.masterVolume = clampedVolume;
-        break;
-      case 'voiceOver':
-        this.voiceOverVolume = clampedVolume;
-        break;
-    }
+    this[`${type}Volume`] = clampedVolume;
     
     if (type !== 'voiceOver') {
       this.updateAllVolumes();
@@ -209,22 +179,15 @@ class AudioManager {
 
   // ===== MUTE CONTROLS =====
   
-  mute() {
-    this.isMuted = true;
+  _setMute(muted) {
+    this.isMuted = muted;
     this.updateAllVolumes();
     this.saveSettings();
   }
 
-  unmute() {
-    this.isMuted = false;
-    this.updateAllVolumes();
-    this.saveSettings();
-  }
-
-  toggleMute() {
-    this.isMuted ? this.unmute() : this.mute();
-    return this.isMuted;
-  }
+  mute() { this._setMute(true); }
+  unmute() { this._setMute(false); }
+  toggleMute() { this._setMute(!this.isMuted); return this.isMuted; }
 
   // ===== INITIALIZATION =====
   
@@ -325,69 +288,55 @@ class AudioManager {
 
   // ===== AUDIO PLAYBACK =====
   
-  playSound(soundName, options = {}) {
+  _playAudio(audioName, options = {}, isMusic = false) {
     if (!this.isInitialized || this.isMuted) return null;
 
-    const originalAudio = this.audioElements.get(soundName);
+    const originalAudio = this.audioElements.get(audioName);
     if (!originalAudio) {
-      console.warn(`Sound not found: ${soundName}`);
+      this._handleError(`find ${isMusic ? 'music' : 'sound'}`, new Error(`${audioName} not found`));
       return null;
     }
 
-    this.limitActiveAudioElements();
-
     const audio = originalAudio.cloneNode();
     const volume = options.volume !== undefined ? options.volume : 1;
-    audio.volume = volume * this.sfxVolume * this.masterVolume;
+    audio.volume = volume * (isMusic ? this.getMusicVolume(audioName) : this.sfxVolume * this.masterVolume);
 
-    if (options.startTime) {
-      audio.currentTime = options.startTime;
+    if (options.startTime) audio.currentTime = options.startTime;
+    if (isMusic && options.loop !== false) audio.loop = true;
+    if (isMusic) audio.startTime = Date.now();
+
+    if (isMusic) {
+      this.musicElements.set(audioName, audio);
+    } else {
+      this.limitActiveAudioElements();
+      this.activeAudioElements.add(audio);
+      audio.addEventListener('ended', () => this.activeAudioElements.delete(audio), { once: true });
     }
 
-    this.activeAudioElements.add(audio);
-    audio.addEventListener('ended', () => this.activeAudioElements.delete(audio), { once: true });
-
-    audio.play().catch(error => {
-      console.warn(`Failed to play sound ${soundName}:`, error);
-      this.activeAudioElements.delete(audio);
-    });
+    const playPromise = audio.play();
+    if (isMusic && options.fadeIn && options.fadeIn > 0) {
+      audio.volume = 0;
+      playPromise.then(() => {
+        this.fadeInAudio(audio, volume * this.getMusicVolume(audioName), options.fadeIn);
+      }).catch(error => {
+        this._handleError(`play music ${audioName}`, error);
+      });
+    } else {
+      playPromise.catch(error => {
+        this._handleError(`play ${isMusic ? 'music' : 'sound'} ${audioName}`, error);
+        if (!isMusic) this.activeAudioElements.delete(audio);
+      });
+    }
 
     return audio;
   }
 
+  playSound(soundName, options = {}) {
+    return this._playAudio(soundName, options, false);
+  }
+
   playMusic(musicName, options = {}) {
-    if (!this.isInitialized || this.isMuted) return null;
-
-    const originalAudio = this.audioElements.get(musicName);
-    if (!originalAudio) {
-      console.warn(`Music not found: ${musicName}`);
-      return null;
-    }
-
-    const audio = originalAudio.cloneNode();
-    const volume = options.volume !== undefined ? options.volume : 1;
-    audio.volume = volume * this.getMusicVolume(musicName);
-
-    if (options.loop !== false) audio.loop = true;
-    if (options.startTime) audio.currentTime = options.startTime;
-
-    audio.startTime = Date.now();
-
-    if (options.fadeIn && options.fadeIn > 0) {
-      audio.volume = 0;
-      audio.play().then(() => {
-        this.fadeInAudio(audio, volume * this.getMusicVolume(musicName), options.fadeIn);
-      }).catch(error => {
-        console.warn(`Failed to play music ${musicName}:`, error);
-      });
-    } else {
-      audio.play().catch(error => {
-        console.warn(`Failed to play music ${musicName}:`, error);
-      });
-    }
-
-    this.musicElements.set(musicName, audio);
-    return audio;
+    return this._playAudio(musicName, options, true);
   }
 
   // ===== FADE EFFECTS =====
@@ -612,16 +561,6 @@ class AudioManager {
 
   getTempMusicVolumeReduction() {
     return TEMP_MUSIC_VOLUME_REDUCTION; // Duck to 30% during voice overs
-  }
-
-  async resumeContext() {
-    // No-op for HTML5 Audio
-  }
-
-  dispose() {
-    this.stopMusic();
-    this.audioElements.clear();
-    this.isInitialized = false;
   }
 }
 
