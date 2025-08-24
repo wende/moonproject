@@ -9,6 +9,7 @@ import { MazeSequencePuzzle } from './puzzles/MazeSequencePuzzle';
 import { ScalesPuzzle } from './puzzles/ScalesPuzzle';
 import { MoonPuzzle } from './puzzles/MoonPuzzle';
 import { CipherSequencePuzzle } from './puzzles/CipherSequencePuzzle';
+
 import { loadGLTFModel } from './loaders';
 import { audioManager, startMusicAfterInteraction, initializeAudioSystem } from './audio_html5.js';
 import { createAudioToggleButton } from './audioControls';
@@ -133,7 +134,6 @@ loadGLTFModel('/scene.glb', scene, mixer)
     const scalesPuzzle = new ScalesPuzzle(actions, gltf.scene);
     const moonPuzzle = new MoonPuzzle(actions, gltf.scene);
     const cipherPuzzle = new CipherSequencePuzzle(actions, gltf.scene);
-
     // register puzzles
     puzzleManager.addPuzzle(startPuzzle);
     puzzleManager.addPuzzle(mazePuzzle);
@@ -168,6 +168,9 @@ loadGLTFModel('/scene.glb', scene, mixer)
       particleSystem.updateParticleSpread(initialProgress);
     }
 
+    // Setup input handling after model is loaded
+    setupInput(raycaster, mouse, camera, puzzleManager, renderer.domElement, gltf.scene, actions);
+
   });
 
 setupUI();
@@ -188,8 +191,7 @@ document.addEventListener('click', startMusicAfterInteraction, { passive: true }
 document.addEventListener('keydown', startMusicAfterInteraction, { passive: true });
 document.addEventListener('touchstart', startMusicAfterInteraction, { passive: true });
 
-// handle mouse stuff
-setupInput(raycaster, mouse, camera, puzzleManager, renderer.domElement);
+// handle mouse stuff - will be set up after model loads
 
 const clock = new THREE.Clock();
 
