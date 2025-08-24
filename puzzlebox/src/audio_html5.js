@@ -1,469 +1,214 @@
 // Audio constants
-const DEFAULT_MUSIC_VOLUME = 0.7; // Reduced from 0.3 to 0.12 (40% of original)
+const DEFAULT_MUSIC_VOLUME = 0.1;
 const DEFAULT_SFX_VOLUME = 0.5;
 const DEFAULT_MASTER_VOLUME = 1.0;
-const TEMP_MUSIC_VOLUME_REDUCTION = 0.3;
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 1;
 const FADE_OUT_DELAY = 500;
-const COMPLETE_DELAY = 1000;
+const COMPLETE_DELAY = 300;
 const BUTTON_CLICK_VOLUME = 0.2;
 const PUZZLE_SOLVE_VOLUME = 1;
 const PUZZLE_SOLVE_START_TIME = 0.8;
-
 const VOICE_OVER_VOLUME = 0.8;
-const MUSIC_FADE_IN = 2.0;
-const MUSIC_LOOP_TIMEOUT = 3.0;
-const MOONPROJECT_TRUE_VOLUME = 0.001;
+const NOTE_VO_DELAY = 500;
+const MUSIC_FADE_IN = 0.5;
+const MOONPROJECT_TRUE_VOLUME = 0.12; // 20% louder than regular music
 
 // Memory optimization constants
-const MAX_AUDIO_POOL_SIZE = 3; // Reduced from 5
-const MAX_SIMULTANEOUS_SOUNDS = 8; // Limit simultaneous audio elements
-const AUDIO_CLEANUP_INTERVAL = 30000; // Clean up unused audio every 30 seconds
+const MAX_AUDIO_POOL_SIZE = 3;
+const MAX_SIMULTANEOUS_SOUNDS = 8;
+const AUDIO_CLEANUP_INTERVAL = 30000;
+const FADE_STEPS = 50;
+
+// Timing and delay constants
+const BUTTON_CLICK_DEBOUNCE = 100; // ms
+const SHOW_BUTTON_DELAY = 100; // ms
+const FADE_DURATION_MULTIPLIER = 1.2;
+const FADE_CLEANUP_DELAY = 1200; // ms
+const PROCESSING_DELAY = 0.1; // seconds
+const PLAY_DELAY_COMPENSATION = 0.001; // seconds
+const TEMP_MUSIC_VOLUME_REDUCTION = 0.3; // Duck to 30% during voice overs
+
+// Progress and UI constants
+const PROGRESS_PERCENTAGE_MULTIPLIER = 100;
+const PROGRESS_COMPLETION_THRESHOLD = 100;
+
+// Audio file configuration
+const AUDIO_FILES = {
+  // Music tracks
+  moonproject: '/audio/moonproject.mp3',
+  moonprojecttrue: '/audio/moonprojecttrue.mp3',
+  
+  // Sound effects
+  puzzle_solve: '/audio/puzzle_solve.mp3',
+  button_click: '/audio/button_click.mp3',
+  
+  // Voice overs
+  maze_vo: '/audio/vo/maze.mp3',
+  start_vo: '/audio/vo/start.mp3',
+  scales_vo: '/audio/vo/scales.mp3',
+  moon_vo: '/audio/vo/moon.mp3',
+  riddle_vo: '/audio/vo/riddle.mp3',
+  note_vo: '/audio/vo/note.mp3',
+  joie_vo: '/audio/vo/joie.mp3',
+  tristese_vo: '/audio/vo/tristese.mp3',
+  peur_vo: '/audio/vo/peur.mp3',
+  amour_vo: '/audio/vo/amour.mp3',
+  colere_vo: '/audio/vo/colere.mp3',
+  resilience_vo: '/audio/vo/resilience.mp3'
+};
+
+// Voice over method mapping
+const VOICE_OVER_METHODS = {
+  start_vo: 'playStartVO',
+  scales_vo: 'playScalesVO',
+  maze_vo: 'playMazeVO',
+  moon_vo: 'playMoonVO',
+  riddle_vo: 'playRiddleVO',
+  note_vo: 'playNoteVO',
+  joie_vo: 'playJoieVO',
+  tristese_vo: 'playTristeseVO',
+  peur_vo: 'playPeurVO',
+  amour_vo: 'playAmourVO',
+  colere_vo: 'playColereVO',
+  resilience_vo: 'playResilienceVO'
+};
 
 class AudioManager {
   constructor() {
-    this.audioElements = new Map(); // HTML5 Audio elements
-    this.musicElements = new Map(); // Currently playing music
-    this.buttonClickPool = []; // Pool of pre-created button click audio elements
-    this.currentButtonIndex = 0; // Index for cycling through button click pool
+    this.audioElements = new Map();
+    this.musicElements = new Map();
+    this.buttonClickPool = [];
+    this.activeAudioElements = new Set();
+    
+    // State flags
     this.isInitialized = false;
     this.isMuted = false;
+    this.voiceOversEnabled = true;
+    this.isPlayingVoiceOver = false;
+    this.isTemporaryVolumeActive = false;
+    
+    // Volume settings
     this.musicVolume = DEFAULT_MUSIC_VOLUME;
     this.sfxVolume = DEFAULT_SFX_VOLUME;
     this.masterVolume = DEFAULT_MASTER_VOLUME;
-    this.tempMusicVolumeReduction = TEMP_MUSIC_VOLUME_REDUCTION;
-    this.voiceOversEnabled = false;
-
-    // Memory optimization: Track active audio elements
-    this.activeAudioElements = new Set();
+    this.voiceOverVolume = VOICE_OVER_VOLUME;
+    
+    // Voice over tracking
+    this.currentVoiceOverAudio = null;
+    this.lastButtonClickTime = 0;
     this.lastCleanupTime = Date.now();
-
-    // Audio file paths
-    this.audioFiles = {
-      moonproject: '/audio/moonproject.mp3',
-      moonprojecttrue: '/audio/moonprojecttrue.mp3',
-      puzzle_solve: '/audio/puzzle_solve.mp3',
-      button_click: '/audio/button_click.mp3',
-
-      maze_vo: '/audio/vo/maze.wav',
-      start_vo: '/audio/vo/start.wav'
-    };
-
-    // Load saved settings from localStorage
+    
+    // Audio files
+    this.audioFiles = AUDIO_FILES;
+    
     this.loadSettings();
-
-    // Start cleanup interval
     this.startCleanupInterval();
   }
 
-  // localStorage methods
+  // ===== SETTINGS MANAGEMENT =====
+  
   loadSettings() {
     try {
       const savedSettings = localStorage.getItem('puzzleBoxAudioSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-
-        // Check if this is an old settings version with high music volume
-        if (settings.musicVolume && settings.musicVolume > 0.1) {
-          // Convert old music volume to new scale (40% of old value)
-          this.musicVolume = settings.musicVolume * 0.4;
-          console.log(`Converted old music volume ${settings.musicVolume} to new scale: ${this.musicVolume}`);
-        } else {
-          this.musicVolume = settings.musicVolume ?? DEFAULT_MUSIC_VOLUME;
-        }
-
+        this.musicVolume = settings.musicVolume ?? DEFAULT_MUSIC_VOLUME;
         this.sfxVolume = settings.sfxVolume ?? DEFAULT_SFX_VOLUME;
         this.masterVolume = settings.masterVolume ?? DEFAULT_MASTER_VOLUME;
+        this.voiceOverVolume = settings.voiceOverVolume ?? VOICE_OVER_VOLUME;
         this.isMuted = settings.isMuted ?? false;
-        this.voiceOversEnabled = false; // Force disable voice overs
+        this.voiceOversEnabled = settings.voiceOversEnabled ?? true;
       }
     } catch (error) {
-      console.warn('Failed to load audio settings from localStorage:', error);
+      console.warn('Failed to load audio settings:', error);
     }
   }
 
   saveSettings() {
+    if (this.isTemporaryVolumeActive) return;
+    
     try {
       const settings = {
         musicVolume: this.musicVolume,
         sfxVolume: this.sfxVolume,
         masterVolume: this.masterVolume,
+        voiceOverVolume: this.voiceOverVolume,
         isMuted: this.isMuted,
         voiceOversEnabled: this.voiceOversEnabled
       };
       localStorage.setItem('puzzleBoxAudioSettings', JSON.stringify(settings));
     } catch (error) {
-      console.warn('Failed to save audio settings to localStorage:', error);
+      console.warn('Failed to save audio settings:', error);
     }
   }
 
-  async initialize() {
-    if (this.isInitialized) return;
-
-    try {
-      console.log('Initializing audio with HTML5 Audio elements (no microphone permissions needed)');
-
-      // Create HTML5 audio elements for each sound
-      await this.preloadAudioElements();
-
-      this.isInitialized = true;
-      console.log('Audio system initialized successfully without Web Audio API');
-    } catch (error) {
-      console.error('Failed to initialize audio system:', error);
+  // ===== VOLUME MANAGEMENT =====
+  
+  setVolume(type, volume) {
+    const clampedVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
+    
+    switch (type) {
+      case 'music':
+        this.musicVolume = clampedVolume;
+        break;
+      case 'sfx':
+        this.sfxVolume = clampedVolume;
+        break;
+      case 'master':
+        this.masterVolume = clampedVolume;
+        break;
+      case 'voiceOver':
+        this.voiceOverVolume = clampedVolume;
+        break;
     }
-  }
-
-  async preloadAudioElements() {
-    const audioFiles = Object.entries(this.audioFiles);
-    let loadedCount = 0;
-
-    const loadPromises = audioFiles.map(async ([key, path]) => {
-      try {
-        const audio = new Audio();
-        audio.preload = 'auto';
-        audio.volume = this.calculateVolume(key);
-        audio.src = path;
-
-        // Wait for audio to be ready
-        await new Promise((resolve, reject) => {
-          audio.addEventListener('canplaythrough', resolve, { once: true });
-          audio.addEventListener('error', reject, { once: true });
-          audio.load();
-        });
-
-        this.audioElements.set(key, audio);
-        loadedCount++;
-
-        // Update loading progress
-        const progress = (loadedCount / audioFiles.length) * 100;
-        this.updateLoadingProgress(progress, `${loadedCount}/${audioFiles.length} files loaded`);
-
-      } catch (error) {
-        console.warn(`Failed to load audio file ${path}:`, error);
-        loadedCount++;
-
-        // Update progress even for failed loads
-        const progress = (loadedCount / audioFiles.length) * 100;
-        this.updateLoadingProgress(progress, `Failed to load ${key}`);
-      }
-    });
-
-    await Promise.all(loadPromises);
-
-    // Create button click audio pool for instant playback
-    this.createButtonClickPool();
-  }
-
-  calculateVolume(key) {
-    if (this.isMuted) return 0;
-    const baseVolume = key.includes('music') ? this.musicVolume : this.sfxVolume;
-    return baseVolume * this.masterVolume;
-  }
-
-  createButtonClickPool() {
-    // Create a pool of 3 pre-loaded button click audio elements for instant playback (reduced from 5)
-    const buttonClickSrc = this.audioFiles.button_click;
-    for (let i = 0; i < MAX_AUDIO_POOL_SIZE; i++) {
-      const audio = new Audio(buttonClickSrc);
-      audio.preload = 'auto';
-      audio.volume = BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
-      // Pre-load the audio
-      audio.load();
-      this.buttonClickPool.push(audio);
+    
+    if (type !== 'voiceOver') {
+      this.updateAllVolumes();
     }
-    console.log('Button click audio pool created with', this.buttonClickPool.length, 'elements');
-  }
-
-  updateLoadingProgress(percentage, text) {
-    const progressBar = document.getElementById('audio-loading-progress');
-    const progressText = document.getElementById('audio-loading-text');
-    const loadingContainer = document.getElementById('audio-loading-container');
-
-    if (progressBar && progressText && loadingContainer) {
-      // Show loading container if it's hidden
-      if (loadingContainer.classList.contains('fade-out')) {
-        loadingContainer.classList.remove('fade-out');
-      }
-
-      progressBar.style.width = `${percentage}%`;
-      progressText.textContent = `${Math.round(percentage)}% - ${text}`;
-
-      if (percentage >= 100) {
-        setTimeout(() => {
-          // Hide loading content and show continue button
-          const loadingContent = loadingContainer.querySelector('.loading-content');
-          const continueButton = document.querySelector('.loading-complete-button');
-          
-          if (loadingContent && continueButton) {
-            loadingContent.style.display = 'none';
-            continueButton.style.display = 'block';
-            // Trigger the animation after a small delay
-            setTimeout(() => {
-              continueButton.classList.add('show');
-            }, 100);
-          }
-        }, COMPLETE_DELAY);
-      }
-    }
-  }
-
-  playSound(soundName, options = {}) {
-    if (!this.isInitialized || this.isMuted) return null;
-
-    const originalAudio = this.audioElements.get(soundName);
-    if (!originalAudio) {
-      console.warn(`Sound not found: ${soundName}`);
-      return null;
-    }
-
-    // Memory optimization: Limit active audio elements
-    this.limitActiveAudioElements();
-
-    // Clone the audio element to allow multiple simultaneous plays
-    const audio = originalAudio.cloneNode();
-
-    // Set volume
-    const volume = options.volume !== undefined ? options.volume : 1;
-    audio.volume = volume * this.sfxVolume * this.masterVolume;
-
-    // Set start time
-    if (options.startTime) {
-      audio.currentTime = options.startTime;
-    }
-
-    // Memory optimization: Track active audio element
-    this.activeAudioElements.add(audio);
-
-    // Add cleanup event listener
-    audio.addEventListener('ended', () => {
-      this.activeAudioElements.delete(audio);
-    }, { once: true });
-
-    // Play the sound
-    audio.play().catch(error => {
-      console.warn(`Failed to play sound ${soundName}:`, error);
-      this.activeAudioElements.delete(audio);
-    });
-
-    return audio;
-  }
-
-  playMusic(musicName, options = {}) {
-    if (!this.isInitialized || this.isMuted) {
-      return null;
-    }
-
-    const originalAudio = this.audioElements.get(musicName);
-    if (!originalAudio) {
-      console.warn(`Music not found: ${musicName}`);
-      return null;
-    }
-
-    // Clone the audio element
-    const audio = originalAudio.cloneNode();
-
-    // Set volume
-    const volume = options.volume !== undefined ? options.volume : 1;
-    audio.volume = volume * this.musicVolume * this.masterVolume;
-
-    // Set loop
-    if (options.loop !== false) {
-      audio.loop = true;
-    }
-
-    // Set start time
-    if (options.startTime) {
-      audio.currentTime = options.startTime;
-    }
-
-    // Track start time for elapsed time calculation
-    const startTime = Date.now();
-    audio.startTime = startTime;
-
-    // Handle fade in
-    if (options.fadeIn && options.fadeIn > 0) {
-      audio.volume = 0;
-      audio.play().then(() => {
-        this.fadeInAudio(audio, volume * this.musicVolume * this.masterVolume, options.fadeIn);
-      }).catch(error => {
-        console.warn(`Failed to play music ${musicName}:`, error);
-      });
-    } else {
-      audio.play().catch(error => {
-        console.warn(`Failed to play music ${musicName}:`, error);
-      });
-    }
-
-    // Store the music element
-    this.musicElements.set(musicName, audio);
-
-    return audio;
-  }
-
-  fadeInAudio(audio, targetVolume, duration) {
-    const currentVolume = audio.volume;
-    const volumeDifference = targetVolume - currentVolume;
-    const steps = 50;
-    const stepTime = (duration * 1000) / steps;
-    const volumeIncrement = volumeDifference / steps;
-    let currentStep = 0;
-
-    const fadeInterval = setInterval(() => {
-      currentStep++;
-      audio.volume = Math.min(currentVolume + (volumeIncrement * currentStep), targetVolume);
-
-      if (currentStep >= steps) {
-        clearInterval(fadeInterval);
-      }
-    }, stepTime);
-  }
-
-  stopMusic(musicName = null) {
-    if (musicName) {
-      const audio = this.musicElements.get(musicName);
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        this.musicElements.delete(musicName);
-      }
-    } else {
-      // Stop all music
-      this.musicElements.forEach((audio, name) => {
-        audio.pause();
-        audio.currentTime = 0;
-      });
-      this.musicElements.clear();
-    }
-  }
-
-  fadeBetweenTracks(fromTrack, toTrack, fadeDuration = 5.0) {
-    const fromAudio = this.musicElements.get(fromTrack);
-
-    if (fromAudio) {
-      // Capture the current position of the from track
-      const fromTrackPosition = fromAudio.currentTime;
-
-      // Pre-load the new track to minimize start delay
-      const originalAudio = this.audioElements.get(toTrack);
-      if (!originalAudio) {
-        console.warn(`Music not found: ${toTrack}`);
-        return;
-      }
-
-      // Clone and prepare the new audio element
-      const newAudio = originalAudio.cloneNode();
-
-      // Compensate for play delay by starting slightly ahead
-      // The delay varies but is typically 50-200ms, so we start 100ms ahead
-      const playDelayCompensation = 0.001; // 100ms
-      const compensatedPosition = fromTrackPosition - playDelayCompensation;
-      newAudio.currentTime = Math.max(0, compensatedPosition);
-      newAudio.loop = true;
-      newAudio.volume = 0; // Start at 0 volume for fade-in
-
-      // Store the new audio element
-      this.musicElements.set(toTrack, newAudio);
-
-      // Start playing immediately to minimize delay
-      const playPromise = newAudio.play();
-
-      // Handle any play errors and start fade-in
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          // Start fade-in after audio begins playing
-          this.fadeInAudio(newAudio, this.musicVolume * this.masterVolume, fadeDuration);
-        }).catch(error => {
-          console.warn(`Failed to play music ${toTrack}:`, error);
-        });
-      }
-
-      console.log(`Crossfading from ${fromTrack} at ${fromTrackPosition}s to ${toTrack} at ${newAudio.currentTime}s (compensated by ${playDelayCompensation}s)`);
-
-      // Now fade out the old track while new track is already playing
-      this.fadeOutAudio(fromAudio, fadeDuration * 1.2);
-
-      // Stop and clean up the old track after fade completes
-      setTimeout(() => {
-        fromAudio.pause();
-        this.musicElements.delete(fromTrack);
-      }, fadeDuration * 1200);
-
-    } else {
-      // No from track, just start the to track
-      this.playMusic(toTrack, { fadeIn: fadeDuration, loop: true });
-    }
-  }
-
-  fadeOutAudio(audio, duration) {
-    const steps = 50;
-    const stepTime = (duration * 1000) / steps;
-    const volumeDecrement = audio.volume / steps;
-    let currentStep = 0;
-
-    const fadeInterval = setInterval(() => {
-      currentStep++;
-      audio.volume = Math.max(audio.volume - volumeDecrement, 0);
-
-      if (currentStep >= steps) {
-        clearInterval(fadeInterval);
-      }
-    }, stepTime);
-  }
-
-  setMusicVolume(volume) {
-    this.musicVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
-    this.updateAllVolumes();
     this.saveSettings();
   }
 
-  setSFXVolume(volume) {
-    this.sfxVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
-    this.updateAllVolumes();
-    this.saveSettings();
-  }
-
-  setMasterVolume(volume) {
-    this.masterVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
-    this.updateAllVolumes();
-    this.saveSettings();
-  }
+  setMusicVolume(volume) { this.setVolume('music', volume); }
+  setSFXVolume(volume) { this.setVolume('sfx', volume); }
+  setMasterVolume(volume) { this.setVolume('master', volume); }
+  setVoiceOverVolume(volume) { this.setVolume('voiceOver', volume); }
 
   setMusicVolumeTemporary(volume) {
-    // Temporarily set music volume without saving to settings
     const originalVolume = this.musicVolume;
     this.musicVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
+    this.isTemporaryVolumeActive = true;
     this.updateAllVolumes();
-    return originalVolume; // Return original volume for restoration
+    return originalVolume;
+  }
+
+  restoreMusicVolume(originalVolume) {
+    this.musicVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, originalVolume));
+    this.isTemporaryVolumeActive = false;
+    this.updateAllVolumes();
   }
 
   updateAllVolumes() {
-    // Update all currently playing music volumes
+    // Update music volumes
     this.musicElements.forEach((audio, name) => {
-      if (this.isMuted) {
-        audio.volume = 0;
-      } else {
-        // Preserve the original volume settings for tracks that should stay at low volume
-        if (name === 'moonprojecttrue') {
-          // Keep moonprojecttrue at very low volume until game completion
-          audio.volume = 0.001 * this.masterVolume;
-        } else {
-          // Normal music tracks use music volume
-          audio.volume = this.musicVolume * this.masterVolume;
-        }
-      }
+      audio.volume = this.isMuted ? 0 : this.getMusicVolume(name);
     });
 
     // Update button click pool volumes
     this.buttonClickPool.forEach(audio => {
-      if (this.isMuted) {
-        audio.volume = 0;
-      } else {
-        audio.volume = BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
-      }
+      audio.volume = this.isMuted ? 0 : BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
     });
   }
 
+  getMusicVolume(trackName) {
+    if (trackName === 'moonprojecttrue') {
+      return MOONPROJECT_TRUE_VOLUME * this.masterVolume;
+    }
+    return this.musicVolume * this.masterVolume;
+  }
+
+  // ===== MUTE CONTROLS =====
+  
   mute() {
     this.isMuted = true;
     this.updateAllVolumes();
@@ -477,23 +222,273 @@ class AudioManager {
   }
 
   toggleMute() {
-    if (this.isMuted) {
-      this.unmute();
-    } else {
-      this.mute();
-    }
+    this.isMuted ? this.unmute() : this.mute();
     return this.isMuted;
   }
 
-  // Convenience methods for common game sounds
+  // ===== INITIALIZATION =====
+  
+  async initialize() {
+    if (this.isInitialized) return;
+
+    try {
+      await this.preloadAudioElements();
+      this.isInitialized = true;
+      this.retryPendingAudioMethods();
+    } catch (error) {
+      console.error('Failed to initialize audio system:', error);
+    }
+  }
+
+  async preloadAudioElements() {
+    const audioFiles = Object.entries(this.audioFiles);
+    let loadedCount = 0;
+
+    // Load all files sequentially to ensure proper progress tracking
+    for (const [key, path] of audioFiles) {
+      await this.loadAudioFile(key, path, loadedCount, audioFiles.length);
+      loadedCount++;
+    }
+
+    this.createButtonClickPool();
+  }
+
+  async loadAudioFile(key, path, loadedCount, totalFiles) {
+    try {
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.volume = this.calculateVolume(key);
+      audio.src = path;
+
+      await new Promise((resolve, reject) => {
+        audio.addEventListener('canplaythrough', resolve, { once: true });
+        audio.addEventListener('error', reject, { once: true });
+        audio.load();
+      });
+
+      this.audioElements.set(key, audio);
+      // Show progress as completed files (loadedCount + 1 since we just finished loading this file)
+      const completedFiles = loadedCount + 1;
+      this.updateLoadingProgress((completedFiles / totalFiles) * PROGRESS_PERCENTAGE_MULTIPLIER, `${completedFiles}/${totalFiles} files loaded`);
+    } catch (error) {
+      console.warn(`Failed to load audio file ${path}:`, error);
+      // Even failed files count as "processed"
+      const completedFiles = loadedCount + 1;
+      this.updateLoadingProgress((completedFiles / totalFiles) * PROGRESS_PERCENTAGE_MULTIPLIER, `Failed to load ${key}`);
+    }
+  }
+
+  calculateVolume(key) {
+    if (this.isMuted) return 0;
+    const baseVolume = key.includes('_vo') ? this.voiceOverVolume : 
+                      key.includes('music') ? this.musicVolume : this.sfxVolume;
+    return baseVolume * this.masterVolume;
+  }
+
+  createButtonClickPool() {
+    for (let i = 0; i < MAX_AUDIO_POOL_SIZE; i++) {
+      const audio = new Audio(this.audioFiles.button_click);
+      audio.preload = 'auto';
+      audio.volume = BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
+      audio.load();
+      this.buttonClickPool.push(audio);
+    }
+  }
+
+  updateLoadingProgress(percentage, text) {
+    const progressBar = document.getElementById('audio-loading-progress');
+    const progressText = document.getElementById('audio-loading-text');
+    const loadingContainer = document.getElementById('audio-loading-container');
+
+    if (progressBar && progressText && loadingContainer) {
+      if (loadingContainer.classList.contains('fade-out')) {
+        loadingContainer.classList.remove('fade-out');
+      }
+
+      progressBar.style.width = `${percentage}%`;
+      progressText.textContent = `${Math.round(percentage)}% - ${text}`;
+
+      if (percentage >= PROGRESS_COMPLETION_THRESHOLD) {
+        setTimeout(() => {
+          const loadingContent = loadingContainer.querySelector('.loading-content');
+          const continueButton = document.querySelector('.loading-complete-button');
+          
+          if (loadingContent && continueButton) {
+            loadingContent.style.display = 'none';
+            continueButton.style.display = 'block';
+            setTimeout(() => continueButton.classList.add('show'), SHOW_BUTTON_DELAY);
+          }
+        }, COMPLETE_DELAY);
+      }
+    }
+  }
+
+  // ===== AUDIO PLAYBACK =====
+  
+  playSound(soundName, options = {}) {
+    if (!this.isInitialized || this.isMuted) return null;
+
+    const originalAudio = this.audioElements.get(soundName);
+    if (!originalAudio) {
+      console.warn(`Sound not found: ${soundName}`);
+      return null;
+    }
+
+    this.limitActiveAudioElements();
+
+    const audio = originalAudio.cloneNode();
+    const volume = options.volume !== undefined ? options.volume : 1;
+    audio.volume = volume * this.sfxVolume * this.masterVolume;
+
+    if (options.startTime) {
+      audio.currentTime = options.startTime;
+    }
+
+    this.activeAudioElements.add(audio);
+    audio.addEventListener('ended', () => this.activeAudioElements.delete(audio), { once: true });
+
+    audio.play().catch(error => {
+      console.warn(`Failed to play sound ${soundName}:`, error);
+      this.activeAudioElements.delete(audio);
+    });
+
+    return audio;
+  }
+
+  playMusic(musicName, options = {}) {
+    if (!this.isInitialized || this.isMuted) return null;
+
+    const originalAudio = this.audioElements.get(musicName);
+    if (!originalAudio) {
+      console.warn(`Music not found: ${musicName}`);
+      return null;
+    }
+
+    const audio = originalAudio.cloneNode();
+    const volume = options.volume !== undefined ? options.volume : 1;
+    audio.volume = volume * this.getMusicVolume(musicName);
+
+    if (options.loop !== false) audio.loop = true;
+    if (options.startTime) audio.currentTime = options.startTime;
+
+    audio.startTime = Date.now();
+
+    if (options.fadeIn && options.fadeIn > 0) {
+      audio.volume = 0;
+      audio.play().then(() => {
+        this.fadeInAudio(audio, volume * this.getMusicVolume(musicName), options.fadeIn);
+      }).catch(error => {
+        console.warn(`Failed to play music ${musicName}:`, error);
+      });
+    } else {
+      audio.play().catch(error => {
+        console.warn(`Failed to play music ${musicName}:`, error);
+      });
+    }
+
+    this.musicElements.set(musicName, audio);
+    return audio;
+  }
+
+  // ===== FADE EFFECTS =====
+  
+  fadeInAudio(audio, targetVolume, duration) {
+    this.fadeAudio(audio, 0, targetVolume, duration);
+  }
+
+  fadeOutAudio(audio, duration) {
+    this.fadeAudio(audio, audio.volume, 0, duration);
+  }
+
+  fadeAudio(audio, fromVolume, toVolume, duration) {
+    const volumeDifference = toVolume - fromVolume;
+    const stepTime = (duration * 1000) / FADE_STEPS;
+    const volumeIncrement = volumeDifference / FADE_STEPS;
+    let currentStep = 0;
+
+    const fadeInterval = setInterval(() => {
+      currentStep++;
+      audio.volume = Math.max(0, Math.min(1, fromVolume + (volumeIncrement * currentStep)));
+
+      if (currentStep >= FADE_STEPS) {
+        clearInterval(fadeInterval);
+      }
+    }, stepTime);
+  }
+
+  fadeBetweenTracks(fromTrack, toTrack, fadeDuration = 5.0) {
+    const fromAudio = this.musicElements.get(fromTrack);
+
+    if (fromAudio) {
+      const fromTrackPosition = fromAudio.currentTime;
+      const originalAudio = this.audioElements.get(toTrack);
+      
+      if (!originalAudio) {
+        console.warn(`Music not found: ${toTrack}`);
+        return;
+      }
+
+      const newAudio = originalAudio.cloneNode();
+      
+      // Account for processing delay when transitioning to outro track
+      let targetPosition = fromTrackPosition;
+      if (toTrack === 'moonprojecttrue') {
+        // Add a small delay to compensate for processing time
+        targetPosition = fromTrackPosition + PROCESSING_DELAY;
+      }
+      
+      const playDelayCompensation = PLAY_DELAY_COMPENSATION;
+      const compensatedPosition = Math.max(0, targetPosition - playDelayCompensation);
+      
+      newAudio.currentTime = compensatedPosition;
+      newAudio.loop = true;
+      newAudio.volume = 0;
+
+      this.musicElements.set(toTrack, newAudio);
+
+      newAudio.play().then(() => {
+        this.fadeInAudio(newAudio, this.getMusicVolume(toTrack), fadeDuration);
+      }).catch(error => {
+        console.warn(`Failed to play music ${toTrack}:`, error);
+      });
+
+      this.fadeOutAudio(fromAudio, fadeDuration * FADE_DURATION_MULTIPLIER);
+
+      setTimeout(() => {
+        fromAudio.pause();
+        this.musicElements.delete(fromTrack);
+      }, fadeDuration * FADE_CLEANUP_DELAY);
+    } else {
+      this.playMusic(toTrack, { fadeIn: fadeDuration, loop: true });
+    }
+  }
+
+  // ===== MUSIC CONTROL =====
+  
+  stopMusic(musicName = null) {
+    if (musicName) {
+      const audio = this.musicElements.get(musicName);
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        this.musicElements.delete(musicName);
+      }
+    } else {
+      this.musicElements.forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+      this.musicElements.clear();
+    }
+  }
+
+  // ===== CONVENIENCE METHODS =====
+  
   playButtonClick() {
-    // Prevent multiple rapid button clicks from playing multiple sounds
-    if (this.lastButtonClickTime && Date.now() - this.lastButtonClickTime < 100) {
-      return null; // Ignore clicks within 100ms of each other
+    if (this.lastButtonClickTime && Date.now() - this.lastButtonClickTime < BUTTON_CLICK_DEBOUNCE) {
+      return null;
     }
     this.lastButtonClickTime = Date.now();
-
-    // Use the original playSound method for button clicks - simpler and more reliable
     return this.playSound('button_click', { volume: BUTTON_CLICK_VOLUME, startTime: 0.2 });
   }
 
@@ -501,20 +496,59 @@ class AudioManager {
     return this.playSound('puzzle_solve', { volume: PUZZLE_SOLVE_VOLUME, startTime: PUZZLE_SOLVE_START_TIME });
   }
 
-
-  playMazeVO() {
+  // ===== VOICE OVER SYSTEM =====
+  
+  _playVoiceOver(soundName) {
     if (!this.voiceOversEnabled) return null;
-    return this.playSound('maze_vo', { volume: VOICE_OVER_VOLUME });
+    
+    if (this.isPlayingVoiceOver && this.currentVoiceOverAudio) {
+      this.currentVoiceOverAudio.pause();
+      this.currentVoiceOverAudio.currentTime = 0;
+      this.isPlayingVoiceOver = false;
+    }
+    
+    this.isPlayingVoiceOver = true;
+    const audio = this.playSound(soundName, { volume: this.voiceOverVolume });
+    
+    if (audio) {
+      this.currentVoiceOverAudio = audio;
+      audio.addEventListener('ended', () => {
+        this.isPlayingVoiceOver = false;
+        this.currentVoiceOverAudio = null;
+      }, { once: true });
+      
+      const originalAudio = this.audioElements.get(soundName);
+      if (originalAudio && originalAudio.duration) {
+        return { duration: originalAudio.duration, audio: audio };
+      }
+    } else {
+      this.isPlayingVoiceOver = false;
+      this.currentVoiceOverAudio = null;
+    }
+    return audio;
   }
 
-  playStartVO() {
-    if (!this.voiceOversEnabled) return null;
-    return this.playSound('start_vo', { volume: VOICE_OVER_VOLUME });
+  // Generate voice over methods dynamically
+  _generateVoiceOverMethods() {
+    Object.entries(VOICE_OVER_METHODS).forEach(([fileKey, methodName]) => {
+      this[methodName] = () => this._playVoiceOver(fileKey);
+    });
+    
+    // Special case for note VO with delay
+    this.playNoteVO = () => {
+      const audioElement = this.audioElements.get('note_vo');
+      if (audioElement) {
+        setTimeout(() => this._playVoiceOver('note_vo'), NOTE_VO_DELAY);
+        return { duration: audioElement.duration, delayed: true };
+      }
+      return null;
+    };
   }
 
-  // Voice over control methods
+  // ===== VOICE OVER CONTROLS =====
+  
   areVoiceOversEnabled() {
-    return false; // Force disable voice overs
+    return this.voiceOversEnabled;
   }
 
   setVoiceOversEnabled(enabled) {
@@ -528,58 +562,28 @@ class AudioManager {
     return this.voiceOversEnabled;
   }
 
-  // Get the temporary music volume reduction factor
-  getTempMusicVolumeReduction() {
-    return this.tempMusicVolumeReduction;
-  }
-
-  // Resume context (no-op for HTML5 Audio)
-  async resumeContext() {
-    // No-op for HTML5 Audio
-  }
-
-  // Cleanup
-  dispose() {
-    this.stopMusic();
-    this.audioElements.clear();
-    this.isInitialized = false;
-  }
-
-  // Memory optimization: Start periodic cleanup
+  // ===== MEMORY MANAGEMENT =====
+  
   startCleanupInterval() {
-    setInterval(() => {
-      this.cleanupUnusedAudio();
-    }, AUDIO_CLEANUP_INTERVAL);
+    setInterval(() => this.cleanupUnusedAudio(), AUDIO_CLEANUP_INTERVAL);
   }
 
-  // Memory optimization: Clean up unused audio elements
   cleanupUnusedAudio() {
     const now = Date.now();
-    const timeSinceLastCleanup = now - this.lastCleanupTime;
-    
-    // Only cleanup if enough time has passed
-    if (timeSinceLastCleanup < AUDIO_CLEANUP_INTERVAL) {
-      return;
-    }
+    if (now - this.lastCleanupTime < AUDIO_CLEANUP_INTERVAL) return;
 
-    // Clean up finished audio elements
     this.activeAudioElements.forEach(audio => {
       if (audio.ended || audio.paused) {
         this.activeAudioElements.delete(audio);
-        // Remove event listeners to prevent memory leaks
-        audio.onended = null;
-        audio.onerror = null;
-        audio.onload = null;
+        audio.onended = audio.onerror = audio.onload = null;
       }
     });
 
     this.lastCleanupTime = now;
   }
 
-  // Memory optimization: Limit active audio elements
   limitActiveAudioElements() {
     if (this.activeAudioElements.size >= MAX_SIMULTANEOUS_SOUNDS) {
-      // Remove oldest audio element
       const oldestAudio = this.activeAudioElements.values().next().value;
       if (oldestAudio) {
         oldestAudio.pause();
@@ -588,94 +592,103 @@ class AudioManager {
       }
     }
   }
+
+  // ===== UTILITY METHODS =====
+  
+  retryPendingAudioMethods() {
+    const dialogueButton = document.querySelector('.dialogue-button');
+    if (dialogueButton?.dataset.pendingAudioMethod) {
+      const pendingMethod = dialogueButton.dataset.pendingAudioMethod;
+      if (typeof this[pendingMethod] === 'function') {
+        dialogueButton.dataset.audioMethod = pendingMethod;
+        dialogueButton.removeAttribute('data-pending-audio-method');
+        
+        if (this.areVoiceOversEnabled()) {
+          this[pendingMethod]();
+        }
+      }
+    }
+  }
+
+  getTempMusicVolumeReduction() {
+    return TEMP_MUSIC_VOLUME_REDUCTION; // Duck to 30% during voice overs
+  }
+
+  async resumeContext() {
+    // No-op for HTML5 Audio
+  }
+
+  dispose() {
+    this.stopMusic();
+    this.audioElements.clear();
+    this.isInitialized = false;
+  }
 }
 
-// Create global audio manager instance
+// Initialize voice over methods
 const audioManager = new AudioManager();
+audioManager._generateVoiceOverMethods();
 
-// Create namespace for global access
+// ===== GLOBAL EXPORTS =====
 window.PuzzleBox = window.PuzzleBox || {};
-
-// Make audioManager globally accessible
 window.PuzzleBox.audioManager = audioManager;
-
-// Expose fadeBetweenTracks for testing
 window.PuzzleBox.fadeBetweenTracks = (fromTrack, toTrack, duration) => {
   return audioManager.fadeBetweenTracks(fromTrack, toTrack, duration);
 };
-
-// Expose cipher puzzle completion audio transition for testing
 window.PuzzleBox.testCipherAudioTransition = () => {
   return audioManager.fadeBetweenTracks('moonproject', 'moonprojecttrue', 2);
 };
-
-// Global function to ensure audio context is resumed (no-op for HTML5 Audio)
 window.PuzzleBox.resumeAudioContext = async () => {
   // No-op for HTML5 Audio
 };
 
-// Flag to track if music has been started
+// ===== MUSIC STARTUP =====
 let musicStarted = false;
 
-export { AudioManager, audioManager };
+export { AudioManager, audioManager, NOTE_VO_DELAY };
 
-// Function to start music after user interaction
 export function startMusicAfterInteraction(event) {
-  // Check if music has already been started
-  if (musicStarted) {
-    return;
-  }
+  if (musicStarted) return;
 
-  // Ignore clicks on audio control elements
-  if (event && event.target) {
+  // Ignore audio control interactions
+  if (event?.target) {
     const target = event.target;
-
-    // Ignore clicks on any audio control elements
-    if (target.closest('.audio-controls') ||
-        target.closest('.audio-toggle-btn') ||
-        target.closest('.volume-slider') ||
-        target.closest('#master-volume') ||
-        target.closest('#music-volume') ||
-        target.closest('#sfx-volume') ||
-        target.closest('#mute-btn') ||
-        target.closest('.audio-close-btn') ||
-        target.closest('.audio-control-group') ||
-        target.closest('.audio-controls-header') ||
-        target.closest('.audio-controls-content') ||
-        target.closest('.audio-control-buttons') ||
-        target.closest('.volume-value')) {
-      console.log('Ignoring audio control interaction:', target.tagName, target.className, target.id);
-      return; // Don't start music for audio control clicks
+    const audioControlSelectors = [
+      '.audio-controls', '.audio-toggle-btn', '.volume-slider',
+      '#master-volume', '#music-volume', '#sfx-volume', '#mute-btn',
+      '.audio-close-btn', '.audio-control-group', '.audio-controls-header',
+      '.audio-controls-content', '.audio-control-buttons', '.volume-value'
+    ];
+    
+    if (audioControlSelectors.some(selector => target.closest(selector))) {
+      return;
     }
   }
 
-  console.log('Starting music after interaction:', event?.type, event?.target?.tagName, event?.target?.className);
   musicStarted = true;
+  const moonprojectAudio = audioManager.audioElements.get('moonproject');
+  
+  if (moonprojectAudio?.readyState >= 2) {
+    audioManager.playMusic('moonproject', { fadeIn: MUSIC_FADE_IN, loop: true, startTime: 0 });
+  } else {
+    audioManager.initialize().then(() => {
+      audioManager.playMusic('moonproject', { fadeIn: MUSIC_FADE_IN, loop: true, startTime: 0 });
+    }).catch(error => {
+      console.error('Failed to initialize audio:', error);
+    });
+  }
 
-  // Initialize audio first if not already done
-  audioManager.initialize().then(() => {
-    // Start only the main moonproject track initially
-    const moonprojectAudio = audioManager.playMusic('moonproject', { fadeIn: MUSIC_FADE_IN, loop: true, startTime: 0 });
-
-    console.log('Started main music track: moonproject');
-  }).catch(error => {
-    console.error('Failed to initialize audio:', error);
+  // Remove event listeners
+  ['click', 'keydown', 'touchstart'].forEach(eventType => {
+    document.removeEventListener(eventType, startMusicAfterInteraction);
   });
-
-  // Remove the event listener after first interaction
-  document.removeEventListener('click', startMusicAfterInteraction);
-  document.removeEventListener('keydown', startMusicAfterInteraction);
-  document.removeEventListener('touchstart', startMusicAfterInteraction);
 }
 
-// Initialize audio system and create audio toggle button after DOM is ready
 export function initializeAudioSystem() {
-  // Show loading bar (but don't start audio loading yet)
   const loadingContainer = document.getElementById('audio-loading-container');
   if (loadingContainer) {
     loadingContainer.classList.remove('fade-out');
   }
-
-  // Don't initialize audio system yet - wait for user interaction
-  // This prevents microphone permission requests on page load
 }
+
+

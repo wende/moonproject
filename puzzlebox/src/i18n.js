@@ -6,7 +6,7 @@ export const translations = {
     // Page titles and headers
     pageTitle: 'The Box for Moon',
     siteTitle: 'The Box for Moon',
-    congratulations: 'Congratulations',
+    congratulations: 'Congratulations!',
     credits: 'Credits',
 
     // Navigation and buttons
@@ -57,7 +57,7 @@ export const translations = {
     helloMoon: 'Hello Moon',
     outroText1: 'Sometimes it takes too many riddles to realize',
     outroText2: 'Sometimes moon wanes',
-    outroText3: 'Happy Birthday Moon',
+    outroText3: 'Happy Birthday Moon!',
     postscript: 'PS2 Did you know that Moon waxes religiously?',
     timeCounterText: 'PS In orbit these past {years} years, {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds',
 

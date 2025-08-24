@@ -113,7 +113,19 @@ export class ScalesPuzzle extends Puzzle {
 
     // Only update dialogue button if this is called from button interaction (not constructor)
     if (!this.isInitializing) {
-      window.PuzzleBox?.setDialogueButton(colorName);
+      // Map color names to audio methods
+      const audioMap = {
+        'Résilience': 'playResilienceVO',
+        'Colère': 'playColereVO',
+        'Joie': 'playJoieVO',
+        'Tristesse': 'playTristeseVO',
+        'Peur': 'playPeurVO',
+        'Amour': 'playAmourVO',
+        'Success': null // No audio for success
+      };
+      
+      const audioMethod = audioMap[colorName];
+      window.PuzzleBox?.setDialogueButton(colorName, audioMethod);
     }
 
     // Add 'col' prefix to match the material naming convention

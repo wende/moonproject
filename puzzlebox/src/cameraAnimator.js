@@ -502,15 +502,15 @@ export class CameraAnimator {
         },
         scales: {
           text: t('scalesPuzzle'),
-          audio: null
+          audio: 'playScalesVO'
         },
         moon: {
           text: t('moonPuzzle'),
-          audio: null
+          audio: 'playMoonVO'
         },
         cipher: {
           text: t('cipherPuzzle'),
-          audio: null
+          audio: 'playRiddleVO'
         }
       };
 

@@ -3,8 +3,9 @@ import { audioManager } from './audio_html5.js';
 // Audio controls constants
 const VOLUME_SLIDER_MAX = 100;
 const VOLUME_SLIDER_DEFAULT_MASTER = 100;
-const VOLUME_SLIDER_DEFAULT_MUSIC = 0.8; // Updated to match new DEFAULT_MUSIC_VOLUME (0.008 * 100)
+const VOLUME_SLIDER_DEFAULT_MUSIC = 20; // Default music volume (0.1 * 100, scaled to slider)
 const VOLUME_SLIDER_DEFAULT_SFX = 50;
+const VOLUME_SLIDER_DEFAULT_VOICE_OVER = 80; // Default voice over volume (0.8 * 100)
 const VOLUME_CONVERSION_FACTOR = 100; // Convert percentage to decimal
 
 class AudioControls {
@@ -57,6 +58,17 @@ class AudioControls {
           <span class="volume-value">${VOLUME_SLIDER_DEFAULT_SFX}%</span>
         </div>
         
+        <div class="audio-control-group">
+          <label for="voice-over-volume">Voice Over Volume</label>
+          <div class="volume-control-wrapper">
+            <input type="range" id="voice-over-volume" min="0" max="${VOLUME_SLIDER_MAX}" value="${VOLUME_SLIDER_DEFAULT_VOICE_OVER}" class="volume-slider" aria-label="Voice over volume control">
+            <div class="volume-indicator">
+              <div class="volume-bar" id="voice-over-volume-bar"></div>
+            </div>
+          </div>
+          <span class="volume-value">${VOLUME_SLIDER_DEFAULT_VOICE_OVER}%</span>
+        </div>
+        
         <div class="audio-control-buttons">
           <button class="btn mute-btn" id="mute-btn" aria-label="Mute all audio">
             <span class="mute-icon">🔊</span>
@@ -82,6 +94,7 @@ class AudioControls {
     const masterSlider = this.container.querySelector('#master-volume');
     const musicSlider = this.container.querySelector('#music-volume');
     const sfxSlider = this.container.querySelector('#sfx-volume');
+    const voiceOverSlider = this.container.querySelector('#voice-over-volume');
 
     masterSlider.addEventListener('input', (e) => {
       const volume = e.target.value / VOLUME_CONVERSION_FACTOR;
@@ -91,9 +104,9 @@ class AudioControls {
     });
 
     musicSlider.addEventListener('input', (e) => {
-      // Reduce the impact of the slider - 100% slider = 15% actual volume
       const sliderValue = e.target.value / VOLUME_CONVERSION_FACTOR;
-      const volume = sliderValue * 0.15; // Scale down the slider impact more aggressively
+      // Scale the slider so that 100% slider = 50% actual volume
+      const volume = sliderValue * 0.5;
       audioManager.setMusicVolume(volume);
       this.updateVolumeDisplay(e.target);
       this.updateVolumeIndicator('music-volume-bar', e.target.value);
@@ -106,12 +119,14 @@ class AudioControls {
       this.updateVolumeIndicator('sfx-volume-bar', e.target.value);
     });
 
-    // Voice overs toggle - hidden for now
-    // const voiceOversToggle = this.container.querySelector('#voice-overs-toggle');
-    // voiceOversToggle.addEventListener('click', () => {
-    //   const isEnabled = audioManager.toggleVoiceOvers();
-    //   this.updateVoiceOversToggle(isEnabled);
-    // });
+    voiceOverSlider.addEventListener('input', (e) => {
+      const volume = e.target.value / VOLUME_CONVERSION_FACTOR;
+      audioManager.setVoiceOverVolume(volume);
+      this.updateVolumeDisplay(e.target);
+      this.updateVolumeIndicator('voice-over-volume-bar', e.target.value);
+    });
+
+    // Voice overs toggle removed - voice overs are always enabled
 
     // Mute button
     const muteBtn = this.container.querySelector('#mute-btn');
@@ -137,7 +152,9 @@ class AudioControls {
 
     // Initialize controls with current state
     this.updateMuteButton(audioManager.isMuted);
-    // this.updateVoiceOversToggle(audioManager.areVoiceOversEnabled()); // Voice overs hidden
+    
+    // Initialize volume sliders with current audio manager state
+    this.updateControls();
   }
 
   updateVolumeDisplay(slider) {
@@ -193,27 +210,30 @@ class AudioControls {
     const masterSlider = this.container.querySelector('#master-volume');
     const musicSlider = this.container.querySelector('#music-volume');
     const sfxSlider = this.container.querySelector('#sfx-volume');
+    const voiceOverSlider = this.container.querySelector('#voice-over-volume');
 
     masterSlider.value = Math.round(audioManager.masterVolume * VOLUME_CONVERSION_FACTOR);
     // Convert actual volume back to slider position (reverse the scaling)
-    musicSlider.value = Math.round((audioManager.musicVolume / 0.15) * VOLUME_CONVERSION_FACTOR);
+    musicSlider.value = Math.round((audioManager.musicVolume / 0.5) * VOLUME_CONVERSION_FACTOR);
     sfxSlider.value = Math.round(audioManager.sfxVolume * VOLUME_CONVERSION_FACTOR);
+    voiceOverSlider.value = Math.round(audioManager.voiceOverVolume * VOLUME_CONVERSION_FACTOR);
 
     // Update volume displays
     this.updateVolumeDisplay(masterSlider);
     this.updateVolumeDisplay(musicSlider);
     this.updateVolumeDisplay(sfxSlider);
+    this.updateVolumeDisplay(voiceOverSlider);
 
     // Update volume indicators
     this.updateVolumeIndicator('master-volume-bar', masterSlider.value);
     this.updateVolumeIndicator('music-volume-bar', musicSlider.value);
     this.updateVolumeIndicator('sfx-volume-bar', sfxSlider.value);
+    this.updateVolumeIndicator('voice-over-volume-bar', voiceOverSlider.value);
 
     // Update mute button state
     this.updateMuteButton(audioManager.isMuted);
 
-    // Update voice overs toggle state - hidden for now
-    // this.updateVoiceOversToggle(audioManager.areVoiceOversEnabled());
+    // Voice overs are always enabled - no toggle needed
   }
 
   hide() {

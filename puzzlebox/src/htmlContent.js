@@ -65,9 +65,9 @@ export function updateHTMLContent() {
   const outroText1 = document.querySelector('#outro p:nth-of-type(2)');
   if (outroText1) {
     outroText1.innerHTML = t('outroText1') + '<br>' +
-      'the answer was to ask inward all along.<br>' +
+      'the answer was to ask within all along.<br>' +
       'Congratulations on completing the puzzle.<br>' +
-      'I leave you with a short poem — just for you:';
+      'I leave you with a short stanza that I hope you\'ll resonate with:';
   }
 
   const outroText2 = document.querySelector('#outro i p');
