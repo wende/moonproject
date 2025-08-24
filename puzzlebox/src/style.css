@@ -212,7 +212,7 @@ button {
 
 .container {
   /* outline: red 1px solid; */
-  --max-width: 976px;
+  --max-width: 1200px;
   --padding: var(--space-4);
 
   width: min(var(--max-width), 100% - (var(--padding) * 2));
@@ -344,7 +344,6 @@ button {
   left: 50%;
   transform: translate(-50%, -50%);
   margin: 0;
-  max-height: 90vh;
   max-width: 95vw;
   overflow: visible;
   display: flex;
@@ -359,17 +358,30 @@ button {
   margin: 5% auto;
   display: flex;
   flex-direction: column;
+  background-color: var(--clr-primary-dark);
+  background-image: linear-gradient(135deg, var(--clr-primary-dark) 0%, var(--clr-neutral-800) 100%);
+  color: var(--clr-primary-light);
 }
 
 #credits .modal-body {
   flex: 1;
   overflow-y: auto;
   font-style: italic;
+  font-size: var(--font-size-xl);
 }
 
 #credits .modal-body h3 {
   font-style: normal;
   font-weight: bold;
+  color: var(--clr-primary-light);
+}
+
+#credits .modal-header {
+  color: var(--clr-primary-light);
+}
+
+#credits .close {
+  color: var(--clr-primary-light);
 }
 
 .close-container {
@@ -588,7 +600,7 @@ button {
 .modal-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-12);
+  gap: 0;
   font-size: var(--font-size-lg);
   line-height: var(--line-height-relaxed);
   overflow-y: auto;
@@ -622,14 +634,26 @@ button {
 
 #intro .modal-body {
   font-size: var(--font-size-2xl);
-  align-items: start;
+  align-items: center;
+  justify-content: center;
   flex: 1;
   min-height: 60vh;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 #outro .modal-body {
   align-items: start;
   flex: 1;
+  font-size: var(--font-size-xl);
+}
+
+#outro .modal-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  margin: auto;
 }
 
 .modal-footer {
@@ -789,7 +813,7 @@ button {
   .modal-content {
     margin: var(--space-2);
     padding: var(--space-6);
-    max-height: 90vh;
+
     overflow-y: auto;
   }
 
@@ -814,6 +838,13 @@ button {
 
   #intro .modal-body {
     font-size: var(--font-size-lg);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .intro-text-container {
+    font-size: var(--font-size-base);
+    line-height: 1.5;
   }
 
   .modal-footer {
@@ -860,11 +891,53 @@ button {
   margin-top: var(--space-4);
 }
 
+/* Reduce spacing between PS lines in outro modal */
+#outro .time-counter + .postscript {
+  margin-top: var(--space-1);
+}
+
+/* Prevent layout shift from time counter updates */
+#outro .time-counter {
+  width: 500px;
+  display: inline-block;
+}
+
 .modal-image {
   width: 100%;
   margin-inline: auto;
   caret-color: transparent;
 }
+
+/* Make the image smaller in the outro modal */
+#outro .modal-image {
+  width: 70%;
+  align-self: center;
+  margin: auto auto !important;
+}
+
+/* Intro text container for animation */
+.intro-text-container {
+  min-height: 200px;
+  line-height: 1.6;
+  position: relative;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.intro-text-container i {
+  font-style: italic;
+}
+
+.intro-text-container p {
+  margin-bottom: 1rem;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Cursor effect for typing animation - now handled dynamically in JavaScript */
 
 /* Note styling for intro modal */
 .note-container {
