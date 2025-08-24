@@ -75,17 +75,6 @@
           </i>
           <br>
           <p class="postscript"></p>
-          
-          <!-- Audio Loading Progress -->
-          <div id="audio-loading-container" class="fade-out">
-            <p>Loading...</p>
-            <div class="loading-bar-container">
-              <div class="loading-bar">
-                <div class="loading-bar-fill" id="audio-loading-progress"></div>
-              </div>
-              <div class="loading-text" id="audio-loading-text">0%</div>
-            </div>
-          </div>
         </div>
         <div class="modal-column">
           <div class="note-container">
@@ -96,7 +85,19 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn continue-button intro-close">Continue</button>
+        <!-- Audio Loading Progress / Continue Button Container -->
+        <div id="audio-loading-container" class="fade-out">
+          <div class="loading-content">
+            <p>Loading...</p>
+            <div class="loading-bar-container">
+              <div class="loading-bar">
+                <div class="loading-bar-fill" id="audio-loading-progress"></div>
+              </div>
+              <div class="loading-text" id="audio-loading-text">0%</div>
+            </div>
+          </div>
+          <button type="button" class="btn continue-button intro-close loading-complete-button" style="display: none;">Continue</button>
+        </div>
       </div>
     </div>
   </div>

@@ -191,7 +191,18 @@ class AudioManager {
 
       if (percentage >= 100) {
         setTimeout(() => {
-          loadingContainer.classList.add('fade-out');
+          // Hide loading content and show continue button
+          const loadingContent = loadingContainer.querySelector('.loading-content');
+          const continueButton = document.querySelector('.loading-complete-button');
+          
+          if (loadingContent && continueButton) {
+            loadingContent.style.display = 'none';
+            continueButton.style.display = 'block';
+            // Trigger the animation after a small delay
+            setTimeout(() => {
+              continueButton.classList.add('show');
+            }, 100);
+          }
         }, COMPLETE_DELAY);
       }
     }
