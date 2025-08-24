@@ -15,7 +15,7 @@ export class ScalesPuzzle extends Puzzle {
       { name: 'Colère', value: 2, hex: '#FF4444' }, // Colère - Bright Red
       { name: 'Joie', value: 3, hex: '#FFFF00' }, // Joie - Bright Yellow
       { name: 'Tristesse', value: 6, hex: '#0088FF' }, // Tristesse - Bright Blue
-      { name: 'Peur', value: 12, hex: '#9932CC' }, // Peur - Bright Purple
+      { name: 'Peur', value: 15, hex: '#9932CC' }, // Peur - Bright Purple
       { name: 'Amour', value: 8, hex: '#FF69B4' }, // Amour - Hot Pink
       { name: 'Success', value: 14, hex: '#FFFFFF' }, // Success - White
     ];
@@ -169,6 +169,10 @@ export class ScalesPuzzle extends Puzzle {
     }
 
     if (endState[0] === endState[1]) {
+      // Disable scales buttons immediately when puzzle is solved
+      this.disableScalesButtons();
+      
+      // Mark as completed after 1 second (for visual effects)
       setTimeout(() => {
         this.markAsCompleted();
       }, 1000);
@@ -176,6 +180,16 @@ export class ScalesPuzzle extends Puzzle {
 
     this.lastBalanceState = [leftSide, rightSide];
 
+  }
+
+  disableScalesButtons() {
+    // Disable only the scales puzzle buttons immediately
+    this.interactiveButtons.forEach(button => {
+      // Remove button from interactive objects by setting a flag
+      button.userData.disabled = true;
+    });
+    
+    console.log('Scales puzzle buttons disabled immediately after puzzle solved');
   }
 
   markAsCompleted() {

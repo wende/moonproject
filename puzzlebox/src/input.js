@@ -51,6 +51,12 @@ export function setupInput(raycaster, mouse, camera, puzzleManager, rendererDomE
     if (intersects.length > 0) {
       const clickedButton = intersects[0].object;
       
+      // Check if button is disabled
+      if (clickedButton.userData.disabled) {
+        console.log(`Button ${clickedButton.name} is disabled - ignoring click`);
+        return;
+      }
+      
       // Handle What_Button click separately
       if (clickedButton.name === 'What_Button') {
         handleWhatButtonClick(clickedButton, actions);
@@ -77,7 +83,10 @@ export function setupInput(raycaster, mouse, camera, puzzleManager, rendererDomE
     
     const intersects = raycaster.intersectObjects(intersected);
 
-    rendererDomElement.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
+    // Check if any intersected object is disabled
+    const hasEnabledButton = intersects.some(intersect => !intersect.object.userData.disabled);
+    
+    rendererDomElement.style.cursor = hasEnabledButton ? 'pointer' : 'default';
   });
 }
 
