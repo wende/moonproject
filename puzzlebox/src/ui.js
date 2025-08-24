@@ -446,7 +446,11 @@ export function setupUI() {
               audioDuration = audioSource.duration * 1000; // Convert to milliseconds
             }
             
-            // Show the loading bar and continue button immediately after animation completes
+            // Show the footer and loading bar immediately after animation completes
+            const modalFooter = document.querySelector('#intro .modal-footer');
+            if (modalFooter) {
+              modalFooter.classList.add('show');
+            }
             if (audioLoadingContainer) {
               audioLoadingContainer.style.display = 'block';
             }

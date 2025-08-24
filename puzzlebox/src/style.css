@@ -672,6 +672,16 @@ button {
   overflow: visible;
 }
 
+/* Hide footer in intro modal initially */
+#intro .modal-footer {
+  display: none;
+}
+
+/* Show footer when letter is read */
+#intro .modal-footer.show {
+  display: flex;
+}
+
 #audio-loading-container {
   display: flex;
   justify-content: center;

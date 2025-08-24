@@ -82,7 +82,7 @@ class AudioManager {
     // Audio files
     this.audioFiles = AUDIO_FILES;
     
-    this.loadSettings();
+    //this.loadSettings();
     this.startCleanupInterval();
   }
 
