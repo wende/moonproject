@@ -229,7 +229,7 @@ function setupCosmicBackground(scene) {
         background.nebula.material.opacity = newNebulaOpacity;
       }
       
-      console.log(`Stars updated: opacity=${finalStarOpacity.toFixed(2)}, size=${newSize.toFixed(2)}, progress=${(completionProgress * 100).toFixed(0)}%, starOpacity=${starOpacity.toFixed(1)}`);
+      // Stars updated with new opacity and size
     }
   };
 }

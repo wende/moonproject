@@ -450,10 +450,6 @@ export class CameraAnimator {
     }
 
     if (nextPosition) {
-      // Find the puzzle name for this position (unused but kept for potential future use)
-      const _nextPuzzleName = this.getPuzzleNameForPosition(nextPosition.position);
-
-
       // If all puzzles are completed, skip the normal transition and go directly to far distance
       if (completedPuzzleNames && completedPuzzleNames.size >= PUZZLE_COMPLETION_THRESHOLD) {
         this.goToFarDistance();

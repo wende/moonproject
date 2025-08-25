@@ -10,7 +10,7 @@ export function setupInput(raycaster, mouse, camera, puzzleManager, rendererDomE
     for (const name of possibleNames) {
       whatButton = scene.getObjectByName(name);
       if (whatButton) {
-        console.log(`What button found with name: ${name}`);
+        // What button found
         break;
       }
     }
@@ -22,11 +22,11 @@ export function setupInput(raycaster, mouse, camera, puzzleManager, rendererDomE
         if (child.isMesh) {
           allMeshes.push(child.name);
           if (child.name.toLowerCase().includes('what') || child.name.toLowerCase().includes('button')) {
-            console.log('Potential button found:', child.name);
+            // Potential button found
           }
         }
       });
-      console.log('All mesh objects in scene:', allMeshes);
+      // All mesh objects logged
     }
   }
 
@@ -53,7 +53,7 @@ export function setupInput(raycaster, mouse, camera, puzzleManager, rendererDomE
       
       // Check if button is disabled
       if (clickedButton.userData.disabled) {
-        console.log(`Button ${clickedButton.name} is disabled - ignoring click`);
+        // Button is disabled - ignoring click
         return;
       }
       
@@ -112,17 +112,17 @@ let whatButtonState = {
 
 // Handle What_Button click
 function handleWhatButtonClick(button, actions) {
-  console.log('What_Button was clicked!');
+        // What_Button was clicked!
   
   // Check if responses are exhausted
   if (whatButtonState.isExhausted) {
-    console.log('What button responses exhausted - no more interactions');
+          // What button responses exhausted - no more interactions
     return;
   }
   
   // Check if already responding to prevent overlapping
   if (whatButtonState.isResponding) {
-    console.log('What button already responding - ignoring click');
+          // What button already responding - ignoring click
     return;
   }
   
@@ -180,7 +180,7 @@ function showCurrentResponse() {
   // Check if we've exhausted all responses
   if (whatButtonState.currentIndex >= whatButtonState.responses.length) {
     whatButtonState.isExhausted = true;
-    console.log('What button responses exhausted');
+          // What button responses exhausted
   }
   
   // Revert back to original text after 2 seconds

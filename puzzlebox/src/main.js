@@ -41,7 +41,7 @@ class MemoryMonitor {
       const totalMB = Math.round(memory.totalJSHeapSize / 1024 / 1024);
       const limitMB = Math.round(memory.jsHeapSizeLimit / 1024 / 1024);
       
-      console.log(`Memory Usage: ${usedMB}MB / ${totalMB}MB (${limitMB}MB limit)`);
+      // Memory usage logging disabled for production
       
       // Warn if memory usage is high
       if (usedMB > limitMB * 0.8) {
@@ -86,7 +86,7 @@ puzzleManager.onPuzzleComplete((puzzleName, progress) => {
   }
 });
 
-console.log('Camera animator initialized with puzzle positions:', cameraAnimator.getPuzzlePositions());
+// Camera animator initialized with puzzle positions
 
 // Expose debug methods globally for testing
 window.debugCamera = {

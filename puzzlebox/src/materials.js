@@ -74,7 +74,7 @@ export class MaterialManager {
 
   initializeDefaultMaterials() {
     // Enhanced metal material
-    this.materials.set('enhancedMetal', new THREE.MeshStandardMaterial({
+    this.materials.set('enhancedMetal', new THREE.MeshPhysicalMaterial({
       color: 0x888888,
       metalness: 0.7,
       roughness: 0.3,
@@ -114,7 +114,7 @@ export class MaterialManager {
     }));
 
     // Ceramic material
-    this.materials.set('ceramic', new THREE.MeshStandardMaterial({
+    this.materials.set('ceramic', new THREE.MeshPhysicalMaterial({
       color: 0xf5f5dc,
       metalness: 0.0,
       roughness: 0.3,

@@ -2,7 +2,7 @@
 export class TextAnimator {
   constructor() {
     this.isAnimating = false;
-    this.defaultSpeed = 20; // Global default speed - change this to adjust animation speed
+    this.defaultSpeed = 25; // Global default speed - change this to adjust animation speed
     this.defaultDelay = 500; // Global default delay - change this to adjust initial delay
   }
 

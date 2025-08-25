@@ -201,7 +201,7 @@ export class ScalesPuzzle extends Puzzle {
       button.userData.disabled = true;
     });
     
-    console.log('Scales puzzle buttons disabled immediately after puzzle solved');
+    // Scales puzzle buttons disabled immediately after puzzle solved
   }
 
   markAsCompleted() {

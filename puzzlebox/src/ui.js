@@ -67,7 +67,7 @@ export function setupUI() {
       // Store audio method for later use
       if (audioFile && typeof audioManager[audioFile] === 'function') {
         currentButton.dataset.audioMethod = audioFile;
-        console.log('Stored audio method:', audioFile, 'for text:', text);
+        // Stored audio method for text
         
         // Play audio immediately if audio manager is ready and voice overs are enabled
         if (audioManager.isInitialized && audioManager.areVoiceOversEnabled()) {
@@ -76,23 +76,23 @@ export function setupUI() {
             // Check if this is still the current dialogue button (not replaced by another call)
             const currentDialogueButton = document.querySelector('.dialogue-button');
             if (currentDialogueButton && currentDialogueButton.dataset.audioMethod === audioFile) {
-              console.log('Playing immediate audio for:', audioFile);
+              // Playing immediate audio
               audioManager[audioFile]();
             }
           }, 100); // 100ms delay to prevent spam
         }
       } else if (audioFile) {
-        console.log('Audio method not found:', audioFile, 'for text:', text);
+        // Audio method not found for text
         // If audio manager isn't initialized yet, store the audio method name to retry later
         if (!audioManager.isInitialized) {
           currentButton.dataset.pendingAudioMethod = audioFile;
-          console.log('Stored pending audio method:', audioFile, 'will retry when audio manager is ready');
+          // Stored pending audio method, will retry when audio manager is ready
         } else {
           currentButton.removeAttribute('data-audio-method');
         }
       } else {
         currentButton.removeAttribute('data-audio-method');
-        console.log('No audio method for text:', text);
+        // No audio method for text
       }
 
       // Remove existing click listeners by cloning and replacing
@@ -142,63 +142,56 @@ export function setupUI() {
         let audioSource = null;
         let audioDuration = 1000; // Default fallback duration
 
-        console.log('Dialogue button clicked:', {
-          text: newButton.textContent,
-          audioMethod: audioMethod,
-          pendingAudioMethod: pendingAudioMethod,
-          voiceOversEnabled: audioManager.areVoiceOversEnabled(),
-          hasAudioMethod: audioMethod && typeof audioManager[audioMethod] === 'function',
-          isInitialized: audioManager.isInitialized
-        });
+        // Dialogue button clicked
 
         // Try to retry pending audio method if audio manager is now initialized
         if (pendingAudioMethod && audioManager.isInitialized && typeof audioManager[pendingAudioMethod] === 'function') {
           newButton.dataset.audioMethod = pendingAudioMethod;
           newButton.removeAttribute('data-pending-audio-method');
-          console.log('Retried and set up audio method:', pendingAudioMethod);
+          // Retried and set up audio method
         }
 
         if (audioMethod && typeof audioManager[audioMethod] === 'function' && audioManager.areVoiceOversEnabled() && audioManager.isInitialized) {
           // Play the stored audio method
           audioSource = audioManager[audioMethod]();
-          console.log('Playing voice over:', audioMethod, audioSource);
+          // Playing voice over
         } else {
           // Fallback to button click sound
           if (audioManager.isInitialized) {
             audioManager.playButtonClick();
-            console.log('Playing button click sound');
+            // Playing button click sound
           } else {
-            console.log('Audio manager not initialized yet');
+            // Audio manager not initialized yet
           }
         }
 
         // If we played a voice over, handle volume and duration
         if (audioSource && audioSource.duration) {
           audioDuration = audioSource.duration * 1000; // Convert to milliseconds
-          console.log('Voice over duration:', audioDuration, 'ms');
+          // Voice over duration calculated
           
           // If it's a delayed audio (like Note VO), add the delay to the duration
           if (audioSource.delayed) {
             audioDuration += DEFAULT_NOTE_VO_DELAY;
-            console.log('Added delay to duration:', audioDuration, 'ms');
+            // Added delay to duration
           }
         } else if (audioSource && audioSource.audio && audioSource.audio.duration) {
           // Handle proxy object from _playVoiceOver
           audioDuration = audioSource.duration * 1000; // Convert to milliseconds
-          console.log('Voice over duration from proxy:', audioDuration, 'ms');
+                      // Voice over duration from proxy
         } else if (audioMethod) {
           // Try to get duration from the audio file directly
           const audioElement = audioManager.audioElements.get(audioMethod.replace('play', '').toLowerCase() + '_vo');
           if (audioElement && audioElement.duration) {
             audioDuration = audioElement.duration * 1000; // Convert to milliseconds
-            console.log('Got duration from audio element:', audioDuration, 'ms');
+            // Got duration from audio element
           } else {
             audioDuration = 3000; // Default 3 seconds for voice overs
-            console.log('Using default voice over duration:', audioDuration, 'ms');
+            // Using default voice over duration
           }
         } else {
           audioDuration = 1000; // Default 1 second for button click
-          console.log('Using default button click duration:', audioDuration, 'ms');
+          // Using default button click duration
         }
 
         // Restore original music volume after the calculated duration
@@ -206,7 +199,7 @@ export function setupUI() {
           audioManager.restoreMusicVolumeScaleFactor(1.0); // Slower fade out
           originalVolume = null; // Reset for next interaction
           volumeRestoreTimeout = null;
-          console.log('Restored music volume after', audioDuration, 'ms');
+          // Restored music volume
         }, audioDuration);
       });
     } else {
@@ -240,8 +233,8 @@ export function setupUI() {
 
         // Play start voice over when intro modal is closed
         if (id === 'intro' && audioManager.areVoiceOversEnabled() && audioManager.isInitialized) {
-                          // Temporarily lower background music volume
-        audioManager.setMusicVolumeScaleFactor(audioManager.getTempMusicVolumeReduction(), 0.3); // Quick fade in
+          // Temporarily lower background music volume
+          audioManager.setMusicVolumeScaleFactor(audioManager.getTempMusicVolumeReduction(), 0.3); // Quick fade in
 
         // Play start voice over
         const audioSource = audioManager.playStartVO();
@@ -494,7 +487,7 @@ export function setupUI() {
   // Show the intro modal by default
   const introModal = document.getElementById('intro');
   if (introModal) {
-    console.log('Showing intro modal');
+    // Showing intro modal
     introModal.style.display = 'block';
     toggleModal(introModal, true);
   } else {

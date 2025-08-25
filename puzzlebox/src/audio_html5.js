@@ -1,8 +1,8 @@
 // Audio constants
 const DEFAULT_MASTER_VOLUME = 1.0;
-const DEFAULT_MUSIC_VOLUME = 0.35;
+const DEFAULT_MUSIC_VOLUME = 0.30;
 const DEFAULT_SFX_VOLUME = 0.9;
-const DEFAULT_VOICE_OVER_VOLUME = 0.6;
+const DEFAULT_VOICE_OVER_VOLUME = 0.4;
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 1;
 const COMPLETE_DELAY = 300;
@@ -94,20 +94,8 @@ class AudioManager {
   }
 
   loadSettings() {
-    try {
-      const savedSettings = null // localStorage.getItem('puzzleBoxAudioSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        this.musicVolume = settings.musicVolume ?? DEFAULT_MUSIC_VOLUME;
-        this.sfxVolume = settings.sfxVolume ?? DEFAULT_SFX_VOLUME;
-        this.masterVolume = settings.masterVolume ?? DEFAULT_MASTER_VOLUME;
-        this.voiceOverVolume = settings.voiceOverVolume ?? DEFAULT_VOICE_OVER_VOLUME;
-        this.isMuted = settings.isMuted ?? false;
-        this.voiceOversEnabled = settings.voiceOversEnabled ?? true;
-      }
-    } catch (error) {
-      this._handleError('load audio settings', error);
-    }
+    // Settings loading disabled - using defaults
+    // TODO: Re-enable localStorage when needed
   }
 
   saveSettings() {

@@ -72,7 +72,7 @@ export const translations = {
     // Credit details
     developer: 'Krzysztof Wende',
     boxModelCreator: 'Some dude on GitHub ¯\\_(ツ)_/¯',
-    i18nHelper: 'ChatGPT 4o',
+    i18nHelper: 'ChatGPT 4o, Agata Skrzypek (Arabic tutoring - never again)',
     technicalStack: 'Cursor, Three.js, Logic Pro, Not you Blender, Izotope RX',
     audioTrack: 'Galdive - Teach me how to love',
     dedicationText: 'Moon, Theia, bloo_ness et al.',

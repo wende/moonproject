@@ -19,7 +19,7 @@ export class Puzzle {
 
   handleButtonClick(button) {
     if (this.isCompleted) {
-      console.log('Puzzle already complete. Button clicks will be ignored.');
+      // Puzzle already complete. Button clicks will be ignored.
       return;
     }
     console.warn('handleButtonClick should be implemented in child classes');
