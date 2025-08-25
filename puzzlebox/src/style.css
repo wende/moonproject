@@ -273,7 +273,7 @@ button {
 
   /* Hide navigation buttons that interfere with game on mobile */
   .audio-toggle-btn,
-  .btn:not(.dialogue-button):not(.outro-button) {
+  .btn:not(.dialogue-button):not(.outro-button):not(#read-letter-btn):not(.intro-close):not(.end-button) {
     display: none !important;
   }
 }
