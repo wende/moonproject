@@ -1,5 +1,5 @@
 import { audioManager } from './audio_html5.js';
-import { NOTE_VO_DELAY } from './audio_html5.js';
+import { DEFAULT_NOTE_VO_DELAY } from './audio_html5.js';
 import { t } from './i18n.js';
 import { textAnimator } from './textAnimator.js';
 
@@ -179,7 +179,7 @@ export function setupUI() {
           
           // If it's a delayed audio (like Note VO), add the delay to the duration
           if (audioSource.delayed) {
-            audioDuration += NOTE_VO_DELAY;
+            audioDuration += DEFAULT_NOTE_VO_DELAY;
             console.log('Added delay to duration:', audioDuration, 'ms');
           }
         } else if (audioSource && audioSource.audio && audioSource.audio.duration) {

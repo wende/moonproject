@@ -1,17 +1,17 @@
 // Audio constants
-const DEFAULT_MUSIC_VOLUME = 0.1;
-const DEFAULT_SFX_VOLUME = 0.5;
 const DEFAULT_MASTER_VOLUME = 1.0;
+const DEFAULT_MUSIC_VOLUME = 0.5;
+const DEFAULT_SFX_VOLUME = 0.5;
+const DEFAULT_VOICE_OVER_VOLUME = 0.6;
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 1;
 const COMPLETE_DELAY = 300;
-const BUTTON_CLICK_VOLUME = 0.2;
-const PUZZLE_SOLVE_VOLUME = 1;
-const PUZZLE_SOLVE_START_TIME = 0.8;
-const VOICE_OVER_VOLUME = 0.8;
-const NOTE_VO_DELAY = 500;
-const MUSIC_FADE_IN = 0.5;
-const MOONPROJECT_TRUE_VOLUME = 0.12; // 20% louder than regular music
+const DEFAULT_BUTTON_CLICK_VOLUME = 0.2;
+const DEFAULT_PUZZLE_SOLVE_VOLUME = 1;
+const DEFAULT_PUZZLE_SOLVE_START_TIME = 0.8;
+const DEFAULT_NOTE_VO_DELAY = 500;
+const DEFAULT_MUSIC_FADE_IN = 0.5;
+const DEFAULT_MOONPROJECT_TRUE_VOLUME = 0.12; // 20% louder than regular music
 
 // Memory optimization constants
 const MAX_AUDIO_POOL_SIZE = 3;
@@ -66,13 +66,13 @@ class AudioManager {
     this.isMuted = false;
     this.voiceOversEnabled = true;
     this.isPlayingVoiceOver = false;
-    this.isTemporaryVolumeActive = false;
     
     // Volume settings
     this.musicVolume = DEFAULT_MUSIC_VOLUME;
     this.sfxVolume = DEFAULT_SFX_VOLUME;
     this.masterVolume = DEFAULT_MASTER_VOLUME;
-    this.voiceOverVolume = VOICE_OVER_VOLUME;
+    this.voiceOverVolume = DEFAULT_VOICE_OVER_VOLUME;
+    this.musicVolumeScaleFactor = 1.0;
     
     // Voice over tracking
     this.currentVoiceOverAudio = null;
@@ -82,7 +82,7 @@ class AudioManager {
     // Audio files
     this.audioFiles = AUDIO_FILES;
     
-    //this.loadSettings();
+    this.loadSettings();
     this.startCleanupInterval();
   }
 
@@ -94,13 +94,13 @@ class AudioManager {
 
   loadSettings() {
     try {
-      const savedSettings = localStorage.getItem('puzzleBoxAudioSettings');
+      const savedSettings = null // localStorage.getItem('puzzleBoxAudioSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         this.musicVolume = settings.musicVolume ?? DEFAULT_MUSIC_VOLUME;
         this.sfxVolume = settings.sfxVolume ?? DEFAULT_SFX_VOLUME;
         this.masterVolume = settings.masterVolume ?? DEFAULT_MASTER_VOLUME;
-        this.voiceOverVolume = settings.voiceOverVolume ?? VOICE_OVER_VOLUME;
+        this.voiceOverVolume = settings.voiceOverVolume ?? DEFAULT_VOICE_OVER_VOLUME;
         this.isMuted = settings.isMuted ?? false;
         this.voiceOversEnabled = settings.voiceOversEnabled ?? true;
       }
@@ -110,8 +110,6 @@ class AudioManager {
   }
 
   saveSettings() {
-    if (this.isTemporaryVolumeActive) return;
-    
     try {
       const settings = {
         musicVolume: this.musicVolume,
@@ -146,15 +144,13 @@ class AudioManager {
 
   setMusicVolumeTemporary(volume) {
     const originalVolume = this.musicVolume;
-    this.musicVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
-    this.isTemporaryVolumeActive = true;
+    this.musicVolumeScaleFactor = volume / this.musicVolume;
     this.updateAllVolumes();
     return originalVolume;
   }
 
   restoreMusicVolume(originalVolume) {
-    this.musicVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, originalVolume));
-    this.isTemporaryVolumeActive = false;
+    this.musicVolumeScaleFactor = 1.0;
     this.updateAllVolumes();
   }
 
@@ -166,15 +162,22 @@ class AudioManager {
 
     // Update button click pool volumes
     this.buttonClickPool.forEach(audio => {
-      audio.volume = this.isMuted ? 0 : BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
+      audio.volume = this.isMuted ? 0 : DEFAULT_BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
     });
   }
 
   getMusicVolume(trackName) {
     if (trackName === 'moonprojecttrue') {
-      return MOONPROJECT_TRUE_VOLUME * this.masterVolume;
+      return DEFAULT_MOONPROJECT_TRUE_VOLUME * this.masterVolume;
     }
-    return this.musicVolume * this.masterVolume;
+    return this.musicVolume * this.musicVolumeScaleFactor * this.masterVolume;
+  }
+
+  getScaledMusicVolume(trackName) {
+    if (trackName === 'moonprojecttrue') {
+      return DEFAULT_MOONPROJECT_TRUE_VOLUME * this.masterVolume;
+    }
+    return this.musicVolume * this.musicVolumeScaleFactor * this.masterVolume;
   }
 
   // ===== MUTE CONTROLS =====
@@ -244,7 +247,7 @@ class AudioManager {
   calculateVolume(key) {
     if (this.isMuted) return 0;
     const baseVolume = key.includes('_vo') ? this.voiceOverVolume : 
-                      key.includes('music') ? this.musicVolume : this.sfxVolume;
+                      key.includes('moonproject') ? this.musicVolume : this.sfxVolume;
     return baseVolume * this.masterVolume;
   }
 
@@ -252,7 +255,7 @@ class AudioManager {
     for (let i = 0; i < MAX_AUDIO_POOL_SIZE; i++) {
       const audio = new Audio(this.audioFiles.button_click);
       audio.preload = 'auto';
-      audio.volume = BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
+      audio.volume = DEFAULT_BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
       audio.load();
       this.buttonClickPool.push(audio);
     }
@@ -299,7 +302,7 @@ class AudioManager {
 
     const audio = originalAudio.cloneNode();
     const volume = options.volume !== undefined ? options.volume : 1;
-    audio.volume = volume * (isMusic ? this.getMusicVolume(audioName) : this.sfxVolume * this.masterVolume);
+    audio.volume = volume * (isMusic ? this.getScaledMusicVolume(audioName) : this.sfxVolume * this.masterVolume);
 
     if (options.startTime) audio.currentTime = options.startTime;
     if (isMusic && options.loop !== false) audio.loop = true;
@@ -317,7 +320,7 @@ class AudioManager {
     if (isMusic && options.fadeIn && options.fadeIn > 0) {
       audio.volume = 0;
       playPromise.then(() => {
-        this.fadeInAudio(audio, volume * this.getMusicVolume(audioName), options.fadeIn);
+        this.fadeInAudio(audio, volume * this.getScaledMusicVolume(audioName), options.fadeIn);
       }).catch(error => {
         this._handleError(`play music ${audioName}`, error);
       });
@@ -438,11 +441,11 @@ class AudioManager {
       return null;
     }
     this.lastButtonClickTime = Date.now();
-    return this.playSound('button_click', { volume: BUTTON_CLICK_VOLUME, startTime: 0.2 });
+    return this.playSound('button_click', { volume: DEFAULT_BUTTON_CLICK_VOLUME, startTime: 0.2 });
   }
 
   playPuzzleSolve() {
-    return this.playSound('puzzle_solve', { volume: PUZZLE_SOLVE_VOLUME, startTime: PUZZLE_SOLVE_START_TIME });
+    return this.playSound('puzzle_solve', { volume: DEFAULT_PUZZLE_SOLVE_VOLUME, startTime: DEFAULT_PUZZLE_SOLVE_START_TIME });
   }
 
   // ===== VOICE OVER SYSTEM =====
@@ -487,7 +490,7 @@ class AudioManager {
     this.playNoteVO = () => {
       const audioElement = this.audioElements.get('note_vo');
       if (audioElement) {
-        setTimeout(() => this._playVoiceOver('note_vo'), NOTE_VO_DELAY);
+        setTimeout(() => this._playVoiceOver('note_vo'), DEFAULT_NOTE_VO_DELAY);
         return { duration: audioElement.duration, delayed: true };
       }
       return null;
@@ -584,7 +587,7 @@ window.PuzzleBox.resumeAudioContext = async () => {
 // ===== MUSIC STARTUP =====
 let musicStarted = false;
 
-export { AudioManager, audioManager, NOTE_VO_DELAY };
+export { AudioManager, audioManager, DEFAULT_NOTE_VO_DELAY };
 
 export function startMusicAfterInteraction(event) {
   if (musicStarted) return;
@@ -608,10 +611,10 @@ export function startMusicAfterInteraction(event) {
   const moonprojectAudio = audioManager.audioElements.get('moonproject');
   
   if (moonprojectAudio?.readyState >= 2) {
-    audioManager.playMusic('moonproject', { fadeIn: MUSIC_FADE_IN, loop: true, startTime: 0 });
+    audioManager.playMusic('moonproject', { fadeIn: DEFAULT_MUSIC_FADE_IN, loop: true, startTime: 0 });
   } else {
     audioManager.initialize().then(() => {
-      audioManager.playMusic('moonproject', { fadeIn: MUSIC_FADE_IN, loop: true, startTime: 0 });
+      audioManager.playMusic('moonproject', { fadeIn: DEFAULT_MUSIC_FADE_IN, loop: true, startTime: 0 });
     }).catch(error => {
       console.error('Failed to initialize audio:', error);
     });
