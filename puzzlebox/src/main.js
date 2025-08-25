@@ -171,6 +171,9 @@ loadGLTFModel('/scene.glb', scene, mixer)
     // Setup input handling after model is loaded
     setupInput(raycaster, mouse, camera, puzzleManager, renderer.domElement, gltf.scene, actions);
 
+    // Set scene reference for camera animator compass functionality
+    cameraAnimator.setScene(gltf.scene);
+
   });
 
 setupUI();
@@ -204,6 +207,15 @@ window.downloadBirthdayCard = function() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+};
+
+// Global debug function to test compass glow
+window.testCompassGlow = function() {
+  if (cameraAnimator) {
+    cameraAnimator.debugTestCompassGlow();
+  } else {
+    console.warn('Camera animator not available');
+  }
 };
 
 // Performance optimization constants - adjusted for better balance

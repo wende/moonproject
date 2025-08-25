@@ -4,17 +4,17 @@ import { t } from './i18n.js';
 // Camera animation constants
 const DEFAULT_ANIMATION_DURATION = 2.0;
 const ANIMATION_TIMEOUT_BUFFER = 1000; // 1 second extra buffer
-const FRAME_UPDATE_INTERVAL = 10; // Update controls every 10 frames
 const PROGRESS_COMPLETE_THRESHOLD = 1;
 const NEXT_PUZZLE_ANIMATION_DURATION = 2.2;
 const PUZZLE_COMPLETION_THRESHOLD = 5;
-const ANIMATION_BUFFER_DELAY = 2500; // 2.2s animation + 0.3s buffer
 const UI_FADE_DURATION = 3000; // 3 seconds
-const END_ZOOM_DISTANCE = 2.6; // Final position after zoom
+const END_ZOOM_DISTANCE = 1.3; // Reduced final position after zoom (was 2.6)
 const ZOOM_DURATION = 15.0;
 const FAR_ANIMATION_DURATION = 2.0;
 const OUTRO_DELAY = 500;
 const OUTRO_FADE_DURATION = 2000; // 2 seconds
+const COMPASS_GLOW_DELAY = 5.0; // Delay before compass starts glowing
+const COMPASS_FADE_IN_DURATION = 4.0; // Duration for compass to fade in
 
 export class CameraAnimator {
   constructor(camera, controls) {
@@ -22,12 +22,20 @@ export class CameraAnimator {
     this.controls = controls;
     this.isAnimating = false;
     this.currentAnimation = null;
+    this.scene = null; // Will be set when needed
 
     // Performance optimization: Cache frequently used vectors
     this._tempVector1 = new THREE.Vector3();
     this._tempVector2 = new THREE.Vector3();
     this._tempVector3 = new THREE.Vector3();
-    this._lastUpdateTime = 0;
+
+    // Compass light materials for outro glow effect
+    this.compassLightMaterials = {
+      off: null,
+      on: null
+    };
+    this.compassLightObj = null;
+    this.compassGlowTriggered = false;
 
     // Define camera positions for each puzzle side
     this.puzzlePositions = {
@@ -64,6 +72,181 @@ export class CameraAnimator {
     // Cache puzzle name lookups for performance
     this._puzzleNameCache = new Map();
     this._buildPuzzleNameCache();
+  }
+
+  // Set scene reference for compass light functionality
+  setScene(scene) {
+    this.scene = scene;
+    this.initCompassLightMaterials();
+  }
+
+  // Initialize compass light materials similar to puzzle lights
+  initCompassLightMaterials() {
+    if (!this.scene) return;
+
+    // Try to find Graphic_Compass element in the scene
+    const compassGroup = this.scene.getObjectByName('Graphic_Compass');
+    if (!compassGroup) {
+      console.warn('Graphic_Compass element not found in scene');
+      return;
+    }
+
+    console.log('Found Graphic_Compass:', compassGroup);
+    console.log('Graphic_Compass type:', compassGroup.type);
+    console.log('Graphic_Compass isMesh:', compassGroup.isMesh);
+    console.log('Graphic_Compass has material:', !!compassGroup.material);
+    console.log('Graphic_Compass children:', compassGroup.children);
+
+    // If Graphic_Compass is a mesh with material, use it directly
+    if (compassGroup.isMesh && compassGroup.material) {
+      console.log('Using Graphic_Compass as direct mesh with material');
+      this.compassLightObj = compassGroup;
+    } else if (compassGroup.children && compassGroup.children.length > 0) {
+      // Find the light object within the compass group
+      console.log('Searching for light object in Graphic_Compass children...');
+      
+      // First, try to find objects with specific material names
+      this.compassLightObj = compassGroup.children.find((child) => (
+        child.material?.name === 'Light_Display' || 
+        child.material?.name === 'Compass_Light' ||
+        child.material?.name === 'Graphic_Compass_Light'
+      ));
+
+      if (!this.compassLightObj) {
+        // If no specific light found, try to use any mesh with a material
+        this.compassLightObj = compassGroup.children.find((child) => 
+          child.isMesh && child.material
+        );
+      }
+
+      if (!this.compassLightObj) {
+        // If still no mesh found, try any object with a material
+        this.compassLightObj = compassGroup.children.find((child) => 
+          child.material
+        );
+      }
+
+      if (this.compassLightObj) {
+        console.log('Found light object in Graphic_Compass:', this.compassLightObj);
+        console.log('Light object material:', this.compassLightObj.material);
+      }
+    }
+
+    if (this.compassLightObj && this.compassLightObj.material) {
+      console.log('Setting up compass light materials...');
+      
+      // Store the original "off" material
+      this.compassLightMaterials.off = this.compassLightObj.material;
+      console.log('Original material:', this.compassLightMaterials.off);
+
+      // Create "on" material by cloning and modifying the original
+      this.compassLightMaterials.on = this.compassLightMaterials.off.clone();
+      this.compassLightMaterials.on.name = 'Compass_Light_Glow';
+      
+      // Set glowing properties - make it much brighter
+      this.compassLightMaterials.on.emissive.setHex(0xffffff);
+      this.compassLightMaterials.on.emissiveIntensity = 5.0; // Much higher initial intensity
+      
+      // Add some additional glow properties if it's a standard material
+      if (this.compassLightMaterials.on.isMeshStandardMaterial) {
+        this.compassLightMaterials.on.metalness = 0.1;
+        this.compassLightMaterials.on.roughness = 0.1; // Lower roughness for more shine
+      }
+
+      console.log('Glow material created:', this.compassLightMaterials.on);
+      console.log('Compass light setup complete!');
+    } else {
+      console.warn('No suitable light object found in Graphic_Compass');
+      console.log('Available children:', compassGroup.children?.map(child => ({
+        name: child.name,
+        type: child.type,
+        isMesh: child.isMesh,
+        hasMaterial: !!child.material,
+        materialName: child.material?.name
+      })));
+    }
+  }
+
+  // Update compass light material (on/off)
+  updateCompassLightMaterial(isActivated = true) {
+    if (!this.compassLightObj || !this.compassLightMaterials.off || !this.compassLightMaterials.on) {
+      return;
+    }
+
+    this.compassLightObj.material = isActivated ? this.compassLightMaterials.on : this.compassLightMaterials.off;
+  }
+
+  // Animate compass glow with pulsing effect
+  animateCompassGlow() {
+    if (!this.compassLightObj || !this.compassLightMaterials.on) return;
+
+    const startTime = performance.now();
+    const pulseSpeed = 1.5; // Speed of the pulse (higher = faster)
+
+    const animateGlow = (currentTime) => {
+      const elapsed = (currentTime - startTime) / 1000;
+      
+      // Create a continuous pulsing effect
+      const pulse = Math.sin(elapsed * pulseSpeed * Math.PI) * 0.4 + 0.8; // Pulse between 0.4 and 1.2
+      
+      // Make it much brighter - increase base intensity and pulse range
+      const baseIntensity = 10.0; // Much higher base intensity
+      const pulseRange = 8.0; // Larger pulse range
+      const finalIntensity = baseIntensity + (pulse * pulseRange);
+      
+      this.compassLightMaterials.on.emissiveIntensity = finalIntensity;
+
+      // Continue the animation indefinitely
+      requestAnimationFrame(animateGlow);
+    };
+
+    requestAnimationFrame(animateGlow);
+  }
+
+  // Animate compass glow fade-in during zoom sequence
+  animateCompassGlowFadeIn() {
+    if (!this.compassLightObj || !this.compassLightMaterials.on) return;
+
+    const startTime = performance.now();
+    const fadeInDuration = COMPASS_FADE_IN_DURATION * 1000; // Convert to milliseconds
+    const pulseSpeed = 1.5;
+
+    const animateFadeIn = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const fadeProgress = Math.min(elapsed / fadeInDuration, 1);
+      
+      // Smooth fade-in curve (ease-in)
+      const easedProgress = fadeProgress * fadeProgress;
+      
+      // Create a continuous pulsing effect
+      const pulse = Math.sin((elapsed / 1000) * pulseSpeed * Math.PI) * 0.4 + 0.8;
+      
+      // Make it much brighter - increase base intensity and pulse range
+      const baseIntensity = 10.0;
+      const pulseRange = 8.0;
+      const maxIntensity = baseIntensity + (pulse * pulseRange);
+      
+      // Apply fade-in to the intensity
+      const finalIntensity = maxIntensity * easedProgress;
+      
+      this.compassLightMaterials.on.emissiveIntensity = finalIntensity;
+
+      if (fadeProgress >= 1) {
+        // Fade-in complete, continue with normal pulsing
+        this.animateCompassGlow();
+      } else {
+        // Continue fade-in animation
+        requestAnimationFrame(animateFadeIn);
+      }
+    };
+
+    requestAnimationFrame(animateFadeIn);
+  }
+
+  // Reset compass light to off state
+  resetCompassLight() {
+    this.updateCompassLightMaterial(false);
+    this.compassGlowTriggered = false;
   }
 
   // Build cache for puzzle name lookups
@@ -274,6 +457,9 @@ export class CameraAnimator {
 
     this.isAnimating = true;
 
+    // Reset compass glow trigger for new completion sequence
+    this.compassGlowTriggered = false;
+
     // Fade out UI buttons during the zoom
     this.fadeOutUI();
 
@@ -370,6 +556,10 @@ export class CameraAnimator {
     // Disable controls during animation (if they exist)
     if (this.controls) {
       this.controls.setEnabled(false);
+      
+      // Temporarily remove distance limits for closer zoom
+      this.controls.minDistance = 0.1; // Allow very close zoom
+      this.controls.maxDistance = 1000; // Allow far zoom
     }
 
     // Use the provided far position as starting point and calculate final position
@@ -392,6 +582,19 @@ export class CameraAnimator {
       // Update controls every frame for smooth movement
       if (this.controls) {
         this.controls.update();
+      }
+
+      // Trigger compass glow effect during the zoom
+      if (progress >= 0.3 && !this.compassGlowTriggered) {
+        this.compassGlowTriggered = true;
+        setTimeout(() => {
+          // Set the glow material but start at 0 intensity to avoid blink
+          if (this.compassLightObj && this.compassLightMaterials.on) {
+            this.compassLightObj.material = this.compassLightMaterials.on;
+            this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
+          }
+          this.animateCompassGlowFadeIn();
+        }, COMPASS_GLOW_DELAY * 1000);
       }
 
       // Only update controls at the very end to avoid interference
@@ -553,5 +756,118 @@ export class CameraAnimator {
     const nextPuzzleName = this.puzzleOrder[nextIndex];
 
     this.debugGoToPuzzle(nextPuzzleName);
+  }
+
+  // Debug method to test compass glow
+  debugTestCompassGlow() {
+    console.log('Testing compass glow...');
+    
+    if (!this.scene) {
+      console.warn('Scene not available. Make sure setScene() was called.');
+      return;
+    }
+
+    // Log all objects in the scene to help find the compass
+    console.log('Searching for compass-related objects in scene...');
+    const allObjects = [];
+    const compassCandidates = [];
+    
+    this.scene.traverse((object) => {
+      allObjects.push(object.name);
+      
+      // Look for objects that might be the compass
+      if (object.name.toLowerCase().includes('compass') || 
+          object.name.toLowerCase().includes('graphic') ||
+          object.name.toLowerCase().includes('rose') ||
+          object.name.toLowerCase().includes('direction')) {
+        compassCandidates.push({
+          name: object.name,
+          type: object.type,
+          isMesh: object.isMesh,
+          hasMaterial: !!object.material,
+          children: object.children?.length || 0
+        });
+      }
+    });
+
+    console.log('All objects in scene:', allObjects);
+    console.log('Compass candidates found:', compassCandidates);
+
+    // Try to find Graphic_Compass specifically
+    const compassGroup = this.scene.getObjectByName('Graphic_Compass');
+    if (compassGroup) {
+      console.log('Found Graphic_Compass group:', compassGroup);
+      console.log('Graphic_Compass children:', compassGroup.children);
+      
+      // If Graphic_Compass is a mesh with material, use it directly
+      if (compassGroup.isMesh && compassGroup.material) {
+        console.log('Using Graphic_Compass as direct mesh with material');
+        this.compassLightObj = compassGroup;
+        this.initCompassLightMaterials();
+        // Set the glow material but start at 0 intensity to avoid blink
+        if (this.compassLightObj && this.compassLightMaterials.on) {
+          this.compassLightObj.material = this.compassLightMaterials.on;
+          this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
+        }
+        this.animateCompassGlowFadeIn();
+        return;
+      }
+      
+      // Look for light objects within the compass group
+      const lightObjects = compassGroup.children.filter(child => 
+        child.material?.name === 'Light_Display' || 
+        child.material?.name === 'Compass_Light' ||
+        child.name.toLowerCase().includes('light') ||
+        child.isMesh
+      );
+      
+      console.log('Light objects in Graphic_Compass:', lightObjects);
+      
+      if (lightObjects.length > 0) {
+        this.compassLightObj = lightObjects[0];
+        console.log('Using first light object:', this.compassLightObj);
+        this.initCompassLightMaterials();
+        // Set the glow material but start at 0 intensity to avoid blink
+        if (this.compassLightObj && this.compassLightMaterials.on) {
+          this.compassLightObj.material = this.compassLightMaterials.on;
+          this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
+        }
+        this.animateCompassGlowFadeIn();
+        return;
+      }
+    }
+
+    // If Graphic_Compass not found, try alternative names
+    const alternativeNames = [
+      'Compass', 'GraphicCompass', 'Compass_Graphic', 'Graphic_Compass_Group',
+      'Rose', 'CompassRose', 'Direction', 'Directional', 'Compass_Light'
+    ];
+
+    for (const name of alternativeNames) {
+      const obj = this.scene.getObjectByName(name);
+      if (obj) {
+        console.log(`Found alternative compass object: ${name}`, obj);
+        if (obj.isMesh && obj.material) {
+          this.compassLightObj = obj;
+          this.initCompassLightMaterials();
+          // Set the glow material but start at 0 intensity to avoid blink
+          if (this.compassLightObj && this.compassLightMaterials.on) {
+            this.compassLightObj.material = this.compassLightMaterials.on;
+            this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
+          }
+          this.animateCompassGlowFadeIn();
+          return;
+        }
+      }
+    }
+
+    console.warn('Compass light object not found. Make sure Graphic_Compass element exists in the scene.');
+    console.log('Available object names that might be relevant:', allObjects.filter(name => 
+      name.toLowerCase().includes('compass') || 
+      name.toLowerCase().includes('graphic') || 
+      name.toLowerCase().includes('light') ||
+      name.toLowerCase().includes('rose') ||
+      name.toLowerCase().includes('direction')
+    ));
   }
 }
