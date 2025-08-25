@@ -326,7 +326,6 @@ button {
   background-color: var(--clr-primary-light);
   background-image: linear-gradient(135deg, var(--clr-primary-light) 0%, var(--clr-neutral-200) 100%);
   padding-inline: var(--space-8);
-  padding-bottom: var(--space-8);
   margin: var(--space-4) auto;
   border-radius: var(--radius-lg);
   height: auto;
@@ -345,10 +344,11 @@ button {
   transform: translate(-50%, -50%);
   margin: 0;
   max-width: 95vw;
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 60vh;
+  min-height: 90vh !important;
+  justify-content: space-between;
 }
 
 #credits .modal-content {
@@ -460,7 +460,7 @@ button {
   align-items: center;
   width: 100%;
   height: 100%;
-  min-height: 60vh;
+  minheight: 10vh !important;
 }
 
 .modal-body-visible .modal-column {
@@ -606,9 +606,8 @@ button {
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
-  min-height: 0;
+  min-height: 60vh !important;
   padding-right: var(--space-2);
-  padding-bottom: var(--space-4);
 }
 
 /* Custom scrollbar styling for modal body */
@@ -637,7 +636,6 @@ button {
   align-items: center;
   justify-content: center;
   flex: 1;
-  min-height: 60vh;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -683,25 +681,34 @@ button {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  padding-bottom: var(--space-4);
-  border-top: 1px solid var(--clr-primary-dark);
+  gap: 0;
+  margin-top: 0;
+  padding: 4px 0;
+  border-top: none;
   flex-shrink: 0;
   position: relative;
-  min-height: 120px;
+  min-height: 100px;
   overflow: visible;
+  width: 100%;
 }
 
-/* Hide footer in intro modal initially */
-#intro .modal-footer {
-  display: none;
+.modal-footer.show {
+  border-top: 1px solid var(--clr-primary-dark);
 }
 
 /* Show footer when letter is read */
 #intro .modal-footer.show {
   display: flex;
+  padding: 4px 0;
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Outro modal footer - buttons side by side */
+#outro .modal-footer {
+  flex-direction: row;
+  gap: var(--space-4);
+  justify-content: center;
 }
 
 #audio-loading-container {
@@ -711,6 +718,18 @@ button {
   width: 100%;
   padding: var(--space-4) 0;
   min-height: 60px;
+  flex: 1 1 100%;
+}
+
+#audio-loading-container[style*="display: none"] {
+  display: none;
+  flex: 0 0 0;
+  width: 0;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 #audio-loading-container .loading-complete-button {
@@ -721,6 +740,47 @@ button {
   position: relative;
   z-index: 10;
   overflow: visible;
+}
+
+/* Continue button container styling for proper centering */
+#continue-button-container {
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  flex: 1 1 100%;
+  text-align: center;
+  position: relative;
+  overflow: visible;
+  min-height: 36px;
+}
+
+#continue-button-container.show {
+  display: flex !important;
+}
+
+#continue-button-container .loading-complete-button {
+  margin: 0 auto;
+  min-height: 28px;
+  padding: 8px 20px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+  overflow: visible;
+  display: block;
+}
+
+/* Override always-hovered-btn transform for centering */
+#continue-button-container .always-hovered-btn {
+  transform: scale(1.05);
+  display: block;
+  visibility: visible;
+  opacity: 1;
+}
+
+#continue-button-container .always-hovered-btn:hover {
+  transform: scale(1.1);
 }
 
 .continue-button {
@@ -889,6 +949,18 @@ button {
     padding: var(--space-4) var(--space-6);
     font-size: var(--font-size-base);
     min-height: 44px;
+  }
+
+  /* Mobile-specific continue button container styling */
+  #continue-button-container {
+    padding: 0;
+    margin: 0;
+  }
+
+  #continue-button-container .loading-complete-button {
+    padding: 8px 20px;
+    font-size: var(--font-size-base);
+    min-height: 28px;
   }
 
   /* Improve touch interactions */

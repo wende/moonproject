@@ -123,7 +123,7 @@ export class ScalesPuzzle extends Puzzle {
         'Amour': 'playAmourVO',
         'Success': null // No audio for success
       };
-      
+
       const audioMethod = audioMap[colorName];
       window.PuzzleBox?.setDialogueButton(colorName, audioMethod);
     }
@@ -183,7 +183,7 @@ export class ScalesPuzzle extends Puzzle {
     if (endState[0] === endState[1]) {
       // Disable scales buttons immediately when puzzle is solved
       this.disableScalesButtons();
-      
+
       // Mark as completed after 1 second (for visual effects)
       setTimeout(() => {
         this.markAsCompleted();
@@ -200,7 +200,7 @@ export class ScalesPuzzle extends Puzzle {
       // Remove button from interactive objects by setting a flag
       button.userData.disabled = true;
     });
-    
+
     // Scales puzzle buttons disabled immediately after puzzle solved
   }
 

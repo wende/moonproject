@@ -279,7 +279,7 @@ class AudioManager {
           
           if (loadingContent && continueButton) {
             loadingContent.style.display = 'none';
-            continueButton.style.display = 'block';
+            continueButton.style.display = 'flex';
             setTimeout(() => continueButton.classList.add('show'), SHOW_BUTTON_DELAY);
           }
         }, COMPLETE_DELAY);

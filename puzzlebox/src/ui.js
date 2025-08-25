@@ -435,7 +435,7 @@ export function setupUI() {
           audioLoadingContainer.style.display = 'block';
         }
         if (continueButtonContainer) {
-          continueButtonContainer.style.display = 'block';
+          continueButtonContainer.classList.add('show');
         }
         
         // Get the final dimensions of the modal content (including footer)
@@ -444,9 +444,8 @@ export function setupUI() {
         const finalWidth = modalContent.offsetWidth;
         
         // Set the modal to its final size immediately with a smooth transition
-        modalContent.style.transition = 'height 0.3s ease-out, width 0.3s ease-out';
+        modalContent.style.transition = 'height 0.3s ease-out';
         modalContent.style.height = `${finalHeight}px`;
-        modalContent.style.width = `${finalWidth}px`;
         modalContent.style.minHeight = `${finalHeight}px`; // Override min-height
         modalContent.style.overflow = 'hidden'; // Prevent any overflow during transition
         
@@ -470,7 +469,7 @@ export function setupUI() {
           audioLoadingContainer.style.display = originalLoadingDisplay;
         }
         if (continueButtonContainer) {
-          continueButtonContainer.style.display = originalContinueDisplay;
+          continueButtonContainer.classList.remove('show');
         }
         
         // Remove transition after it completes to prevent interference with text animation
@@ -501,16 +500,16 @@ export function setupUI() {
               audioDuration = audioSource.duration * 1000; // Convert to milliseconds
             }
             
-            // Show the footer and loading bar immediately after animation completes
+            // Show the footer and continue button immediately after animation completes
             const modalFooter = document.querySelector('#intro .modal-footer');
             if (modalFooter) {
               modalFooter.classList.add('show');
             }
             if (audioLoadingContainer) {
-              audioLoadingContainer.style.display = 'block';
+              audioLoadingContainer.style.display = 'none';
             }
             if (continueButtonContainer) {
-              continueButtonContainer.style.display = 'block';
+              continueButtonContainer.classList.add('show');
             }
             
             // Show the note image after a short delay

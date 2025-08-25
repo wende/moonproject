@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { Puzzle } from './Puzzle';
 
 export class MoonPuzzle extends Puzzle {

@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { PuzzleManager } from './PuzzleManager';
 import { audioManager } from '../audio_html5.js';
 
 export class Puzzle {
@@ -17,7 +16,7 @@ export class Puzzle {
     };
   }
 
-  handleButtonClick(button) {
+  handleButtonClick(_button) {
     if (this.isCompleted) {
       // Puzzle already complete. Button clicks will be ignored.
       return;
@@ -55,7 +54,6 @@ export class Puzzle {
 
   triggerEpicBackgroundFlash() {
     const flashElement = document.getElementById('background-flash');
-    const backgroundElement = document.getElementById('background');
     if (!flashElement) return;
 
     // Helper to set opacity and transition
@@ -127,7 +125,7 @@ export class Puzzle {
     this.interactiveButtons.push(button);
   }
 
-  playAnimation(name, isScaleTransition = false) {
+  playAnimation(name, _isScaleTransition = false) {
     if (!this.actions || !this.actions[name]) {
       console.warn(`Animation not found: ${name}`);
       return;
