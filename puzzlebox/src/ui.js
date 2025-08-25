@@ -417,11 +417,74 @@ export function setupUI() {
       if (introTextElement) {
         const originalContent = introTextElement.innerHTML;
         
-        // Clear the content initially
+        // Set the final content temporarily to calculate the final size
+        introTextElement.innerHTML = originalContent;
+        
+        // Temporarily show the footer to include it in the final size calculation
+        const modalFooter = document.querySelector('#intro .modal-footer');
+        const originalFooterDisplay = modalFooter ? modalFooter.style.display : 'none';
+        if (modalFooter) {
+          modalFooter.style.display = 'flex';
+          modalFooter.classList.add('show');
+        }
+        
+        // Also temporarily show the loading and continue button containers
+        const originalLoadingDisplay = audioLoadingContainer ? audioLoadingContainer.style.display : 'none';
+        const originalContinueDisplay = continueButtonContainer ? continueButtonContainer.style.display : 'none';
+        if (audioLoadingContainer) {
+          audioLoadingContainer.style.display = 'block';
+        }
+        if (continueButtonContainer) {
+          continueButtonContainer.style.display = 'block';
+        }
+        
+        // Get the final dimensions of the modal content (including footer)
+        const modalContent = document.querySelector('#intro .modal-content');
+        const finalHeight = modalContent.offsetHeight;
+        const finalWidth = modalContent.offsetWidth;
+        
+        // Set the modal to its final size immediately with a smooth transition
+        modalContent.style.transition = 'height 0.3s ease-out, width 0.3s ease-out';
+        modalContent.style.height = `${finalHeight}px`;
+        modalContent.style.width = `${finalWidth}px`;
+        modalContent.style.minHeight = `${finalHeight}px`; // Override min-height
+        modalContent.style.overflow = 'hidden'; // Prevent any overflow during transition
+        
+        // Also set the intro text container to its final size to prevent resizing
+        const finalTextContainerHeight = introTextElement.offsetHeight;
+        introTextElement.style.minHeight = `${finalTextContainerHeight}px`;
+        
+        // Set the modal body to its final size as well
+        const modalBody = document.querySelector('#intro .modal-body');
+        if (modalBody) {
+          const finalModalBodyHeight = modalBody.offsetHeight;
+          modalBody.style.minHeight = `${finalModalBodyHeight}px`;
+        }
+        
+        // Hide the footer elements again after size calculation
+        if (modalFooter) {
+          modalFooter.style.display = originalFooterDisplay;
+          modalFooter.classList.remove('show');
+        }
+        if (audioLoadingContainer) {
+          audioLoadingContainer.style.display = originalLoadingDisplay;
+        }
+        if (continueButtonContainer) {
+          continueButtonContainer.style.display = originalContinueDisplay;
+        }
+        
+        // Remove transition after it completes to prevent interference with text animation
+        setTimeout(() => {
+          modalContent.style.transition = 'none';
+          modalContent.style.overflow = 'visible'; // Restore overflow after transition
+        }, 300);
+        
+        // Clear the content for animation
         introTextElement.innerHTML = '';
         
-        // Start the letter-by-letter animation
-        textAnimator.animateText(introTextElement, originalContent, {
+        // Start the letter-by-letter animation after a small delay to ensure modal sizing is complete
+        setTimeout(() => {
+          textAnimator.animateText(introTextElement, originalContent, {
           // speed and delay will use the defaults from textAnimator
           onComplete: () => {
             // Play audio when text animation completes
@@ -477,6 +540,7 @@ export function setupUI() {
             }, audioDuration);
           }
         });
+        }, 350); // Small delay to ensure modal sizing is complete
       }
     });
   }
