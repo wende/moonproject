@@ -8,7 +8,7 @@ const PROGRESS_COMPLETE_THRESHOLD = 1;
 const NEXT_PUZZLE_ANIMATION_DURATION = 2.2;
 const PUZZLE_COMPLETION_THRESHOLD = 5;
 const UI_FADE_DURATION = 3000; // 3 seconds
-const END_ZOOM_DISTANCE = 1.5; // Reduced final position after zoom (was 2.6)
+const END_ZOOM_DISTANCE = 1.8; // Reduced final position after zoom (was 2.6)
 const ZOOM_DURATION = 15.0;
 const FAR_ANIMATION_DURATION = 2.0;
 const OUTRO_DELAY = 500;
@@ -22,7 +22,35 @@ const OUTRO_FADE_IN_DURATION = 1800; // Fade-in duration
 const OUTRO_BREAK_INSERT_INDEX = 11; // Insert <br> after the poem
 const OUTRO_ANIMATION_DELAY = 500; // Delay after modal fade-in before starting line animation
 
+// Time counter constants
+const TIME_COUNTER_START_DATE = '2020-01-19T00:00:00';
+
 export class CameraAnimator {
+  // Helper function to calculate time counter text
+  static calculateTimeCounterText() {
+    const now = new Date();
+    const startDate = new Date(TIME_COUNTER_START_DATE);
+    const timeDiff = now - startDate;
+
+    const totalSeconds = Math.floor(timeDiff / 1000);
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const totalHours = Math.floor(totalMinutes / 60);
+    const totalDays = Math.floor(totalHours / 24);
+    const totalYears = Math.floor(totalDays / 365.25);
+
+    const remainingDays = totalDays - Math.floor(totalYears * 365.25);
+    const remainingHours = totalHours - (totalDays * 24);
+    const remainingMinutes = totalMinutes - (totalHours * 60);
+    const remainingSeconds = totalSeconds - (totalMinutes * 60);
+
+    return `PS In orbit these past ${totalYears.toLocaleString()} years, ${remainingDays.toLocaleString()} days, ${remainingHours.toLocaleString()} hours, ${remainingMinutes.toLocaleString()} minutes, and ${remainingSeconds.toLocaleString()} seconds`;
+  }
+
+  // Helper function to set element styles
+  static setElementStyles(element, styles) {
+    Object.assign(element.style, styles);
+  }
+
   constructor(camera, controls) {
     this.camera = camera;
     this.controls = controls;
@@ -569,6 +597,123 @@ export class CameraAnimator {
     }
   }
 
+  // Create line elements from text content
+  createLineElements(modalBody) {
+    const lines = [];
+    const textElements = Array.from(modalBody.children).filter(element => {
+      return element.textContent.trim() !== '' || element.innerHTML.trim() !== '';
+    });
+
+    textElements.forEach((element) => {
+      element.dataset.originalHTML = element.innerHTML;
+
+      if (element.tagName.toLowerCase() === 'br') {
+        lines.push(this.createBreakElement(element));
+      } else {
+        const content = element.innerHTML;
+        const lineParts = content.split(/<br\s*\/?>/i);
+
+        lineParts.forEach((lineContent, lineIndex) => {
+          if (lineContent.trim() === '') {
+            lines.push(this.createBreakElement(element, lineIndex));
+          } else {
+            lines.push(this.createTextElement(element, lineContent.trim(), lineIndex));
+          }
+        });
+      }
+    });
+
+    // Add manual break after poem
+    lines.splice(OUTRO_BREAK_INSERT_INDEX, 0, this.createBreakElement(null));
+
+    return lines;
+  }
+
+  // Create a break element
+  createBreakElement(originalElement, lineIndex = 0) {
+    const brElement = document.createElement('br');
+    brElement.dataset.originalElement = originalElement;
+    brElement.dataset.lineIndex = lineIndex;
+    brElement.dataset.isBreak = 'true';
+    return brElement;
+  }
+
+  // Create a text element
+  createTextElement(originalElement, content, lineIndex) {
+    const lineElement = originalElement.cloneNode(false);
+    lineElement.innerHTML = content;
+    lineElement.dataset.originalElement = originalElement;
+    lineElement.dataset.lineIndex = lineIndex;
+    return lineElement;
+  }
+
+  // Setup line elements for animation
+  setupLineElements(lines, modalBody) {
+    lines.forEach((lineElement) => {
+      if (lineElement.dataset.isBreak === 'true') {
+        CameraAnimator.setElementStyles(lineElement, {
+          visibility: 'hidden',
+          opacity: '0'
+        });
+      } else {
+        // Store original styles
+        ['position', 'top', 'left', 'transform', 'opacity', 'transition', 'margin'].forEach(prop => {
+          lineElement.dataset[`original${prop.charAt(0).toUpperCase() + prop.slice(1)}`] = lineElement.style[prop] || '';
+        });
+
+        // Set initial animation state
+        CameraAnimator.setElementStyles(lineElement, {
+          position: 'static',
+          opacity: '0',
+          transition: 'none',
+          margin: '0',
+          display: 'block',
+          visibility: 'visible'
+        });
+      }
+      modalBody.appendChild(lineElement);
+    });
+  }
+
+  // Start time counter updates
+  startTimeCounterUpdates(lineElement, fadeInDuration) {
+    setTimeout(() => {
+      const updateTimeCounter = () => {
+        lineElement.innerHTML = CameraAnimator.calculateTimeCounterText();
+      };
+      updateTimeCounter();
+      const intervalId = setInterval(updateTimeCounter, 1000);
+      lineElement.dataset.timeCounterInterval = intervalId;
+    }, fadeInDuration);
+  }
+
+  // Animate a single line
+  animateLine(lineElement, index, totalLines, fadeInDuration) {
+    const fadeIn = () => {
+      CameraAnimator.setElementStyles(lineElement, {
+        transition: `opacity ${fadeInDuration}ms ease-in`,
+        opacity: '1'
+      });
+    };
+
+    if (lineElement.dataset.isBreak === 'true') {
+      lineElement.style.visibility = 'visible';
+      fadeIn();
+    } else if (lineElement.classList.contains('time-counter')) {
+      fadeIn();
+      this.startTimeCounterUpdates(lineElement, fadeInDuration);
+    } else {
+      fadeIn();
+    }
+
+    // Animate flower image after last line
+    if (index === totalLines - 1) {
+      setTimeout(() => {
+        this.animateFlowerImage();
+      }, fadeInDuration + 500);
+    }
+  }
+
   // Animate outro modal body lines with simple fade-in effect
   animateOutroModalLines() {
     const outroModal = document.getElementById('outro');
@@ -577,95 +722,10 @@ export class CameraAnimator {
     const modalBody = outroModal.querySelector('.modal-body .modal-column:first-child');
     if (!modalBody) return;
 
-
-    // Split text by <br> tags and create individual line elements
-    const lines = [];
-    const textElements = Array.from(modalBody.children).filter(element => {
-      return element.textContent.trim() !== '' || element.innerHTML.trim() !== '';
-    });
-
-    textElements.forEach((element) => {
-      // Store original element for later restoration
-      element.dataset.originalHTML = element.innerHTML;
-
-      if (element.tagName.toLowerCase() === 'br') {
-        // If the element itself is a <br>, add it as a break
-        const brElement = document.createElement('br');
-        brElement.dataset.originalElement = element;
-        brElement.dataset.lineIndex = 0;
-        brElement.dataset.isBreak = 'true';
-        lines.push(brElement);
-      } else {
-        // Split the content by <br> tags
-        const content = element.innerHTML;
-        const lineParts = content.split(/<br\s*\/?>/i);
-
-        lineParts.forEach((lineContent, lineIndex) => {
-          // Include empty lines (br tags) as separate elements
-          if (lineContent.trim() === '') {
-            // Create a line break element
-            const brElement = document.createElement('br');
-            brElement.dataset.originalElement = element;
-            brElement.dataset.lineIndex = lineIndex;
-            brElement.dataset.isBreak = 'true';
-            lines.push(brElement);
-          } else {
-            // Create a new element for this line
-            const lineElement = element.cloneNode(false);
-            lineElement.innerHTML = lineContent.trim();
-            lineElement.dataset.originalElement = element;
-            lineElement.dataset.lineIndex = lineIndex;
-            lines.push(lineElement);
-          }
-        });
-      }
-    });
-
+    const lines = this.createLineElements(modalBody);
     if (lines.length === 0) return;
 
-    // Manually add the <br> after the poem (after "And so does on me")
-    const brAfterPoem = document.createElement('br');
-    brAfterPoem.dataset.originalElement = null;
-    brAfterPoem.dataset.lineIndex = 0;
-    brAfterPoem.dataset.isBreak = 'true';
-    lines.splice(OUTRO_BREAK_INSERT_INDEX, 0, brAfterPoem); // Insert after the poem
-
-
-    // Set initial state for all line elements
-    lines.forEach((lineElement, _index) => {
-      if (lineElement.dataset.isBreak === 'true') {
-        // For break elements, add them to the DOM but make them invisible
-        lineElement.style.visibility = 'hidden'; // Start invisible but maintain layout
-        lineElement.style.opacity = '0';
-        modalBody.appendChild(lineElement);
-      } else {
-        // Store original position and styles
-        lineElement.dataset.originalPosition = lineElement.style.position || 'static';
-        lineElement.dataset.originalTop = lineElement.style.top || 'auto';
-        lineElement.dataset.originalLeft = lineElement.style.left || 'auto';
-        lineElement.dataset.originalTransform = lineElement.style.transform || 'none';
-        lineElement.dataset.originalOpacity = lineElement.style.opacity || '1';
-        lineElement.dataset.originalTransition = lineElement.style.transition || 'none';
-        lineElement.dataset.originalMargin = lineElement.style.margin || '';
-
-        // Set initial state for animation - position exactly where it should be but invisible
-        lineElement.style.position = 'static';
-        lineElement.style.opacity = '0';
-        lineElement.style.transition = 'none';
-        lineElement.style.margin = '0';
-        lineElement.style.display = 'block';
-        lineElement.style.visibility = 'visible'; // Ensure visibility
-
-        // Special handling for time-counter: keep it invisible initially, will be animated later
-        if (lineElement.classList.contains('time-counter')) {
-          lineElement.style.opacity = '0';
-          lineElement.style.transition = 'none';
-        }
-
-        // Add the line element to the DOM
-        modalBody.appendChild(lineElement);
-      }
-    });
+    this.setupLineElements(lines, modalBody);
 
     // Animate each line with staggered timing
     lines.forEach((lineElement, index) => {
@@ -673,63 +733,7 @@ export class CameraAnimator {
       const fadeInDuration = OUTRO_FADE_IN_DURATION;
 
       setTimeout(() => {
-        if (lineElement.dataset.isBreak === 'true') {
-          // For break elements, make them visible
-          lineElement.style.visibility = 'visible';
-          lineElement.style.transition = `opacity ${fadeInDuration}ms ease-in`;
-          lineElement.style.opacity = '1';
-
-        } else if (lineElement.classList.contains('time-counter')) {
-          // Special handling for time-counter: animate it and start the counter updates
-          lineElement.style.transition = `opacity ${fadeInDuration}ms ease-in`;
-          lineElement.style.opacity = '1';
-
-          // Start the time counter updates after it becomes visible
-          setTimeout(() => {
-            // Create a custom update function that targets our specific element
-            const updateTimeCounter = () => {
-              const now = new Date();
-              const startDate = new Date('2020-01-19T00:00:00');
-              const timeDiff = now - startDate;
-
-              const totalSeconds = Math.floor(timeDiff / 1000);
-              const totalMinutes = Math.floor(totalSeconds / 60);
-              const totalHours = Math.floor(totalMinutes / 60);
-              const totalDays = Math.floor(totalHours / 24);
-              const totalYears = Math.floor(totalDays / 365.25);
-
-              const remainingDays = totalDays - Math.floor(totalYears * 365.25);
-              const remainingHours = totalHours - (totalDays * 24);
-              const remainingMinutes = totalMinutes - (totalHours * 60);
-              const remainingSeconds = totalSeconds - (totalMinutes * 60);
-
-              const text = `PS In orbit these past ${totalYears.toLocaleString()} years, ${remainingDays.toLocaleString()} days, ${remainingHours.toLocaleString()} hours, ${remainingMinutes.toLocaleString()} minutes, and ${remainingSeconds.toLocaleString()} seconds`;
-              lineElement.innerHTML = text;
-            };
-
-            // Do initial update
-            updateTimeCounter();
-
-            // Start continuous updates every second
-            const intervalId = setInterval(updateTimeCounter, 1000);
-
-            // Store the interval ID so we can stop it later if needed
-            lineElement.dataset.timeCounterInterval = intervalId;
-          }, fadeInDuration);
-
-        } else {
-          // Start fade-in for text elements
-          lineElement.style.transition = `opacity ${fadeInDuration}ms ease-in`;
-          lineElement.style.opacity = '1';
-
-        }
-
-        // If this is the last line, animate the flower image
-        if (index === lines.length - 1) {
-          setTimeout(() => {
-            this.animateFlowerImage();
-          }, fadeInDuration + 500);
-        }
+        this.animateLine(lineElement, index, lines.length, fadeInDuration);
       }, delay);
     });
   }
@@ -961,53 +965,20 @@ export class CameraAnimator {
 
   // Debug method to test compass glow
   debugTestCompassGlow() {
-
     if (!this.scene) {
       console.warn('Scene not available. Make sure setScene() was called.');
       return;
     }
 
-    // Log all objects in the scene to help find the compass
-    const allObjects = [];
-    const compassCandidates = [];
-
-    this.scene.traverse((object) => {
-      allObjects.push(object.name);
-
-      // Look for objects that might be the compass
-      if (object.name.toLowerCase().includes('compass') ||
-          object.name.toLowerCase().includes('graphic') ||
-          object.name.toLowerCase().includes('rose') ||
-          object.name.toLowerCase().includes('direction')) {
-        compassCandidates.push({
-          name: object.name,
-          type: object.type,
-          isMesh: object.isMesh,
-          hasMaterial: !!object.material,
-          children: object.children?.length || 0
-        });
-      }
-    });
-
-
-    // Try to find Graphic_Compass specifically
     const compassGroup = this.scene.getObjectByName('Graphic_Compass');
     if (compassGroup) {
-
-      // If Graphic_Compass is a mesh with material, use it directly
       if (compassGroup.isMesh && compassGroup.material) {
         this.compassLightObj = compassGroup;
         this.initCompassLightMaterials();
-        // Set the glow material but start at 0 intensity to avoid blink
-        if (this.compassLightObj && this.compassLightMaterials.on) {
-          this.compassLightObj.material = this.compassLightMaterials.on;
-          this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
-        }
-        this.animateCompassGlowFadeIn();
+        this.startCompassGlow();
         return;
       }
 
-      // Look for light objects within the compass group
       const lightObjects = compassGroup.children.filter(child =>
         child.material?.name === 'Light_Display' ||
         child.material?.name === 'Compass_Light' ||
@@ -1018,41 +989,30 @@ export class CameraAnimator {
       if (lightObjects.length > 0) {
         this.compassLightObj = lightObjects[0];
         this.initCompassLightMaterials();
-        // Set the glow material but start at 0 intensity to avoid blink
-        if (this.compassLightObj && this.compassLightMaterials.on) {
-          this.compassLightObj.material = this.compassLightMaterials.on;
-          this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
-        }
-        this.animateCompassGlowFadeIn();
+        this.startCompassGlow();
         return;
       }
     }
 
-    // If Graphic_Compass not found, try alternative names
-    const alternativeNames = [
-      'Compass', 'GraphicCompass', 'Compass_Graphic', 'Graphic_Compass_Group',
-      'Rose', 'CompassRose', 'Direction', 'Directional', 'Compass_Light'
-    ];
-
-    for (const name of alternativeNames) {
-      const obj = this.scene.getObjectByName(name);
-      if (obj) {
-        if (obj.isMesh && obj.material) {
-          this.compassLightObj = obj;
-          this.initCompassLightMaterials();
-          // Set the glow material but start at 0 intensity to avoid blink
-          if (this.compassLightObj && this.compassLightMaterials.on) {
-            this.compassLightObj.material = this.compassLightMaterials.on;
-            this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
-          }
-          this.animateCompassGlowFadeIn();
-          return;
-        }
-      }
+    // Try Compass_Graphic specifically
+    const compassGraphic = this.scene.getObjectByName('Compass_Graphic');
+    if (compassGraphic && compassGraphic.isMesh && compassGraphic.material) {
+      this.compassLightObj = compassGraphic;
+      this.initCompassLightMaterials();
+      this.startCompassGlow();
+      return;
     }
 
     console.warn('Compass light object not found. Make sure Graphic_Compass element exists in the scene.');
+  }
 
+  // Helper method to start compass glow
+  startCompassGlow() {
+    if (this.compassLightObj && this.compassLightMaterials.on) {
+      this.compassLightObj.material = this.compassLightMaterials.on;
+      this.compassLightMaterials.on.emissiveIntensity = 0;
+    }
+    this.animateCompassGlowFadeIn();
   }
 
   // Animate the flower image in the outro modal
