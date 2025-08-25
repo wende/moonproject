@@ -134,7 +134,7 @@ export function setupUI() {
         }
 
         // Temporarily lower background music volume
-        audioManager.setMusicVolumeTemporary(originalVolume * audioManager.getTempMusicVolumeReduction());
+        audioManager.setMusicVolumeScaleFactor(audioManager.getTempMusicVolumeReduction());
 
         // Play audio based on stored audio method or button text
         const audioMethod = newButton.dataset.audioMethod;
@@ -203,7 +203,7 @@ export function setupUI() {
 
         // Restore original music volume after the calculated duration
         volumeRestoreTimeout = setTimeout(() => {
-          audioManager.restoreMusicVolume(originalVolume);
+          audioManager.restoreMusicVolumeScaleFactor(1.0); // Slower fade out
           originalVolume = null; // Reset for next interaction
           volumeRestoreTimeout = null;
           console.log('Restored music volume after', audioDuration, 'ms');
@@ -240,12 +240,11 @@ export function setupUI() {
 
         // Play start voice over when intro modal is closed
         if (id === 'intro' && audioManager.areVoiceOversEnabled() && audioManager.isInitialized) {
-          // Temporarily lower background music volume
-          const originalMusicVolume = audioManager.musicVolume;
-          audioManager.setMusicVolumeTemporary(originalMusicVolume * audioManager.getTempMusicVolumeReduction());
+                          // Temporarily lower background music volume
+        audioManager.setMusicVolumeScaleFactor(audioManager.getTempMusicVolumeReduction(), 0.3); // Quick fade in
 
-          // Play start voice over
-          const audioSource = audioManager.playStartVO();
+        // Play start voice over
+        const audioSource = audioManager.playStartVO();
 
           // Get the duration of the audio file
           let audioDuration = 1000; // Default fallback duration
@@ -255,7 +254,7 @@ export function setupUI() {
 
           // Restore original music volume after the actual audio duration (with 100ms delay to cut short)
           setTimeout(() => {
-            audioManager.restoreMusicVolume(originalMusicVolume);
+            audioManager.restoreMusicVolumeScaleFactor(1.0); // Slower fade out
           }, audioDuration + 100);
         }
       });
@@ -434,7 +433,7 @@ export function setupUI() {
           onComplete: () => {
             // Play audio when text animation completes
             audioManager.setVoiceOversEnabled(true);
-            audioManager.setMusicVolumeTemporary(originalMusicVolume * audioManager.getTempMusicVolumeReduction());
+            audioManager.setMusicVolumeScaleFactor(audioManager.getTempMusicVolumeReduction(), 0.3); // Quick fade in
             
             const audioSource = audioManager.playNoteVO();
             
@@ -474,7 +473,7 @@ export function setupUI() {
             // Restore original states after audio finishes
             setTimeout(() => {
               // Restore original music volume
-              audioManager.restoreMusicVolume(originalMusicVolume);
+              audioManager.restoreMusicVolumeScaleFactor(1.0); // Slower fade out
               
               // Restore original voice-over state
               audioManager.setVoiceOversEnabled(originalVoiceOverState);

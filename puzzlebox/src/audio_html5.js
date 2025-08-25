@@ -1,7 +1,7 @@
 // Audio constants
 const DEFAULT_MASTER_VOLUME = 1.0;
-const DEFAULT_MUSIC_VOLUME = 0.5;
-const DEFAULT_SFX_VOLUME = 0.5;
+const DEFAULT_MUSIC_VOLUME = 0.35;
+const DEFAULT_SFX_VOLUME = 0.9;
 const DEFAULT_VOICE_OVER_VOLUME = 0.6;
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 1;
@@ -11,7 +11,7 @@ const DEFAULT_PUZZLE_SOLVE_VOLUME = 1;
 const DEFAULT_PUZZLE_SOLVE_START_TIME = 0.8;
 const DEFAULT_NOTE_VO_DELAY = 500;
 const DEFAULT_MUSIC_FADE_IN = 0.5;
-const DEFAULT_MOONPROJECT_TRUE_VOLUME = 0.12; // 20% louder than regular music
+const MOONPROJECT_TRUE_VOLUME_SCALE = 1.2; // 20% louder than regular music
 
 // Memory optimization constants
 const MAX_AUDIO_POOL_SIZE = 3;
@@ -34,6 +34,7 @@ const PROGRESS_COMPLETION_THRESHOLD = 100;
 
 // Voice over constants
 const TEMP_MUSIC_VOLUME_REDUCTION = 0.3; // Duck to 30% during voice overs
+const VOLUME_FADE_DURATION = 0.2; // Duration in seconds for volume transitions
 
 import { voiceOverFiles, voiceOverMethods } from './i18n.js';
 
@@ -131,9 +132,7 @@ class AudioManager {
     const clampedVolume = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, volume));
     this[`${type}Volume`] = clampedVolume;
     
-    if (type !== 'voiceOver') {
-      this.updateAllVolumes();
-    }
+    this.updateAllVolumes();
     this.saveSettings();
   }
 
@@ -142,16 +141,14 @@ class AudioManager {
   setMasterVolume(volume) { this.setVolume('master', volume); }
   setVoiceOverVolume(volume) { this.setVolume('voiceOver', volume); }
 
-  setMusicVolumeTemporary(volume) {
-    const originalVolume = this.musicVolume;
-    this.musicVolumeScaleFactor = volume / this.musicVolume;
-    this.updateAllVolumes();
-    return originalVolume;
+  setMusicVolumeScaleFactor(scaleFactor, fadeDuration = VOLUME_FADE_DURATION) {
+    this.musicVolumeScaleFactor = scaleFactor;
+    this.updateAllVolumesWithFade(fadeDuration);
   }
 
-  restoreMusicVolume(originalVolume) {
+  restoreMusicVolumeScaleFactor(fadeDuration = VOLUME_FADE_DURATION) {
     this.musicVolumeScaleFactor = 1.0;
-    this.updateAllVolumes();
+    this.updateAllVolumesWithFade(fadeDuration);
   }
 
   updateAllVolumes() {
@@ -166,16 +163,29 @@ class AudioManager {
     });
   }
 
+  updateAllVolumesWithFade(fadeDuration = VOLUME_FADE_DURATION) {
+    // Update music volumes with fade
+    this.musicElements.forEach((audio, name) => {
+      const targetVolume = this.isMuted ? 0 : this.getMusicVolume(name);
+      this.fadeAudio(audio, audio.volume, targetVolume, fadeDuration);
+    });
+
+    // Update button click pool volumes (instant for SFX)
+    this.buttonClickPool.forEach(audio => {
+      audio.volume = this.isMuted ? 0 : DEFAULT_BUTTON_CLICK_VOLUME * this.sfxVolume * this.masterVolume;
+    });
+  }
+
   getMusicVolume(trackName) {
     if (trackName === 'moonprojecttrue') {
-      return DEFAULT_MOONPROJECT_TRUE_VOLUME * this.masterVolume;
+      return this.musicVolume * MOONPROJECT_TRUE_VOLUME_SCALE * this.masterVolume;
     }
     return this.musicVolume * this.musicVolumeScaleFactor * this.masterVolume;
   }
 
   getScaledMusicVolume(trackName) {
     if (trackName === 'moonprojecttrue') {
-      return DEFAULT_MOONPROJECT_TRUE_VOLUME * this.masterVolume;
+      return this.musicVolume * MOONPROJECT_TRUE_VOLUME_SCALE * this.masterVolume;
     }
     return this.musicVolume * this.musicVolumeScaleFactor * this.masterVolume;
   }
