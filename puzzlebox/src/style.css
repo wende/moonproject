@@ -704,6 +704,11 @@ button {
   opacity: 1;
 }
 
+/* Hide close button in intro modal */
+#intro .close-container {
+  display: none;
+}
+
 /* Outro modal footer - buttons side by side */
 #outro .modal-footer {
   flex-direction: row;
