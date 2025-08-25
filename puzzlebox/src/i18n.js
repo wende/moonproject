@@ -54,7 +54,7 @@ export const translations = {
     next: 'Next',
 
     // Outro text
-    helloMoon: 'Hello Moon',
+    helloMoon: 'Hello Moon,',
     outroText1: 'Sometimes it takes too many riddles to realize',
     outroText2: 'Sometimes moon wanes',
     outroText3: 'Happy Birthday Moon!',

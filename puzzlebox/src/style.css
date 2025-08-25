@@ -646,6 +646,12 @@ button {
   align-items: start;
   flex: 1;
   font-size: var(--font-size-xl);
+  position: relative; /* Ensure proper positioning context for animations */
+  line-height: 1.5; /* Reduce line spacing */
+}
+
+#outro .modal-body i {
+  line-height: 2 !important;
 }
 
 #outro .modal-column {
@@ -654,7 +660,23 @@ button {
   justify-content: center;
   align-items: flex-start;
   margin: auto;
+  position: relative; /* Ensure proper positioning context for animations */
+  min-height: 200px; /* Ensure minimum height for animation space */
 }
+
+/* Reduce spacing between paragraphs in outro modal */
+ /* #outro .modal-column p {
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+} */
+
+
+/* Keep normal spacing for the poem (italic text) */
+ /* #outro .modal-column i {
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}  */
+
 
 .modal-footer {
   display: flex;

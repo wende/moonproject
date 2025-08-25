@@ -52,8 +52,10 @@ export default [
         'varsIgnorePattern': '^_'
       }],
       
-      // Disallow console statements (can be relaxed for development)
-      'no-console': 'warn',
+      // Disallow console.log but allow console.warn and console.error
+      'no-console': ['warn', { 
+        allow: ['warn', 'error'] 
+      }],
       
       // Enforce consistent spacing
       'space-before-blocks': 'error',

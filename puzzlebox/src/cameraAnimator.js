@@ -8,13 +8,19 @@ const PROGRESS_COMPLETE_THRESHOLD = 1;
 const NEXT_PUZZLE_ANIMATION_DURATION = 2.2;
 const PUZZLE_COMPLETION_THRESHOLD = 5;
 const UI_FADE_DURATION = 3000; // 3 seconds
-const END_ZOOM_DISTANCE = 1.3; // Reduced final position after zoom (was 2.6)
+const END_ZOOM_DISTANCE = 1.5; // Reduced final position after zoom (was 2.6)
 const ZOOM_DURATION = 15.0;
 const FAR_ANIMATION_DURATION = 2.0;
 const OUTRO_DELAY = 500;
 const OUTRO_FADE_DURATION = 2000; // 2 seconds
 const COMPASS_GLOW_DELAY = 5.0; // Delay before compass starts glowing
 const COMPASS_FADE_IN_DURATION = 4.0; // Duration for compass to fade in
+
+// Outro text animation constants
+const OUTRO_LINE_DELAY = 2000; // Delay between each line
+const OUTRO_FADE_IN_DURATION = 1800; // Fade-in duration
+const OUTRO_BREAK_INSERT_INDEX = 11; // Insert <br> after the poem
+const OUTRO_ANIMATION_DELAY = 500; // Delay after modal fade-in before starting line animation
 
 export class CameraAnimator {
   constructor(camera, controls) {
@@ -91,79 +97,59 @@ export class CameraAnimator {
       return;
     }
 
-    console.log('Found Graphic_Compass:', compassGroup);
-    console.log('Graphic_Compass type:', compassGroup.type);
-    console.log('Graphic_Compass isMesh:', compassGroup.isMesh);
-    console.log('Graphic_Compass has material:', !!compassGroup.material);
-    console.log('Graphic_Compass children:', compassGroup.children);
 
     // If Graphic_Compass is a mesh with material, use it directly
     if (compassGroup.isMesh && compassGroup.material) {
-      console.log('Using Graphic_Compass as direct mesh with material');
       this.compassLightObj = compassGroup;
     } else if (compassGroup.children && compassGroup.children.length > 0) {
       // Find the light object within the compass group
-      console.log('Searching for light object in Graphic_Compass children...');
-      
+
       // First, try to find objects with specific material names
       this.compassLightObj = compassGroup.children.find((child) => (
-        child.material?.name === 'Light_Display' || 
+        child.material?.name === 'Light_Display' ||
         child.material?.name === 'Compass_Light' ||
         child.material?.name === 'Graphic_Compass_Light'
       ));
 
       if (!this.compassLightObj) {
         // If no specific light found, try to use any mesh with a material
-        this.compassLightObj = compassGroup.children.find((child) => 
+        this.compassLightObj = compassGroup.children.find((child) =>
           child.isMesh && child.material
         );
       }
 
       if (!this.compassLightObj) {
         // If still no mesh found, try any object with a material
-        this.compassLightObj = compassGroup.children.find((child) => 
+        this.compassLightObj = compassGroup.children.find((child) =>
           child.material
         );
       }
 
-      if (this.compassLightObj) {
-        console.log('Found light object in Graphic_Compass:', this.compassLightObj);
-        console.log('Light object material:', this.compassLightObj.material);
-      }
+
     }
 
     if (this.compassLightObj && this.compassLightObj.material) {
-      console.log('Setting up compass light materials...');
-      
       // Store the original "off" material
       this.compassLightMaterials.off = this.compassLightObj.material;
-      console.log('Original material:', this.compassLightMaterials.off);
 
       // Create "on" material by cloning and modifying the original
       this.compassLightMaterials.on = this.compassLightMaterials.off.clone();
       this.compassLightMaterials.on.name = 'Compass_Light_Glow';
-      
+
       // Set glowing properties - make it much brighter
       this.compassLightMaterials.on.emissive.setHex(0xffffff);
       this.compassLightMaterials.on.emissiveIntensity = 5.0; // Much higher initial intensity
-      
+
       // Add some additional glow properties if it's a standard material
       if (this.compassLightMaterials.on.isMeshStandardMaterial) {
         this.compassLightMaterials.on.metalness = 0.1;
         this.compassLightMaterials.on.roughness = 0.1; // Lower roughness for more shine
       }
 
-      console.log('Glow material created:', this.compassLightMaterials.on);
-      console.log('Compass light setup complete!');
+
     } else {
       console.warn('No suitable light object found in Graphic_Compass');
-      console.log('Available children:', compassGroup.children?.map(child => ({
-        name: child.name,
-        type: child.type,
-        isMesh: child.isMesh,
-        hasMaterial: !!child.material,
-        materialName: child.material?.name
-      })));
+
     }
   }
 
@@ -185,15 +171,15 @@ export class CameraAnimator {
 
     const animateGlow = (currentTime) => {
       const elapsed = (currentTime - startTime) / 1000;
-      
+
       // Create a continuous pulsing effect
       const pulse = Math.sin(elapsed * pulseSpeed * Math.PI) * 0.4 + 0.8; // Pulse between 0.4 and 1.2
-      
+
       // Make it much brighter - increase base intensity and pulse range
       const baseIntensity = 10.0; // Much higher base intensity
       const pulseRange = 8.0; // Larger pulse range
       const finalIntensity = baseIntensity + (pulse * pulseRange);
-      
+
       this.compassLightMaterials.on.emissiveIntensity = finalIntensity;
 
       // Continue the animation indefinitely
@@ -214,21 +200,21 @@ export class CameraAnimator {
     const animateFadeIn = (currentTime) => {
       const elapsed = currentTime - startTime;
       const fadeProgress = Math.min(elapsed / fadeInDuration, 1);
-      
+
       // Smooth fade-in curve (ease-in)
       const easedProgress = fadeProgress * fadeProgress;
-      
+
       // Create a continuous pulsing effect
       const pulse = Math.sin((elapsed / 1000) * pulseSpeed * Math.PI) * 0.4 + 0.8;
-      
+
       // Make it much brighter - increase base intensity and pulse range
       const baseIntensity = 10.0;
       const pulseRange = 8.0;
       const maxIntensity = baseIntensity + (pulse * pulseRange);
-      
+
       // Apply fade-in to the intensity
       const finalIntensity = maxIntensity * easedProgress;
-      
+
       this.compassLightMaterials.on.emissiveIntensity = finalIntensity;
 
       if (fadeProgress >= 1) {
@@ -430,8 +416,8 @@ export class CameraAnimator {
     }
 
     if (nextPosition) {
-      // Find the puzzle name for this position
-      const nextPuzzleName = this.getPuzzleNameForPosition(nextPosition.position);
+      // Find the puzzle name for this position (unused but kept for potential future use)
+      const _nextPuzzleName = this.getPuzzleNameForPosition(nextPosition.position);
 
 
       // If all puzzles are completed, skip the normal transition and go directly to far distance
@@ -470,7 +456,7 @@ export class CameraAnimator {
 
     // Calculate transition parameters
     const currentPosition = this.camera.position.clone();
-    
+
     // Double the zoom out distance after all puzzles are solved
     const baseFarDistance = 11.0;
     const completionMultiplier = 2.0; // Double the distance
@@ -539,6 +525,215 @@ export class CameraAnimator {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
+  // Prepare outro animation by hiding original text
+  prepareOutroAnimation() {
+    const outroModal = document.getElementById('outro');
+    if (!outroModal) return;
+
+    const modalBody = outroModal.querySelector('.modal-body .modal-column:first-child');
+    if (!modalBody) return;
+
+    // Store the original height to prevent jumping
+    const originalHeight = modalBody.offsetHeight;
+    modalBody.style.minHeight = `${originalHeight}px`;
+
+    // Get all elements including standalone <br> tags
+    const textElements = Array.from(modalBody.children).filter(element => {
+      const hasText = element.textContent.trim() !== '' || element.innerHTML.trim() !== '';
+      const isBr = element.tagName.toLowerCase() === 'br';
+      return hasText || isBr;
+    });
+
+    // Store the text elements for later use
+    modalBody.dataset.textElements = JSON.stringify(textElements.map(el => ({
+      tagName: el.tagName,
+      innerHTML: el.innerHTML,
+      textContent: el.textContent
+    })));
+
+    // Hide all original text elements immediately
+    textElements.forEach((element) => {
+      element.dataset.originalDisplay = element.style.display;
+      element.dataset.originalVisibility = element.style.visibility;
+      element.style.display = 'none';
+      element.style.visibility = 'hidden';
+    });
+
+    // Hide the flower image immediately
+    const flowerImage = outroModal.querySelector('.modal-image');
+    if (flowerImage) {
+      flowerImage.dataset.originalOpacity = flowerImage.style.opacity || '1';
+      flowerImage.dataset.originalTransition = flowerImage.style.transition || '';
+      flowerImage.style.opacity = '0';
+      flowerImage.style.transition = 'none';
+    }
+  }
+
+  // Animate outro modal body lines with simple fade-in effect
+  animateOutroModalLines() {
+    const outroModal = document.getElementById('outro');
+    if (!outroModal) return;
+
+    const modalBody = outroModal.querySelector('.modal-body .modal-column:first-child');
+    if (!modalBody) return;
+
+
+    // Split text by <br> tags and create individual line elements
+    const lines = [];
+    const textElements = Array.from(modalBody.children).filter(element => {
+      return element.textContent.trim() !== '' || element.innerHTML.trim() !== '';
+    });
+
+    textElements.forEach((element) => {
+      // Store original element for later restoration
+      element.dataset.originalHTML = element.innerHTML;
+
+      if (element.tagName.toLowerCase() === 'br') {
+        // If the element itself is a <br>, add it as a break
+        const brElement = document.createElement('br');
+        brElement.dataset.originalElement = element;
+        brElement.dataset.lineIndex = 0;
+        brElement.dataset.isBreak = 'true';
+        lines.push(brElement);
+      } else {
+        // Split the content by <br> tags
+        const content = element.innerHTML;
+        const lineParts = content.split(/<br\s*\/?>/i);
+
+        lineParts.forEach((lineContent, lineIndex) => {
+          // Include empty lines (br tags) as separate elements
+          if (lineContent.trim() === '') {
+            // Create a line break element
+            const brElement = document.createElement('br');
+            brElement.dataset.originalElement = element;
+            brElement.dataset.lineIndex = lineIndex;
+            brElement.dataset.isBreak = 'true';
+            lines.push(brElement);
+          } else {
+            // Create a new element for this line
+            const lineElement = element.cloneNode(false);
+            lineElement.innerHTML = lineContent.trim();
+            lineElement.dataset.originalElement = element;
+            lineElement.dataset.lineIndex = lineIndex;
+            lines.push(lineElement);
+          }
+        });
+      }
+    });
+
+    if (lines.length === 0) return;
+
+    // Manually add the <br> after the poem (after "And so does on me")
+    const brAfterPoem = document.createElement('br');
+    brAfterPoem.dataset.originalElement = null;
+    brAfterPoem.dataset.lineIndex = 0;
+    brAfterPoem.dataset.isBreak = 'true';
+    lines.splice(OUTRO_BREAK_INSERT_INDEX, 0, brAfterPoem); // Insert after the poem
+
+
+    // Set initial state for all line elements
+    lines.forEach((lineElement, _index) => {
+      if (lineElement.dataset.isBreak === 'true') {
+        // For break elements, add them to the DOM but make them invisible
+        lineElement.style.visibility = 'hidden'; // Start invisible but maintain layout
+        lineElement.style.opacity = '0';
+        modalBody.appendChild(lineElement);
+      } else {
+        // Store original position and styles
+        lineElement.dataset.originalPosition = lineElement.style.position || 'static';
+        lineElement.dataset.originalTop = lineElement.style.top || 'auto';
+        lineElement.dataset.originalLeft = lineElement.style.left || 'auto';
+        lineElement.dataset.originalTransform = lineElement.style.transform || 'none';
+        lineElement.dataset.originalOpacity = lineElement.style.opacity || '1';
+        lineElement.dataset.originalTransition = lineElement.style.transition || 'none';
+        lineElement.dataset.originalMargin = lineElement.style.margin || '';
+
+        // Set initial state for animation - position exactly where it should be but invisible
+        lineElement.style.position = 'static';
+        lineElement.style.opacity = '0';
+        lineElement.style.transition = 'none';
+        lineElement.style.margin = '0';
+        lineElement.style.display = 'block';
+        lineElement.style.visibility = 'visible'; // Ensure visibility
+
+        // Special handling for time-counter: keep it invisible initially, will be animated later
+        if (lineElement.classList.contains('time-counter')) {
+          lineElement.style.opacity = '0';
+          lineElement.style.transition = 'none';
+        }
+
+        // Add the line element to the DOM
+        modalBody.appendChild(lineElement);
+      }
+    });
+
+    // Animate each line with staggered timing
+    lines.forEach((lineElement, index) => {
+      const delay = index * OUTRO_LINE_DELAY;
+      const fadeInDuration = OUTRO_FADE_IN_DURATION;
+
+      setTimeout(() => {
+        if (lineElement.dataset.isBreak === 'true') {
+          // For break elements, make them visible
+          lineElement.style.visibility = 'visible';
+          lineElement.style.transition = `opacity ${fadeInDuration}ms ease-in`;
+          lineElement.style.opacity = '1';
+
+        } else if (lineElement.classList.contains('time-counter')) {
+          // Special handling for time-counter: animate it and start the counter updates
+          lineElement.style.transition = `opacity ${fadeInDuration}ms ease-in`;
+          lineElement.style.opacity = '1';
+
+          // Start the time counter updates after it becomes visible
+          setTimeout(() => {
+            // Create a custom update function that targets our specific element
+            const updateTimeCounter = () => {
+              const now = new Date();
+              const startDate = new Date('2020-01-19T00:00:00');
+              const timeDiff = now - startDate;
+
+              const totalSeconds = Math.floor(timeDiff / 1000);
+              const totalMinutes = Math.floor(totalSeconds / 60);
+              const totalHours = Math.floor(totalMinutes / 60);
+              const totalDays = Math.floor(totalHours / 24);
+              const totalYears = Math.floor(totalDays / 365.25);
+
+              const remainingDays = totalDays - Math.floor(totalYears * 365.25);
+              const remainingHours = totalHours - (totalDays * 24);
+              const remainingMinutes = totalMinutes - (totalHours * 60);
+              const remainingSeconds = totalSeconds - (totalMinutes * 60);
+
+              const text = `PS In orbit these past ${totalYears.toLocaleString()} years, ${remainingDays.toLocaleString()} days, ${remainingHours.toLocaleString()} hours, ${remainingMinutes.toLocaleString()} minutes, and ${remainingSeconds.toLocaleString()} seconds`;
+              lineElement.innerHTML = text;
+            };
+
+            // Do initial update
+            updateTimeCounter();
+
+            // Start continuous updates every second
+            const intervalId = setInterval(updateTimeCounter, 1000);
+
+            // Store the interval ID so we can stop it later if needed
+            lineElement.dataset.timeCounterInterval = intervalId;
+          }, fadeInDuration);
+
+        } else {
+          // Start fade-in for text elements
+          lineElement.style.transition = `opacity ${fadeInDuration}ms ease-in`;
+          lineElement.style.opacity = '1';
+
+        }
+
+        // If this is the last line, animate the flower image
+        if (index === lines.length - 1) {
+          setTimeout(() => {
+            this.animateFlowerImage();
+          }, fadeInDuration + 500);
+        }
+      }, delay);
+    });
+  }
+
   // Start a slow linear zoom as far as possible after completion
   startCompletionZoom(farPosition) {
     if (this.isAnimating) {
@@ -556,7 +751,7 @@ export class CameraAnimator {
     // Disable controls during animation (if they exist)
     if (this.controls) {
       this.controls.setEnabled(false);
-      
+
       // Temporarily remove distance limits for closer zoom
       this.controls.minDistance = 0.1; // Allow very close zoom
       this.controls.maxDistance = 1000; // Allow far zoom
@@ -629,6 +824,12 @@ export class CameraAnimator {
 
             // Start fade-in
             outroModal.style.opacity = '1';
+
+            // Hide original text immediately and start the line animation after modal fade-in
+            this.prepareOutroAnimation();
+            setTimeout(() => {
+              this.animateOutroModalLines();
+            }, OUTRO_FADE_DURATION + OUTRO_ANIMATION_DELAY);
 
             // Optionally, focus the modal for accessibility
             outroModal.focus?.();
@@ -760,23 +961,21 @@ export class CameraAnimator {
 
   // Debug method to test compass glow
   debugTestCompassGlow() {
-    console.log('Testing compass glow...');
-    
+
     if (!this.scene) {
       console.warn('Scene not available. Make sure setScene() was called.');
       return;
     }
 
     // Log all objects in the scene to help find the compass
-    console.log('Searching for compass-related objects in scene...');
     const allObjects = [];
     const compassCandidates = [];
-    
+
     this.scene.traverse((object) => {
       allObjects.push(object.name);
-      
+
       // Look for objects that might be the compass
-      if (object.name.toLowerCase().includes('compass') || 
+      if (object.name.toLowerCase().includes('compass') ||
           object.name.toLowerCase().includes('graphic') ||
           object.name.toLowerCase().includes('rose') ||
           object.name.toLowerCase().includes('direction')) {
@@ -790,18 +989,13 @@ export class CameraAnimator {
       }
     });
 
-    console.log('All objects in scene:', allObjects);
-    console.log('Compass candidates found:', compassCandidates);
 
     // Try to find Graphic_Compass specifically
     const compassGroup = this.scene.getObjectByName('Graphic_Compass');
     if (compassGroup) {
-      console.log('Found Graphic_Compass group:', compassGroup);
-      console.log('Graphic_Compass children:', compassGroup.children);
-      
+
       // If Graphic_Compass is a mesh with material, use it directly
       if (compassGroup.isMesh && compassGroup.material) {
-        console.log('Using Graphic_Compass as direct mesh with material');
         this.compassLightObj = compassGroup;
         this.initCompassLightMaterials();
         // Set the glow material but start at 0 intensity to avoid blink
@@ -812,20 +1006,17 @@ export class CameraAnimator {
         this.animateCompassGlowFadeIn();
         return;
       }
-      
+
       // Look for light objects within the compass group
-      const lightObjects = compassGroup.children.filter(child => 
-        child.material?.name === 'Light_Display' || 
+      const lightObjects = compassGroup.children.filter(child =>
+        child.material?.name === 'Light_Display' ||
         child.material?.name === 'Compass_Light' ||
         child.name.toLowerCase().includes('light') ||
         child.isMesh
       );
-      
-      console.log('Light objects in Graphic_Compass:', lightObjects);
-      
+
       if (lightObjects.length > 0) {
         this.compassLightObj = lightObjects[0];
-        console.log('Using first light object:', this.compassLightObj);
         this.initCompassLightMaterials();
         // Set the glow material but start at 0 intensity to avoid blink
         if (this.compassLightObj && this.compassLightMaterials.on) {
@@ -846,7 +1037,6 @@ export class CameraAnimator {
     for (const name of alternativeNames) {
       const obj = this.scene.getObjectByName(name);
       if (obj) {
-        console.log(`Found alternative compass object: ${name}`, obj);
         if (obj.isMesh && obj.material) {
           this.compassLightObj = obj;
           this.initCompassLightMaterials();
@@ -862,12 +1052,89 @@ export class CameraAnimator {
     }
 
     console.warn('Compass light object not found. Make sure Graphic_Compass element exists in the scene.');
-    console.log('Available object names that might be relevant:', allObjects.filter(name => 
-      name.toLowerCase().includes('compass') || 
-      name.toLowerCase().includes('graphic') || 
-      name.toLowerCase().includes('light') ||
-      name.toLowerCase().includes('rose') ||
-      name.toLowerCase().includes('direction')
-    ));
+
+  }
+
+  // Animate the flower image in the outro modal
+  animateFlowerImage() {
+    const outroModal = document.getElementById('outro');
+    if (!outroModal) return;
+
+    const flowerImage = outroModal.querySelector('.modal-image');
+    if (!flowerImage) return;
+
+
+    // Fade in the flower image
+    flowerImage.style.transition = `opacity ${OUTRO_FADE_IN_DURATION}ms ease-in`;
+    flowerImage.style.opacity = '1';
+  }
+
+  // Debug method to restart the outro text animation
+  debugRestartOutroAnimation() {
+
+
+    const outroModal = document.getElementById('outro');
+    if (!outroModal) {
+      console.error('Outro modal not found!');
+      return;
+    }
+
+    // Make sure the modal is visible
+    if (outroModal.style.display !== 'block') {
+      outroModal.style.display = 'block';
+      outroModal.style.opacity = '1';
+    }
+
+    // Reset all text elements to their original state first
+    const modalBody = outroModal.querySelector('.modal-body .modal-column:first-child');
+    if (!modalBody) {
+      console.error('Modal body not found!');
+      return;
+    }
+
+    // Remove any existing animated line elements
+    const existingAnimatedLines = modalBody.querySelectorAll('[data-original-element]');
+    existingAnimatedLines.forEach(line => line.remove());
+
+    // Also remove any standalone <br> elements that were added
+    const standaloneBreaks = modalBody.querySelectorAll('br[data-is-break]');
+    standaloneBreaks.forEach(br => br.remove());
+
+    // Reset original elements to their original state
+    const textElements = Array.from(modalBody.children).filter(element => {
+      return element.textContent.trim() !== '' || element.innerHTML.trim() !== '';
+    });
+
+    textElements.forEach((element) => {
+      // Restore original HTML if it was stored
+      if (element.dataset.originalHTML) {
+        element.innerHTML = element.dataset.originalHTML;
+      }
+
+      // Restore original display and visibility state
+      element.style.display = element.dataset.originalDisplay || '';
+      element.style.visibility = element.dataset.originalVisibility || '';
+
+      // Clear any existing animation styles
+      element.style.opacity = element.dataset.originalOpacity || '1';
+      element.style.transition = element.dataset.originalTransition || 'none';
+    });
+
+    // Restore original height
+    modalBody.style.minHeight = '';
+
+    // Reset flower image
+    const flowerImage = outroModal.querySelector('.modal-image');
+    if (flowerImage) {
+      flowerImage.style.opacity = flowerImage.dataset.originalOpacity || '';
+      flowerImage.style.transition = flowerImage.dataset.originalTransition || '';
+    }
+
+
+    // Force a reflow
+    void modalBody.offsetWidth;
+
+    // Start the animation
+    this.animateOutroModalLines();
   }
 }
