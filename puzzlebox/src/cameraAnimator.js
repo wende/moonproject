@@ -111,7 +111,10 @@ export class CameraAnimator {
   // Set scene reference for compass light functionality
   setScene(scene) {
     this.scene = scene;
-    this.initCompassLightMaterials();
+    // Defer material initialization to avoid blocking the main thread
+    requestAnimationFrame(() => {
+      this.initCompassLightMaterials();
+    });
   }
 
   // Initialize compass light materials similar to puzzle lights
@@ -181,13 +184,16 @@ export class CameraAnimator {
     }
   }
 
-  // Update compass light material (on/off)
+  // Update compass light material (on/off) - optimized to avoid stuttering
   updateCompassLightMaterial(isActivated = true) {
     if (!this.compassLightObj || !this.compassLightMaterials.off || !this.compassLightMaterials.on) {
       return;
     }
 
-    this.compassLightObj.material = isActivated ? this.compassLightMaterials.on : this.compassLightMaterials.off;
+    // Defer material change to next frame to avoid stuttering during camera animations
+    requestAnimationFrame(() => {
+      this.compassLightObj.material = isActivated ? this.compassLightMaterials.on : this.compassLightMaterials.off;
+    });
   }
 
   // Animate compass glow with pulsing effect
@@ -553,7 +559,7 @@ export class CameraAnimator {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
-  // Prepare outro animation by hiding original text
+  // Prepare outro animation by hiding original text - optimized to avoid stuttering
   prepareOutroAnimation() {
     const outroModal = document.getElementById('outro');
     if (!outroModal) return;
@@ -561,40 +567,43 @@ export class CameraAnimator {
     const modalBody = outroModal.querySelector('.modal-body .modal-column:first-child');
     if (!modalBody) return;
 
-    // Store the original height to prevent jumping
-    const originalHeight = modalBody.offsetHeight;
-    modalBody.style.minHeight = `${originalHeight}px`;
+    // Defer DOM operations to avoid stuttering during camera animation
+    requestAnimationFrame(() => {
+      // Store the original height to prevent jumping
+      const originalHeight = modalBody.offsetHeight;
+      modalBody.style.minHeight = `${originalHeight}px`;
 
-    // Get all elements including standalone <br> tags
-    const textElements = Array.from(modalBody.children).filter(element => {
-      const hasText = element.textContent.trim() !== '' || element.innerHTML.trim() !== '';
-      const isBr = element.tagName.toLowerCase() === 'br';
-      return hasText || isBr;
+      // Get all elements including standalone <br> tags
+      const textElements = Array.from(modalBody.children).filter(element => {
+        const hasText = element.textContent.trim() !== '' || element.innerHTML.trim() !== '';
+        const isBr = element.tagName.toLowerCase() === 'br';
+        return hasText || isBr;
+      });
+
+      // Store the text elements for later use
+      modalBody.dataset.textElements = JSON.stringify(textElements.map(el => ({
+        tagName: el.tagName,
+        innerHTML: el.innerHTML,
+        textContent: el.textContent
+      })));
+
+      // Hide all original text elements immediately
+      textElements.forEach((element) => {
+        element.dataset.originalDisplay = element.style.display;
+        element.dataset.originalVisibility = element.style.visibility;
+        element.style.display = 'none';
+        element.style.visibility = 'hidden';
+      });
+
+      // Hide the flower image immediately
+      const flowerImage = outroModal.querySelector('.modal-image');
+      if (flowerImage) {
+        flowerImage.dataset.originalOpacity = flowerImage.style.opacity || '1';
+        flowerImage.dataset.originalTransition = flowerImage.style.transition || '';
+        flowerImage.style.opacity = '0';
+        flowerImage.style.transition = 'none';
+      }
     });
-
-    // Store the text elements for later use
-    modalBody.dataset.textElements = JSON.stringify(textElements.map(el => ({
-      tagName: el.tagName,
-      innerHTML: el.innerHTML,
-      textContent: el.textContent
-    })));
-
-    // Hide all original text elements immediately
-    textElements.forEach((element) => {
-      element.dataset.originalDisplay = element.style.display;
-      element.dataset.originalVisibility = element.style.visibility;
-      element.style.display = 'none';
-      element.style.visibility = 'hidden';
-    });
-
-    // Hide the flower image immediately
-    const flowerImage = outroModal.querySelector('.modal-image');
-    if (flowerImage) {
-      flowerImage.dataset.originalOpacity = flowerImage.style.opacity || '1';
-      flowerImage.dataset.originalTransition = flowerImage.style.transition || '';
-      flowerImage.style.opacity = '0';
-      flowerImage.style.transition = 'none';
-    }
   }
 
   // Create line elements from text content
@@ -783,17 +792,20 @@ export class CameraAnimator {
         this.controls.update();
       }
 
-      // Trigger compass glow effect during the zoom
+      // Trigger compass glow effect during the zoom - defer material change to avoid stuttering
       if (progress >= 0.3 && !this.compassGlowTriggered) {
         this.compassGlowTriggered = true;
-        setTimeout(() => {
-          // Set the glow material but start at 0 intensity to avoid blink
-          if (this.compassLightObj && this.compassLightMaterials.on) {
-            this.compassLightObj.material = this.compassLightMaterials.on;
-            this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
-          }
-          this.animateCompassGlowFadeIn();
-        }, COMPASS_GLOW_DELAY * 1000);
+        // Defer material change to next frame to avoid stuttering during camera animation
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            // Set the glow material but start at 0 intensity to avoid blink
+            if (this.compassLightObj && this.compassLightMaterials.on) {
+              this.compassLightObj.material = this.compassLightMaterials.on;
+              this.compassLightMaterials.on.emissiveIntensity = 0; // Start at 0
+            }
+            this.animateCompassGlowFadeIn();
+          }, COMPASS_GLOW_DELAY * 1000);
+        });
       }
 
       // Only update controls at the very end to avoid interference
@@ -813,34 +825,37 @@ export class CameraAnimator {
           dialogueButton.style.opacity = '1';
         }
 
-        // Show the outro modal after completion zoom
-        setTimeout(() => {
-          const outroModal = document.getElementById('outro');
+        // Show the outro modal after completion zoom - defer to avoid stuttering
+        // Use requestAnimationFrame to ensure camera animation is completely finished
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const outroModal = document.getElementById('outro');
 
-          if (outroModal) {
-            // Set initial state for fade-in
-            outroModal.style.display = 'block';
-            outroModal.style.opacity = '0';
-            outroModal.style.transition = `opacity ${OUTRO_FADE_DURATION / 1000}s ease-in`;
+            if (outroModal) {
+              // Set initial state for fade-in
+              outroModal.style.display = 'block';
+              outroModal.style.opacity = '0';
+              outroModal.style.transition = `opacity ${OUTRO_FADE_DURATION / 1000}s ease-in`;
 
-            // Force reflow to ensure the transition works
-            void outroModal.offsetWidth;
+              // Force reflow to ensure the transition works
+              void outroModal.offsetWidth;
 
-            // Start fade-in
-            outroModal.style.opacity = '1';
+              // Start fade-in
+              outroModal.style.opacity = '1';
 
-            // Hide original text immediately and start the line animation after modal fade-in
-            this.prepareOutroAnimation();
-            setTimeout(() => {
-              this.animateOutroModalLines();
-            }, OUTRO_FADE_DURATION + OUTRO_ANIMATION_DELAY);
+              // Hide original text immediately and start the line animation after modal fade-in
+              this.prepareOutroAnimation();
+              setTimeout(() => {
+                this.animateOutroModalLines();
+              }, OUTRO_FADE_DURATION + OUTRO_ANIMATION_DELAY);
 
-            // Optionally, focus the modal for accessibility
-            outroModal.focus?.();
-          } else {
-            console.error('Outro modal element not found!');
-          }
-        }, OUTRO_DELAY); // Small delay after zoom completes
+              // Optionally, focus the modal for accessibility
+              outroModal.focus?.();
+            } else {
+              console.error('Outro modal element not found!');
+            }
+          }, OUTRO_DELAY); // Small delay after zoom completes
+        });
 
       } else {
         // Use immediate next frame for faster response
@@ -1006,11 +1021,14 @@ export class CameraAnimator {
     console.warn('Compass light object not found. Make sure Graphic_Compass element exists in the scene.');
   }
 
-  // Helper method to start compass glow
+  // Helper method to start compass glow - optimized to avoid stuttering
   startCompassGlow() {
     if (this.compassLightObj && this.compassLightMaterials.on) {
-      this.compassLightObj.material = this.compassLightMaterials.on;
-      this.compassLightMaterials.on.emissiveIntensity = 0;
+      // Defer material change to next frame to avoid stuttering
+      requestAnimationFrame(() => {
+        this.compassLightObj.material = this.compassLightMaterials.on;
+        this.compassLightMaterials.on.emissiveIntensity = 0;
+      });
     }
     this.animateCompassGlowFadeIn();
   }

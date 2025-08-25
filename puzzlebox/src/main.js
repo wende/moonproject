@@ -299,6 +299,7 @@ function animate(currentTime) {
     }
 
     // Render immediately for smooth camera movement
+    // Use a more aggressive frame rate during camera animations
     composer.render();
     requestAnimationFrame(animate);
     return;
