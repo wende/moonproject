@@ -32,7 +32,7 @@ export function setupUI() {
   window.PuzzleBox = window.PuzzleBox || {};
 
   // Global function to set dialogue button text and audio
-  window.PuzzleBox.setDialogueButton = function(text, audioFile) {
+  window.PuzzleBox.setDialogueButton = function(text, audioFile, autoPlay = true) {
     // Don't update dialogue button if all puzzles are completed
     if (window.PuzzleBox?.puzzleManager?.allPuzzlesCompleted) {
       return;
@@ -46,7 +46,7 @@ export function setupUI() {
       }
     }
     window.PuzzleBox.setDialogueButton.lastCallTime = Date.now();
-
+    
     // Get fresh reference to button in case it was replaced
     let currentButton = document.querySelector('.dialogue-button');
 
@@ -69,8 +69,8 @@ export function setupUI() {
         currentButton.dataset.audioMethod = audioFile;
         // Stored audio method for text
         
-        // Play audio immediately if audio manager is ready and voice overs are enabled
-        if (audioManager.isInitialized && audioManager.areVoiceOversEnabled()) {
+        // Play audio immediately if auto-play is enabled, audio manager is ready and voice overs are enabled
+        if (autoPlay && audioManager.isInitialized && audioManager.areVoiceOversEnabled()) {
           // Add a small delay to prevent rapid-fire audio when spamming buttons
           setTimeout(() => {
             // Check if this is still the current dialogue button (not replaced by another call)
@@ -208,7 +208,7 @@ export function setupUI() {
   };
 
   // Set up initial dialogue button (will retry audio method setup when audio manager is ready)
-  window.PuzzleBox.setDialogueButton(t('startSequence'), 'playStartVO');
+      window.PuzzleBox.setDialogueButton(t('startSequence'), 'playStartVO', true);
 
 
   modals.forEach(({ id, openClass, closeClass }) => {

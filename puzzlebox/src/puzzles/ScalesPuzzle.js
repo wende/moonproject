@@ -10,6 +10,9 @@ export class ScalesPuzzle extends Puzzle {
     this.lastBalanceState = [0, 0];
     this.isInitializing = true;
 
+    // Track which colors have been pronounced
+    this.pronouncedColors = new Set();
+
     this.colorOptions = [
       { name: 'Résilience', value: 1, hex: '#00FFD4' }, // Résilience - Bright Cyan
       { name: 'Colère', value: 2, hex: '#FF4444' }, // Colère - Bright Red
@@ -125,7 +128,16 @@ export class ScalesPuzzle extends Puzzle {
       };
 
       const audioMethod = audioMap[colorName];
-      window.PuzzleBox?.setDialogueButton(colorName, audioMethod);
+      
+      // Only pronounce the color if it hasn't been pronounced before
+      if (audioMethod && !this.pronouncedColors.has(colorName)) {
+        this.pronouncedColors.add(colorName);
+        // Set the dialogue button - it will auto-play the VO on first encounter
+        window.PuzzleBox?.setDialogueButton(colorName, audioMethod, true);
+      } else {
+        // For subsequent encounters, just set the dialogue button without auto-playing
+        window.PuzzleBox?.setDialogueButton(colorName, audioMethod, false);
+      }
     }
 
     // Add 'col' prefix to match the material naming convention

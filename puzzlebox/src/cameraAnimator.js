@@ -935,7 +935,7 @@ export class CameraAnimator {
 
       const dialogue = puzzleDialogue[puzzleName];
       if (dialogue) {
-        window.PuzzleBox.setDialogueButton(dialogue.text, dialogue.audio);
+        window.PuzzleBox.setDialogueButton(dialogue.text, dialogue.audio, true);
       }
     }
   }
